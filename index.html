@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>unSpootify Playlist Viewer</title>
-    <link rel="stylesheet" href="/assets/style.css">
     <style>
         body {
             background-color: #000000;
@@ -17,7 +16,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* Ensures content stays centered vertically */
+            min-height: 100vh;
             cursor: url('pixelated-cursor.png'), auto;
         }
         h1 {
@@ -27,7 +26,7 @@
             margin: 20px 0;
         }
         .container {
-            width: 60%; /* Centers the content with a fixed width */
+            width: 60%;
             text-align: center;
         }
         .ascii-container {
@@ -37,11 +36,6 @@
             padding: 10px;
             color: #00FF00;
             font-size: 1.2em;
-        }
-        .ascii-box {
-            white-space: pre;
-            color: #00FF00;
-            margin-bottom: 20px;
         }
         .sort-by-date, .sort-by-title, .sort-by-artist {
             background-color: #00AA00;
@@ -107,10 +101,81 @@
             text-align: center;
             color: #00FF00;
         }
-        marquee {
+
+        /* Download manager */
+        .download-manager {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            width: 250px;
+            background-color: #003300;
+            color: #00FF00;
+            border: 2px solid #00FF00;
+            padding: 15px;
+            box-shadow: 3px 3px 5px #005500;
+            z-index: 1000;
+            cursor: move;
+        }
+        .download-manager h3 {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #005500;
+            border: 1px solid #00FF00;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 0;
+            height: 20px;
+            background-color: #00FF00;
+        }
+        .stats {
+            margin-top: 10px;
+        }
+        .stats p {
+            margin: 5px 0;
+        }
+        .divider {
+            border-bottom: 1px solid #00FF00;
+            margin: 10px 0;
+        }
+        .back-to-top {
             display: block;
-            width: 100%; /* Ensure it stretches across the page */
-            white-space: nowrap;
+            padding: 10px;
+            background-color: #00AA00;
+            color: #000;
+            border: none;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .back-to-top:hover {
+            background-color: #00FF00;
+            color: #000000;
+            box-shadow: 5px 5px 8px #009900;
+        }
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .toggle-button {
+            width: 50%;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background-color: #00AA00;
+            font-weight: bold;
+            color: #000000;
+        }
+        .toggle-button.selected {
+            background-color: #003300;
+            color: #00FF00;
         }
     </style>
 </head>
@@ -125,21 +190,35 @@
            \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
             \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
                                 \|_________|                                                 \|___|/      
-    </h1>
-<!--
-    <marquee behavior="scroll" direction="left" scrollamount="4" id="userMessages">
-        Just uploaded my playlist, worked great | Can't believe I found that track here | This is a solid way to manage everything | The download speeds are decent so far | Anyone else using this to back up their playlists? | The peer-to-peer search is working well today | I finally organized all my music with this | Had some trouble uploading but it’s sorted now | Just downloaded some rare stuff from the network | The search function actually found the track I needed | This is making everything easier | Does anyone know if I can batch download? | I’m using this to organize my old mixtapes | Playlist editing is smoother than I expected | Uploading worked but took a little longer than I thought | Just found a rare remix through search | I didn’t expect to find this track so easily | Upload process was fast this time | Backing up my playlists, this is actually useful | Finally sharing my old playlist files | I love being able to download from here | Found an old mixtape I thought was gone | This search tool is surprisingly good | Took a while but I found the track I was looking for | Now I can organize everything in one place | Downloaded a few tracks, worked well | Never thought I’d get that file back | I’m surprised by how easy this was to use | Found a track from 2001, still sounds perfect | I’m starting to get the hang of this | Editing playlists has never been this easy | Took me a bit to figure it out but I’m here | Not bad for organizing everything in one place | Backup your stuff, you’ll thank me later | This peer-to-peer search is solid | Sharing music is easier than ever | I’ve finally got all my tracks in one spot | Wish I found this earlier | This made cleaning up my library so much easier | I just found my favorite song again | Didn’t expect it to work so well | If you’re organizing your music, use this | Download speeds are faster today | Finally got everything uploaded | Is anyone else backing up their old playlists? | I use this to check my tracks before sharing | Can’t believe I’ve been doing this manually all this time | Getting the hang of using this for sharing | Organizing playlists is way smoother now | So far so good with the downloads | Didn’t know I could back up all my music here | Working on setting up my old tracks for sharing | Uploads are much faster than I thought | Good find for managing your own playlists | Getting all my music from the 90s organized | Does anyone know if it’s possible to share directly? | Used this to clean up my music library, worth it
-    </marquee>
-    <h3>
+                                                                                                          
 
-    </h3>
--->
+    </h1>
+
     <div class="container">
         <button class="sort-by-date" onclick="loadPlaylists('date')">Sort by Last Modified</button>
         <button class="sort-by-title" onclick="loadPlaylists('title')">Sort by Title</button>
-        <button class="sort-by-artist">Sort by Artist</button>
+        <button class="sort-by-artist" onclick="loadByArtist()">Sort by Artist</button>
 
         <div id="playlistContainer" class="ascii-container"></div>
+    </div>
+
+    <div class="download-manager" id="downloadManager">
+        <h3>Download Manager</h3>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div class="stats">
+            <p>Selected: <span id="selectedCount">0</span></p>
+            <p>Failed Downloads: <span id="failedCount">0</span></p>
+            <p>Completed: <span id="completedCount">0</span></p>
+        </div>
+        <div class="divider"></div>
+        <button class="back-to-top" onclick="scrollToTop()">Back to Top</button>
+
+        <div class="toggle-container">
+            <button id="songButton" class="toggle-button selected" onclick="selectMode('song')">Song</button>
+            <button id="albumButton" class="toggle-button" onclick="selectMode('album')">Album</button>
+        </div>
     </div>
 
     <div class="footer">
@@ -147,7 +226,27 @@
     </div>
 
     <script>
-        let currentSort = 'date'; // Track current sorting method
+        let currentSort = 'date'; 
+        let selectedCount = 0; 
+        let selectedMode = 'song'; 
+
+        let isDragging = false;
+        let offsetX, offsetY;
+        const downloadManager = document.getElementById('downloadManager');
+        downloadManager.addEventListener('mousedown', function (e) {
+            isDragging = true;
+            offsetX = e.clientX - downloadManager.offsetLeft;
+            offsetY = e.clientY - downloadManager.offsetTop;
+        });
+        document.addEventListener('mousemove', function (e) {
+            if (isDragging) {
+                downloadManager.style.left = (e.clientX - offsetX) + 'px';
+                downloadManager.style.top = (e.clientY - offsetY) + 'px';
+            }
+        });
+        document.addEventListener('mouseup', function () {
+            isDragging = false;
+        });
 
         function loadPlaylists(sortBy = 'date') {
             fetch('Playlist1.json')
@@ -162,40 +261,14 @@
                     }
 
                     displayPlaylists(playlists);
-                    currentSort = sortBy; // Update current sort state
+                    currentSort = sortBy;
                 })
                 .catch(error => console.error('Error loading playlist data:', error));
         }
 
-        function loadByArtist() {
-            fetch('Playlist1.json')
-                .then(response => response.json())
-                .then(data => {
-                    let artists = {};
-
-                    // Group songs by artist
-                    data.playlists.forEach(playlist => {
-                        playlist.items.forEach(item => {
-                            const artistName = item.artistName || (item.track ? item.track.artistName : 'Unknown Artist');
-                            if (!artists[artistName]) {
-                                artists[artistName] = [];
-                            }
-                            artists[artistName].push(item);
-                        });
-                    });
-
-                    // Convert the artist object into an array and sort by artist name
-                    const sortedArtists = Object.keys(artists).sort();
-
-                    displayArtists(sortedArtists, artists);
-                    currentSort = 'artist'; // Update current sort state
-                })
-                .catch(error => console.error('Error loading artist data:', error));
-        }
-
         function displayPlaylists(playlists) {
             const container = document.getElementById('playlistContainer');
-            container.innerHTML = ''; // Clear previous content
+            container.innerHTML = '';
 
             playlists.forEach(playlist => {
                 const header = document.createElement('div');
@@ -219,6 +292,17 @@
                     headRow.appendChild(th);
                 });
 
+                // Add 'Add All' checkbox and text in the same cell
+                const addAllTh = document.createElement('th');
+                addAllTh.innerHTML = 'Add All <input type="checkbox" id="addAllCheckbox">';
+                addAllTh.querySelector('input').addEventListener('change', function () {
+                    const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                    updateSelectedCount();
+                });
+                headRow.appendChild(addAllTh);
+
+
                 thead.appendChild(headRow);
                 table.appendChild(thead);
 
@@ -229,6 +313,17 @@
                         td.textContent = item[key] || (item.track ? item.track[key] : 'N/A');
                         tr.appendChild(td);
                     });
+
+                    // Add individual checkboxes for download
+                    const addDownloadTd = document.createElement('td');
+                    const addDownloadCheckbox = document.createElement('input');
+                    addDownloadCheckbox.type = 'checkbox';
+                    addDownloadCheckbox.addEventListener('change', function () {
+                        updateSelectedCount();
+                    });
+                    addDownloadTd.appendChild(addDownloadCheckbox);
+                    tr.appendChild(addDownloadTd);
+
                     tbody.appendChild(tr);
                 });
 
@@ -239,9 +334,33 @@
             });
         }
 
+        function loadByArtist() {
+            fetch('Playlist1.json')
+                .then(response => response.json())
+                .then(data => {
+                    let artists = {};
+
+                    data.playlists.forEach(playlist => {
+                        playlist.items.forEach(item => {
+                            const artistName = item.artistName || (item.track ? item.track.artistName : 'Unknown Artist');
+                            if (!artists[artistName]) {
+                                artists[artistName] = [];
+                            }
+                            artists[artistName].push(item);
+                        });
+                    });
+
+                    const sortedArtists = Object.keys(artists).sort();
+
+                    displayArtists(sortedArtists, artists);
+                    currentSort = 'artist'; 
+                })
+                .catch(error => console.error('Error loading artist data:', error));
+        }
+
         function displayArtists(sortedArtists, artists) {
             const container = document.getElementById('playlistContainer');
-            container.innerHTML = ''; // Clear previous content
+            container.innerHTML = ''; 
 
             sortedArtists.forEach(artist => {
                 const header = document.createElement('div');
@@ -265,6 +384,19 @@
                     headRow.appendChild(th);
                 });
 
+                // Add 'Add All' checkbox directly in the same cell
+                const addAllTh = document.createElement('th');
+                addAllTh.innerHTML = 'Add All <input type="checkbox" id="addAllCheckboxArtist">';
+                addAllTh.querySelector('input').addEventListener('change', function () {
+                    const checkboxes = tbody.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                    updateSelectedCount();
+                });
+                headRow.appendChild(addAllTh);
+
+                // Add 'Add All' checkbox to the same cell
+ 
+    
                 thead.appendChild(headRow);
                 table.appendChild(thead);
 
@@ -275,6 +407,17 @@
                         td.textContent = item[key] || (item.track ? item.track[key] : 'N/A');
                         tr.appendChild(td);
                     });
+
+                    // Add individual checkboxes for download
+                    const addDownloadTd = document.createElement('td');
+                    const addDownloadCheckbox = document.createElement('input');
+                    addDownloadCheckbox.type = 'checkbox';
+                    addDownloadCheckbox.addEventListener('change', function () {
+                        updateSelectedCount();
+                    });
+                    addDownloadTd.appendChild(addDownloadCheckbox);
+                    tr.appendChild(addDownloadTd);
+
                     tbody.appendChild(tr);
                 });
 
@@ -285,21 +428,35 @@
             });
         }
 
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('#playlistContainer input[type="checkbox"]:checked');
+            selectedCount = checkboxes.length;
+            document.getElementById('selectedCount').textContent = selectedCount;
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Function to switch between Song/Album in the Download Manager
+        function selectMode(mode) {
+            selectedMode = mode;
+
+            const songButton = document.getElementById('songButton');
+            const albumButton = document.getElementById('albumButton');
+
+            if (mode === 'song') {
+                songButton.classList.add('selected');
+                albumButton.classList.remove('selected');
+            } else {
+                albumButton.classList.add('selected');
+                songButton.classList.remove('selected');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
-            loadPlaylists(); // Initial load sorted by date
-
-            const marquee = document.getElementById('userMessages');
-            // Duplicate the content to allow seamless looping
-            marquee.innerHTML = marquee.innerHTML + ' | ' + marquee.innerHTML;
-
-            const contentLength = marquee.scrollWidth; // Get the total width of the content
-            const randomStart = Math.floor(Math.random() * contentLength); // Pick a random start point
-            marquee.scrollLeft = randomStart; // Set the scroll position to the random point
+            loadPlaylists(); 
         });
-
-
-        // Add click event for Sort by Artist button
-        document.querySelector('.sort-by-artist').addEventListener('click', loadByArtist);
     </script>
 
 </body>
