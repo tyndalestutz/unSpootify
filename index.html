@@ -43,7 +43,7 @@
             color: #00FF00;
             margin-bottom: 20px;
         }
-        .sort-by-date, .sort-by-title {
+        .sort-by-date, .sort-by-title, .sort-by-artist {
             background-color: #00AA00;
             color: #000000;
             padding: 10px 20px;
@@ -126,17 +126,18 @@
             \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
                                 \|_________|                                                 \|___|/      
     </h1>
-
+<!--
     <marquee behavior="scroll" direction="left" scrollamount="4" id="userMessages">
         Just uploaded my playlist, worked great | Can't believe I found that track here | This is a solid way to manage everything | The download speeds are decent so far | Anyone else using this to back up their playlists? | The peer-to-peer search is working well today | I finally organized all my music with this | Had some trouble uploading but it’s sorted now | Just downloaded some rare stuff from the network | The search function actually found the track I needed | This is making everything easier | Does anyone know if I can batch download? | I’m using this to organize my old mixtapes | Playlist editing is smoother than I expected | Uploading worked but took a little longer than I thought | Just found a rare remix through search | I didn’t expect to find this track so easily | Upload process was fast this time | Backing up my playlists, this is actually useful | Finally sharing my old playlist files | I love being able to download from here | Found an old mixtape I thought was gone | This search tool is surprisingly good | Took a while but I found the track I was looking for | Now I can organize everything in one place | Downloaded a few tracks, worked well | Never thought I’d get that file back | I’m surprised by how easy this was to use | Found a track from 2001, still sounds perfect | I’m starting to get the hang of this | Editing playlists has never been this easy | Took me a bit to figure it out but I’m here | Not bad for organizing everything in one place | Backup your stuff, you’ll thank me later | This peer-to-peer search is solid | Sharing music is easier than ever | I’ve finally got all my tracks in one spot | Wish I found this earlier | This made cleaning up my library so much easier | I just found my favorite song again | Didn’t expect it to work so well | If you’re organizing your music, use this | Download speeds are faster today | Finally got everything uploaded | Is anyone else backing up their old playlists? | I use this to check my tracks before sharing | Can’t believe I’ve been doing this manually all this time | Getting the hang of using this for sharing | Organizing playlists is way smoother now | So far so good with the downloads | Didn’t know I could back up all my music here | Working on setting up my old tracks for sharing | Uploads are much faster than I thought | Good find for managing your own playlists | Getting all my music from the 90s organized | Does anyone know if it’s possible to share directly? | Used this to clean up my music library, worth it
     </marquee>
     <h3>
 
     </h3>
-
+-->
     <div class="container">
         <button class="sort-by-date" onclick="loadPlaylists('date')">Sort by Last Modified</button>
         <button class="sort-by-title" onclick="loadPlaylists('title')">Sort by Title</button>
+        <button class="sort-by-artist">Sort by Artist</button>
 
         <div id="playlistContainer" class="ascii-container"></div>
     </div>
@@ -146,6 +147,8 @@
     </div>
 
     <script>
+        let currentSort = 'date'; // Track current sorting method
+
         function loadPlaylists(sortBy = 'date') {
             fetch('Playlist1.json')
                 .then(response => response.json())
@@ -159,15 +162,42 @@
                     }
 
                     displayPlaylists(playlists);
+                    currentSort = sortBy; // Update current sort state
                 })
                 .catch(error => console.error('Error loading playlist data:', error));
+        }
+
+        function loadByArtist() {
+            fetch('Playlist1.json')
+                .then(response => response.json())
+                .then(data => {
+                    let artists = {};
+
+                    // Group songs by artist
+                    data.playlists.forEach(playlist => {
+                        playlist.items.forEach(item => {
+                            const artistName = item.artistName || (item.track ? item.track.artistName : 'Unknown Artist');
+                            if (!artists[artistName]) {
+                                artists[artistName] = [];
+                            }
+                            artists[artistName].push(item);
+                        });
+                    });
+
+                    // Convert the artist object into an array and sort by artist name
+                    const sortedArtists = Object.keys(artists).sort();
+
+                    displayArtists(sortedArtists, artists);
+                    currentSort = 'artist'; // Update current sort state
+                })
+                .catch(error => console.error('Error loading artist data:', error));
         }
 
         function displayPlaylists(playlists) {
             const container = document.getElementById('playlistContainer');
             container.innerHTML = ''; // Clear previous content
 
-            playlists.forEach((playlist, index) => {
+            playlists.forEach(playlist => {
                 const header = document.createElement('div');
                 header.className = 'playlist-header';
                 header.textContent = playlist.name + ' (Last Modified: ' + playlist.lastModifiedDate + ')';
@@ -209,14 +239,67 @@
             });
         }
 
+        function displayArtists(sortedArtists, artists) {
+            const container = document.getElementById('playlistContainer');
+            container.innerHTML = ''; // Clear previous content
+
+            sortedArtists.forEach(artist => {
+                const header = document.createElement('div');
+                header.className = 'playlist-header';
+                header.textContent = artist;
+                header.addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                });
+
+                const artistContainer = document.createElement('div');
+                artistContainer.className = 'playlist-container';
+
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headRow = document.createElement('tr');
+                ['Track Name', 'Album', 'Added Date'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headRow.appendChild(th);
+                });
+
+                thead.appendChild(headRow);
+                table.appendChild(thead);
+
+                artists[artist].forEach(item => {
+                    const tr = document.createElement('tr');
+                    ['trackName', 'albumName', 'addedDate'].forEach(key => {
+                        const td = document.createElement('td');
+                        td.textContent = item[key] || (item.track ? item.track[key] : 'N/A');
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                artistContainer.appendChild(table);
+                container.appendChild(header);
+                container.appendChild(artistContainer);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
-            loadPlaylists(); // Initial load (sorted by date)
+            loadPlaylists(); // Initial load sorted by date
 
             const marquee = document.getElementById('userMessages');
+            // Duplicate the content to allow seamless looping
+            marquee.innerHTML = marquee.innerHTML + ' | ' + marquee.innerHTML;
+
             const contentLength = marquee.scrollWidth; // Get the total width of the content
             const randomStart = Math.floor(Math.random() * contentLength); // Pick a random start point
             marquee.scrollLeft = randomStart; // Set the scroll position to the random point
         });
+
+
+        // Add click event for Sort by Artist button
+        document.querySelector('.sort-by-artist').addEventListener('click', loadByArtist);
     </script>
 
 </body>
