@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spootify Playlist Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+    <button class="theme-switcher" onclick="toggleTheme()">Switch to Light Theme</button>
+    <select class="sort-selector" onchange="loadPlaylists(this.value)">
+        <option value="title">Sort by Title</option>
+        <option value="date">Sort by Last Modified</option>
+    </select>
+    <h1>Spotify Playlists</h1>
+    <div id="playlistContainer"></div>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const themeSwitcher = document.querySelector('.theme-switcher');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                themeSwitcher.textContent = 'Switch to Dark Theme';
+                document.documentElement.style.setProperty('--background-color', '#fff');
+                document.documentElement.style.setProperty('--text-color', '#000');
+                document.documentElement.style.setProperty('--border-color', '#ddd');
+                document.documentElement.style.setProperty('--header-bg-color', '#04AA6D');
+                document.documentElement.style.setProperty('--even-row-color', '#f2f2f2');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeSwitcher.textContent = 'Switch to Light Theme';
+                document.documentElement.style.setProperty('--background-color', '#333');
+                document.documentElement.style.setProperty('--text-color', '#fff');
+                document.documentElement.style.setProperty('--border-color', '#666');
+                document.documentElement.style.setProperty('--header-bg-color', '#007556');
+                document.documentElement.style.setProperty('--even-row-color', '#454545');
+            }
+        }
+
+        function loadPlaylists(sortBy = 'title') {
+            fetch('Playlist1.json')
+                .then(response => response.json())
+                .then(data => {
+                    let playlists = data.playlists;
+                    if (sortBy === 'title') {
+                        playlists.sort((a, b) => a.name.localeCompare(b.name));
+                    } else if (sortBy === 'date') {
+                        playlists.sort((a, b) => new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate));
+                    }
+                    displayPlaylists(playlists);
+                })
+                .catch(error => console.error('Error loading playlist data:', error));
+        }
+
+        function displayPlaylists(playlists) {
+            const container = document.getElementById('playlistContainer');
+            container.innerHTML = ''; // Clear previous content
+            playlists.forEach((playlist, index) => {
+                const header = document.createElement('div');
+                header.className = 'playlist-header';
+                header.textContent = playlist.name + ' (Last Modified: ' + playlist.lastModifiedDate + ')';
+                header.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+                });
+
+                const playlistContainer = document.createElement('div');
+                playlistContainer.className = 'playlist-container';
+
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headRow = document.createElement('tr');
+                ['Track Name', 'Artist', 'Album', 'Added Date'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headRow.appendChild(th);
+                });
+
+                thead.appendChild(headRow);
+                table.appendChild(thead);
+
+                playlist.items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    ['trackName', 'artistName', 'albumName', 'addedDate'].forEach(key => {
+                        const td = document.createElement('td');
+                        td.textContent = item[key] || (item.track ? item.track[key] : 'N/A');
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(tbody);
+                playlistContainer.appendChild(table);
+                container.appendChild(header);
+                container.appendChild(playlistContainer);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => loadPlaylists()); // Initial load
+    </script>
+</body>
+</html>

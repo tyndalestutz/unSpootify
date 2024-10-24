@@ -1,0 +1,60 @@
+:root {
+    --background-color: #333; /* Dark Theme */
+    --text-color: #fff;
+    --link-color: #bbf;
+    --border-color: #666;
+    --header-bg-color: #007556;
+    --header-bg-color-expanded: #005744;
+    --even-row-color: #454545;
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+.theme-switcher, .sort-selector {
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    background-color: var(--header-bg-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.sort-selector {
+    background-color: transparent;
+    cursor: pointer;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+.playlist-header {
+    margin-top: 20px;
+    cursor: pointer;
+    background-color: var(--header-bg-color);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    user-select: none;
+}
+.playlist-container {
+    border: 1px solid var(--border-color);
+    margin-top: 5px;
+    display: none; /* Initially hide playlists */
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    text-align: left;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+}
+th {
+    background-color: var(--header-bg-color);
+}
+tr:nth-child(even) {
+    background-color: var(--even-row-color);
+}
