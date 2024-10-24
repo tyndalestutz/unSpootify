@@ -4,25 +4,24 @@
 ![UnSpootify](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
 
-
 ## Overview
 
 **unSpootify** is a tool designed to help users effectively convert their Spotify library into a local MP3 archive. Basically, if you're addicted to Spotify but crave total control of your music listenning experience, this repository is your first step. 
 
 ## Usage
 
-To get started with **unSpootify**, run the following code on your UNIX or OSX system:
+To get started with **unSpootify**, follow the instructions below for UNIX and OSX systems:
 
-1. **Clone the repository:**
+1. **Acquire Spotify User Data**
+   First, you'll need to request your Spotify Library data. Sometimes this can take over a week so the sooner the better. More information on how to get your data can be found [here](https://www.spotify.com/us/account/privacy/).
+2. **Clone the repository:**
+   Once you've acquired your data, go ahead and get this repository set up. Simply copy the following lines into your terminal of choice:
    ```
    git clone git@github.com:tyndalestutz/unSpootify.git
    cd unSpootify
    ```
-2. **Acquire Spotify User Data**
 3. **Plug-In Playlist-data.json**
-   ```
-   fancy code goes here
-   ```
+   Now you'll need to copy your Spotify data over to this repository on your local machine. From the downloaded data folder, locate Playlist1.json and move it to this directory. 
 4. **Begin Conversion**
    This might take a little bit of work since some of the tools here rely on SoulSeek which requires a little bit of human intervention. 
 5. **Go Buy an iPod**
@@ -32,11 +31,13 @@ To get started with **unSpootify**, run the following code on your UNIX or OSX s
 
 ## Contributions
 
-If you want to add or change anything, feel free to help out.
+This project will be a work in progress for awhile. If you have recommendations or would like to help improve anything, you're help is more than welcome!
 
 Just follow these steps:
 
-1. **Fork the repository**: Click the "Fork" button at the top-right corner of this page.
-2. **Clone your forked repository**: 
-   ```bash
-   git clone https://github.com/your-username/unSpootify.git
+1. Fork the repository to your own GitHub account.
+2. `git clone` your forked repository.
+3. `git checkout -b <my-branch-name>` to create a branch, replacing with your actual branch name.
+4. Add your features or bug fixes.
+5. `git push origin <my-branch-name>` to push your branch to your forked repository.
+6. Head back to the upstream `tyndalestutz/bh_vis` repository and submit a pull request using your branch from your forked repository.
