@@ -12,22 +12,21 @@
             font-family: 'Courier New', monospace;
             margin: 0;
             padding: 0;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Ensures content stays centered vertically */
+            text-align: center; /* Centering all content */
             cursor: url('pixelated-cursor.png'), auto;
         }
         h1 {
             white-space: pre;
             color: #00FF00;
+            text-align: center;
             font-size: 1.2em;
             margin: 20px 0;
         }
         .container {
-            width: 60%; /* Centers the content with a fixed width */
+            margin: 20px auto;
+            width: 60%; /* Set a width to center the content properly */
+            font-family: 'Courier New', monospace;
+            color: #00FF00;
             text-align: center;
         }
         .ascii-container {
@@ -107,11 +106,6 @@
             text-align: center;
             color: #00FF00;
         }
-        marquee {
-            display: block;
-            width: 100%; /* Ensure it stretches across the page */
-            white-space: nowrap;
-        }
     </style>
 </head>
 <body>
@@ -125,16 +119,15 @@
            \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
             \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
                                 \|_________|                                                 \|___|/      
+                                                                                                          
+           
     </h1>
-
-    <marquee behavior="scroll" direction="left" scrollamount="4" id="userMessages">
+    <marquee behavior="scroll" direction="left" scrollamount="4">
         Just uploaded my playlist, worked great | Can't believe I found that track here | This is a solid way to manage everything | The download speeds are decent so far | Anyone else using this to back up their playlists? | The peer-to-peer search is working well today | I finally organized all my music with this | Had some trouble uploading but it’s sorted now | Just downloaded some rare stuff from the network | The search function actually found the track I needed | This is making everything easier | Does anyone know if I can batch download? | I’m using this to organize my old mixtapes | Playlist editing is smoother than I expected | Uploading worked but took a little longer than I thought | Just found a rare remix through search | I didn’t expect to find this track so easily | Upload process was fast this time | Backing up my playlists, this is actually useful | Finally sharing my old playlist files | I love being able to download from here | Found an old mixtape I thought was gone | This search tool is surprisingly good | Took a while but I found the track I was looking for | Now I can organize everything in one place | Downloaded a few tracks, worked well | Never thought I’d get that file back | I’m surprised by how easy this was to use | Found a track from 2001, still sounds perfect | I’m starting to get the hang of this | Editing playlists has never been this easy | Took me a bit to figure it out but I’m here | Not bad for organizing everything in one place | Backup your stuff, you’ll thank me later | This peer-to-peer search is solid | Sharing music is easier than ever | I’ve finally got all my tracks in one spot | Wish I found this earlier | This made cleaning up my library so much easier | I just found my favorite song again | Didn’t expect it to work so well | If you’re organizing your music, use this | Download speeds are faster today | Finally got everything uploaded | Is anyone else backing up their old playlists? | I use this to check my tracks before sharing | Can’t believe I’ve been doing this manually all this time | Getting the hang of using this for sharing | Organizing playlists is way smoother now | So far so good with the downloads | Didn’t know I could back up all my music here | Working on setting up my old tracks for sharing | Uploads are much faster than I thought | Good find for managing your own playlists | Getting all my music from the 90s organized | Does anyone know if it’s possible to share directly? | Used this to clean up my music library, worth it
     </marquee>
-    <h3>
-
-    </h3>
-
+    
     <div class="container">
+
         <button class="sort-by-date" onclick="loadPlaylists('date')">Sort by Last Modified</button>
         <button class="sort-by-title" onclick="loadPlaylists('title')">Sort by Title</button>
 
@@ -209,14 +202,7 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            loadPlaylists(); // Initial load (sorted by date)
-
-            const marquee = document.getElementById('userMessages');
-            const contentLength = marquee.scrollWidth; // Get the total width of the content
-            const randomStart = Math.floor(Math.random() * contentLength); // Pick a random start point
-            marquee.scrollLeft = randomStart; // Set the scroll position to the random point
-        });
+        document.addEventListener('DOMContentLoaded', () => loadPlaylists()); // Initial load (sorted by date)
     </script>
 
 </body>
