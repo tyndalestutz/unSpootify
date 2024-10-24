@@ -9,19 +9,22 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh; /* Ensures content stays centered vertically */
+    min-height: 100vh;
     cursor: url('pixelated-cursor.png'), auto;
 }
+
 h1 {
     white-space: pre;
     color: #00FF00;
     font-size: 1.2em;
     margin: 20px 0;
 }
+
 .container {
-    width: 60%; /* Centers the content with a fixed width */
+    width: 60%;
     text-align: center;
 }
+
 .ascii-container {
     border: none;
     display: inline-block;
@@ -30,12 +33,8 @@ h1 {
     color: #00FF00;
     font-size: 1.2em;
 }
-.ascii-box {
-    white-space: pre;
-    color: #00FF00;
-    margin-bottom: 20px;
-}
-.sort-by-date, .sort-by-title {
+
+.sort-by-date, .sort-by-title, .sort-by-artist {
     background-color: #00AA00;
     color: #000000;
     padding: 10px 20px;
@@ -47,15 +46,18 @@ h1 {
     font-weight: bold;
     box-shadow: 3px 3px 5px #005500;
 }
+
 button:hover {
     background-color: #00FF00;
     box-shadow: 5px 5px 8px #009900;
     color: #000000;
 }
+
 #playlistContainer {
     text-align: left;
     margin-top: 20px;
 }
+
 .playlist-header {
     background-color: #003300;
     color: #00FF00;
@@ -66,32 +68,39 @@ button:hover {
     margin-bottom: 5px;
     text-shadow: 1px 1px 3px #000000;
 }
+
 .playlist-container {
     display: none;
     margin-top: 5px;
     padding: 10px;
     background-color: #001100;
 }
+
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
     color: #00FF00;
 }
+
 th, td {
     padding: 8px;
     border: 1px solid #00FF00;
 }
+
 th {
     background-color: #003300;
     color: #00FF00;
 }
+
 tr:nth-child(even) {
     background-color: #002200;
 }
+
 tr:hover {
     background-color: #003300;
 }
+
 .footer {
     margin-top: 40px;
     font-size: 12px;
@@ -99,8 +108,90 @@ tr:hover {
     text-align: center;
     color: #00FF00;
 }
-marquee {
+
+/* Download manager */
+.download-manager {
+    position: fixed;
+    top: 50px;
+    right: 20px;
+    width: 250px;
+    background-color: #003300;
+    color: #00FF00;
+    border: 2px solid #00FF00;
+    padding: 15px;
+    box-shadow: 3px 3px 5px #005500;
+    z-index: 1000;
+    cursor: move;
+}
+
+.download-manager h3 {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    background-color: #005500;
+    border: 1px solid #00FF00;
+    margin-top: 10px;
+}
+
+.progress {
+    width: 0;
+    height: 20px;
+    background-color: #00FF00;
+}
+
+.stats {
+    margin-top: 10px;
+}
+
+.stats p {
+    margin: 5px 0;
+}
+
+.divider {
+    border-bottom: 1px solid #00FF00;
+    margin: 10px 0;
+}
+
+.back-to-top {
     display: block;
-    width: 100%; /* Ensure it stretches across the page */
-    white-space: nowrap;
+    padding: 10px;
+    background-color: #00AA00;
+    color: #000;
+    border: none;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.back-to-top:hover {
+    background-color: #00FF00;
+    color: #000000;
+    box-shadow: 5px 5px 8px #009900;
+}
+
+.toggle-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.toggle-button {
+    width: 50%;
+    padding: 10px;
+    cursor: pointer;
+    border: none;
+    background-color: #00AA00;
+    font-weight: bold;
+    color: #000000;
+}
+
+.toggle-button.selected {
+    background-color: #003300;
+    color: #00FF00;
 }
