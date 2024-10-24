@@ -1,0 +1,6 @@
+# Ignore all JSON files
+*.json
+
+# Other ignores
+node_modules/
+.DS_Store

@@ -13,7 +13,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
 }
-.theme-switcher, .sort-selector {
+.theme-switcher, .sort-by-date, .sort-by-title {
     padding: 10px 20px;
     margin-bottom: 20px;
     cursor: pointer;
@@ -22,12 +22,6 @@ body {
     border: none;
     border-radius: 5px;
     font-size: 16px;
-}
-.sort-selector {
-    background-color: transparent;
-    cursor: pointer;
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
 }
 .playlist-header {
     margin-top: 20px;

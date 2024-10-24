@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spootify Playlist Viewer</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Spotify Playlist Viewer</title>
+    <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body data-theme="dark">
 
     <button class="theme-switcher" onclick="toggleTheme()">Switch to Light Theme</button>
-    <select class="sort-selector" onchange="loadPlaylists(this.value)">
-        <option value="title">Sort by Title</option>
-        <option value="date">Sort by Last Modified</option>
-    </select>
-    <h1>Spotify Playlists</h1>
+    <button class="sort-by-date" onclick="loadPlaylists('date')">Sort by Last Modified</button>
+    <button class="sort-by-title" onclick="loadPlaylists('title')">Sort by Title</button>
+    
+    <h1>Spootify Playlists</h1>
     <div id="playlistContainer"></div>
 
     <script>
@@ -39,16 +38,18 @@
             }
         }
 
-        function loadPlaylists(sortBy = 'title') {
+        function loadPlaylists(sortBy = 'date') {
             fetch('Playlist1.json')
                 .then(response => response.json())
                 .then(data => {
                     let playlists = data.playlists;
+
                     if (sortBy === 'title') {
                         playlists.sort((a, b) => a.name.localeCompare(b.name));
                     } else if (sortBy === 'date') {
                         playlists.sort((a, b) => new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate));
                     }
+
                     displayPlaylists(playlists);
                 })
                 .catch(error => console.error('Error loading playlist data:', error));
@@ -57,11 +58,12 @@
         function displayPlaylists(playlists) {
             const container = document.getElementById('playlistContainer');
             container.innerHTML = ''; // Clear previous content
+
             playlists.forEach((playlist, index) => {
                 const header = document.createElement('div');
                 header.className = 'playlist-header';
                 header.textContent = playlist.name + ' (Last Modified: ' + playlist.lastModifiedDate + ')';
-                header.addEventListener('click', function() {
+                header.addEventListener('click', function () {
                     const content = this.nextElementSibling;
                     content.style.display = content.style.display === 'block' ? 'none' : 'block';
                 });
@@ -99,7 +101,8 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => loadPlaylists()); // Initial load
+        document.addEventListener('DOMContentLoaded', () => loadPlaylists()); // Initial load (sorted by date)
+
     </script>
 </body>
 </html>
