@@ -1,20 +1,15 @@
 # unSpootify
 
+![screenshot](/assets/images/screenshot.png)
 ![UnSpootify](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
----
+
 
 ## Overview
 
 **unSpootify** is a tool designed to help users effectively convert their Spotify library into a local MP3 archive. Basically, if you're addicted to Spotify but crave total control of your music listenning experience, this repository is your first step. 
 
----
-
-## Features
-
----
-
-## 📦 Installation
+## Usage
 
 To get started with **unSpootify**, run the following code on your UNIX or OSX system:
 
@@ -35,7 +30,7 @@ To get started with **unSpootify**, run the following code on your UNIX or OSX s
 6. **Don't Sue Me**
    Not totally sure why you would sue me but if you're thinking about it, stop. 
 
-## 🤝 Contributions
+## Contributions
 
 If you want to add or change anything, feel free to help out.
 
