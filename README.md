@@ -1,12 +1,17 @@
-# unSpootify
+![titleASCII](/assets/images/unSpootify.png)
 
-![screenshot](/assets/images/screenshot.png)
+
+
 ![UnSpootify](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-active-brightgreen)
-
 
 ## Overview
 
-**unSpootify** is a tool designed to help users effectively convert their Spotify library into a local MP3 archive. Basically, if you're addicted to Spotify but crave total control of your music listenning experience, this repository is your first step. 
+**unSpootify** is a web based GUI built on [slsk-batchdl](https://github.com/fiso64/slsk-batchdl) to help users effectively convert their Spotify library into a local MP3 archive. Basically, if you're addicted to Spotify but crave total control of your music listenning experience, this repository is your first step. 
+
+**unSpootify** features an interactive table of most of sldl's parameters which can be selected to effortlessly formulate an sldl command. Thanks to [slsk-batchdl's](https://github.com/fiso64/slsk-batchdl) wide range of input data, this allows for user friendly downloading of Spotify playlists and a tool in development for converting Spotify user data. 
+
+![unSpootify](/assets/images/screenshot.png)
+
 
 ## Usage
 
@@ -41,3 +46,4 @@ Just follow these steps:
 4. Add your features or bug fixes.
 5. `git push origin <my-branch-name>` to push your branch to your forked repository.
 6. Head back to the upstream `tyndalestutz/bh_vis` repository and submit a pull request using your branch from your forked repository.
+---
