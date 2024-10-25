@@ -6,10 +6,21 @@ const playlistURLField = document.getElementById('playlistURL');
 const basicOptionsTable = document.getElementById('basicOptionsTable');
 const advancedOptionsTable = document.getElementById('advancedOptionsTable');
 const mockTerminal = document.getElementById('mockTerminal');
+const downloadButton = document.getElementById('downloadButton');
 
 // Command-related variables
 let baseCommand = "audiophile@unSpootify:~/sldl$ ./sldl";
 let options = {};
+let isRunning = false; // Track if a command is running
+
+// Initialize WebSocket connection
+const socket = new WebSocket('ws://localhost:3000');
+
+// Listen for messages (output from the command)
+socket.addEventListener('message', (event) => {
+    mockTerminal.textContent += '\n' + event.data;
+    scrollToBottom();
+});
 
 // Blinking cursor effect
 function addBlinkingCursor() {
@@ -137,32 +148,32 @@ function scrollToBottom() {
     mockTerminal.scrollTop = mockTerminal.scrollHeight;
 }
 
-// Event listener for the Download button to send the command without the mock prompt
-document.getElementById('downloadButton').addEventListener('click', () => {
-    const username = usernameField.value ? `--user ${usernameField.value}` : '';
-    const password = passwordField.value ? `--pass ${passwordField.value}` : '';
-    const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
-    const playlistURL = playlistURLField.value ? `${playlistURLField.value}` : '';
+// Event listener for the Download button
+downloadButton.addEventListener('click', () => {
+    if (!isRunning) {
+        // Start command if not already running
+        const username = usernameField.value ? `--user ${usernameField.value}` : '';
+        const password = passwordField.value ? `--pass ${passwordField.value}` : '';
+        const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
+        const playlistURL = playlistURLField.value ? `${playlistURLField.value}` : '';
 
-    const commandOptions = `${username} ${password} ${folderPath} ${playlistURL} ${Object.values(options).join(' ')}`;
+        const commandOptions = `${username} ${password} ${folderPath} ${playlistURL} ${Object.values(options).join(' ')}`;
 
-    fetch('/execute-command', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ command: commandOptions }), // Send clean commandOptions
-    })
-    .then(response => response.text())
-    .then(output => {
-        // Display the output in the mock terminal
-        mockTerminal.textContent += '\n' + output;
-        scrollToBottom();
-    })
-    .catch(error => {
-        mockTerminal.textContent += `\nError: ${error}`;
-        scrollToBottom();
-    });
+        // Send the command to the WebSocket server
+        socket.send(JSON.stringify({ command: commandOptions, action: 'start' }));
+        isRunning = true;
+
+        // Change button text to Reset
+        downloadButton.textContent = "Reset";
+    } else {
+        // If running, reset the current process
+        socket.send(JSON.stringify({ action: 'reset' }));
+        isRunning = false;
+
+        // Reset UI elements
+        downloadButton.textContent = "Download";
+        mockTerminal.textContent = '';
+    }
 });
 
 // Toggle advanced options visibility

@@ -1,42 +1,56 @@
 const express = require('express');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
+const WebSocket = require('ws');
+
 const app = express();
 const port = 3000;
+const publicDirectory = path.join(__dirname, 'public');
+const sldlDirectory = path.join(__dirname, '../slsk-batchdl/slsk-batchdl/bin/Release/net6.0/linux-x64/publish');
 
-// Define paths
-const publicDirectory = path.join(__dirname, 'public'); // Updated to reference public in the same directory
-const sldlDirectory = path.join(__dirname, '../slsk-batchdl/slsk-batchdl/bin/Release/net6.0/linux-x64/publish'); // Directory for sldl
-
-// Serve static files from the public directory
 app.use(express.static(publicDirectory));
 app.use(express.json());
 app.use(cors());
 
-// POST route for executing the command
-app.post('/execute-command', (req, res) => {
-    const { command } = req.body;
+const server = http.createServer(app);
 
-    // Prepend './sldl' to the command to execute it correctly
-    const cleanCommand = `./sldl ${command.trim()}`;
+// Create a WebSocket server for real-time output
+const wss = new WebSocket.Server({ server });
 
-    // Run the command in the specified working directory
-    exec(cleanCommand, { cwd: sldlDirectory }, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`);
-            return res.status(500).send(`Error: ${error.message}`);
+let currentProcess = null;
+
+wss.on('connection', (ws) => {
+    ws.on('message', (message) => {
+        const { command, action } = JSON.parse(message);
+
+        if (action === 'start') {
+            // Run the command using spawn for real-time output
+            currentProcess = spawn('./sldl', command.split(' '), { cwd: sldlDirectory });
+
+            currentProcess.stdout.on('data', (data) => {
+                ws.send(data.toString());
+            });
+
+            currentProcess.stderr.on('data', (data) => {
+                ws.send(data.toString());
+            });
+
+            currentProcess.on('close', (code) => {
+                ws.send(`Process exited with code ${code}`);
+                currentProcess = null;
+            });
+        } else if (action === 'reset' && currentProcess) {
+            // If reset is triggered, kill the running process
+            currentProcess.kill();
+            ws.send('Process terminated');
+            currentProcess = null;
         }
-        if (stderr) {
-            console.error(`Stderr: ${stderr}`);
-            return res.status(500).send(`Stderr: ${stderr}`);
-        }
-        console.log(`Stdout: ${stdout}`);
-        res.send(`Output: ${stdout}`);
     });
 });
 
 // Start the server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
