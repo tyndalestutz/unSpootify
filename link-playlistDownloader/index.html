@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>unSpootify Download Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1 class="header-title">
+        ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___ 
+        |\  \|\  \|\   ___  \|\   ____\|\   __  \|\   __  \|\   __  \|\___   ___\\  \|\  _____\\  \  /  /|
+        \ \  \\\  \ \  \\ \  \ \  \___|\ \  \|\  \ \  \|\  \ \  \|\  \|___ \  \_\ \  \ \  \__/\ \  \/  / /
+         \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / / 
+          \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /  
+           \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
+            \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
+                                \|_________|                                                 \|___|/      
+    </h1>
+
+    <div class="grid-container">
+        <div class="grid-item input-group">
+            <label for="username">Soulseek Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username">
+        </div>
+
+        <div class="grid-item input-group">
+            <label for="password">Soulseek Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password">
+        </div>
+
+        <div class="grid-item input-group">
+            <label for="downloadFolder">Download Folder:</label>
+            <input type="text" id="folderPath" name="folderPath" readonly placeholder="Choose a folder">
+            <button id="chooseFolderButton" class="custom-file-upload">Choose Folder</button>
+        </div>
+
+        <div class="grid-item input-group">
+            <label for="playlistURL">Spotify Playlist URL:</label>
+            <input type="text" id="playlistURL" name="playlistURL" placeholder="Paste Spotify playlist URL here">
+        </div>
+
+        <div class="grid-item submit-group">
+            <button type="submit" class="submit-button">Download Playlist</button>
+        </div>
+
+        <!-- Mock Terminal Section -->
+        <div class="grid-item mock-terminal">
+            <pre id="mockTerminal" class="terminal-output">audiophile@unSpootify:~/sldl$ ./sldl</pre>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2000 - 2005 unSpootify Playlist Viewer. All Rights Reserved.
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
