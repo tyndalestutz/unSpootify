@@ -1,49 +1,143 @@
 ![titleASCII](/assets/images/unSpootify.png)
 
-
-
 ![UnSpootify](https://img.shields.io/badge/Version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-active-brightgreen)
+
+---
 
 ## Overview
 
-**unSpootify** is a web based GUI built on [slsk-batchdl](https://github.com/fiso64/slsk-batchdl) to help users effectively convert their Spotify library into a local MP3 archive. Basically, if you're addicted to Spotify but crave total control of your music listenning experience, this repository is your first step. 
-
-**unSpootify** features an interactive table of most of sldl's parameters which can be selected to effortlessly formulate an sldl command. Thanks to [slsk-batchdl's](https://github.com/fiso64/slsk-batchdl) wide range of input data, this allows for user friendly downloading of Spotify playlists and a tool in development for converting Spotify user data. 
+**UnSpootify** is a web-based interface for [slsk-batchdl](https://github.com/fiso64/slsk-batchdl), created for those who want complete control of their music collection but aren't experienced with bash. This GUI is designed to help users convert Spotify libraries into personal MP3 archives quickly and efficiently. If you're tied to Spotify but long for the freedom of your own collection of downloaded music, **UnSpootify** is your first step.
 
 ![unSpootify](/assets/images/screenshot.png)
 
 
-## Usage
+## Installation and Usage
 
-To get started with **unSpootify**, follow the instructions below for UNIX and OSX systems:
+**System Requirements:**  
+- **Operating System:** UNIX-based (Linux/macOS)
+- **Dependencies:** [SoulSeek](https://www.slsknet.org/), [slsk-batchdl](https://github.com/fiso64/slsk-batchdl)
 
-1. **Acquire Spotify User Data**
-   First, you'll need to request your Spotify Library data. Sometimes this can take over a week so the sooner the better. More information on how to get your data can be found [here](https://www.spotify.com/us/account/privacy/).
-2. **Clone the repository:**
-   Once you've acquired your data, go ahead and get this repository set up. Simply copy the following lines into your terminal of choice:
+***NOTE: These tools have not been tested on Windows***
+### Step 1: Acquire Spotify User Data
+Request your Spotify Library data. (Note: It may take over a week, so request it early!) Follow the [Spotify data request guide](https://www.spotify.com/us/account/privacy/).
+
+while it is more efficient to have your Spotify data locally, you can also skip ahead and simply find the link to a public playlist you'd like to download (if you plan to download albums from each song, choose a playlist that's less than 30 songs as downloading will take a while). 
+
+To keep track of the playlists you're downloading, it is recommended to save the links to each playlist in a `.txt` file in this repository for future reference.
+
+### Step 2: Clone Repositories and Set Up Requirements
+
+1. **Clone `unSpootify` and `slsk-batchdl` Repositories**  
+   First, clone both this repository and the `slsk-batchdl` repository, which is required for playlist downloading.
    ```
-   git clone git@github.com:tyndalestutz/unSpootify.git
-   cd unSpootify
+   git clone https://github.com/tyndalestutz/unSpootify  
+   cd unSpootify  
+   git clone https://github.com/fiso64/slsk-batchdl
    ```
-3. **Plug-In Playlist-data.json**
-   Now you'll need to copy your Spotify data over to this repository on your local machine. From the downloaded data folder, locate Playlist1.json and move it to this directory. 
-4. **Begin Conversion**
-   This might take a little bit of work since some of the tools here rely on SoulSeek which requires a little bit of human intervention. 
-5. **Go Buy an iPod**
-   With all your music now downloaded, you can grab an iPod and live the 2000's Audiophile dream. Also check out [iFlash](https://www.iflash.xyz/) if you're a fan of iPods but need more space. 
-6. **Don't Sue Me**
-   Not totally sure why you would sue me but if you're thinking about it, stop. 
+2. **Install .NET SDK**  
+   `slsk-batchdl` requires the .NET SDK for publishing.
+
+   - **For Unix-based Systems (Linux)**:  
+     Run the following command:  
+   ``` 
+     sudo apt update  
+     sudo apt install -y dotnet-sdk-6.0
+   ```
+   - **For macOS**:  
+     Make sure Homebrew is installed, then run:  
+   ```
+     brew install --cask dotnet-sdk  
+   ```
+3. **Publish `slsk-batchdl` for Your Platform**  
+   Navigate to the `slsk-batchdl` directory and publish the app using the provided script:
+   ```
+   cd slsk-batchdl
+   ```
+   - **For Unix (Linux)**:  
+   ```
+     bash publish.sh -r linux-x64
+   ```
+   - **For macOS (Apple Silicon)**:  
+   ```
+     bash publish.sh -r osx-arm64
+   ```
+   - **For macOS (Intel)**:  
+   ```  
+     bash publish.sh -r osx-x64
+   ```
+4. **Update Path in `server.js` (macOS Users Only)**  
+   If you are using macOS, update the `sldlDirectory` path in `server.js`:  
+
+   - Replace: 
+   ``` 
+     const sldlDirectory = path.join(__dirname, '../slsk-batchdl/slsk-batchdl/bin/Release/net6.0/linux-x64/publish');
+   ```
+   - With:  
+   ```
+     const sldlDirectory = path.join(__dirname, '../slsk-batchdl/slsk-batchdl/bin/Release/net6.0/osx-arm64/publish');
+   ```
+### Step 3: Add Playlist Data
+
+In the downloaded Spotify data folder, locate the file `Playlist1.json` and copy it into the main unSpootify directory. If you are downloading directly from a Spotify playlist link, skip this step and proceed to Step 3.
+
+### Step 4: Start the Application
+
+1. **Launch unSpootify**  
+   While in the unSpootify directory, start the server with the following command:
+   ```
+   cd link-playlistDownloader
+   node server.js
+   ```
+2. **Open the Application**  
+   Go to [https://localhost:3000](http://localhost:3000) in your web browser.
+
+3. **Begin Downloading**  
+   In the web interface:  
+   - Enter a SoulSeek username and password of your choice.  
+   - Select your download folder.  
+   - Paste the link to your Spotify playlist.  
+
+   Adjust any desired parameters in the `Basic` and `Advanced` Options panels, and start downloading your music!
+
+### Step 5: Get an iPod
+With your favorite Spotify songs now downloaded, get yourself an iPod and live the early 2000's audiophile dream! Further, if you find that your library is too large for your iPod, check out [iFlash](https://www.iflash.xyz/) to expand your iPod’s storage. 
+
+
+## Troubleshooting
+
+- **Port Error:** If sldl displays a port error, adjust the listening port in the advanced options and retry. Some networks restrict SoulSeek's default ports.
+- **Path Error:** If you encounter a path error, retrieve your download folder path manually (macOS users can use `Show Path`) and paste it directly into **UnSpootify**.
+- **No Results:** As SoulSeek is a peer-to-peer network, some songs may yield no results. You can try the `-d` desperate mode and disable `--fast-search` to broaden the search range.
+
+
+
+## Development Roadmap
+
+- **Feature Expansions:** In progress, including tools for expanded data handling.
+- **Enhanced GUI:** Refinements for better user interactivity and customizability.
+
 
 ## Contributions
 
-This project will be a work in progress for awhile. If you have recommendations or would like to help improve anything, you're help is more than welcome!
+Contributions are welcome! To contribute:
+1. **Fork** this repository.
+2. **Clone** your fork:
+    
+        git clone https://github.com/your-username/unSpootify.git
+        cd unSpootify
 
-Just follow these steps:
+3. **Create a new branch** for your feature:
+    
+        git checkout -b feature/your-feature-name
 
-1. Fork the repository to your own GitHub account.
-2. `git clone` your forked repository.
-3. `git checkout -b <my-branch-name>` to create a branch, replacing with your actual branch name.
-4. Add your features or bug fixes.
-5. `git push origin <my-branch-name>` to push your branch to your forked repository.
-6. Head back to the upstream `tyndalestutz/bh_vis` repository and submit a pull request using your branch from your forked repository.
----
+4. Implement your changes and commit.
+5. **Push** to your branch:
+    
+        git push origin feature/your-feature-name
+
+6. Submit a **pull request** to the original repository.
+
+<br></br>
+
+**License:** MIT  
+For detailed terms, please refer to the LICENSE file.
