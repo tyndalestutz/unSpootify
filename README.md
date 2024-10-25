@@ -66,7 +66,7 @@ To keep track of the playlists you're downloading, it is recommended to save the
      bash publish.sh -r osx-x64
    ```
 4. **Update Path in `server.js` (macOS Users Only)**  
-   If you are using macOS, update the `sldlDirectory` path in `server.js`:  
+   If you are using macOS, update the `sldlDirectory` path in line 16 of `server.js` found in the `link-playlistDownloader` folder:  
 
    - Replace: 
    ``` 
@@ -78,7 +78,7 @@ To keep track of the playlists you're downloading, it is recommended to save the
    ```
 ### Step 3: Add Playlist Data
 
-In the downloaded Spotify data folder, locate the file `Playlist1.json` and copy it into the main unSpootify directory. If you are downloading directly from a Spotify playlist link, skip this step and proceed to Step 3.
+In the downloaded Spotify data folder, locate the file `Playlist1.json` and copy it into the main unSpootify directory. If you are downloading directly from a Spotify playlist link, skip this step and proceed to Step 4.
 
 ### Step 4: Start the Application
 
