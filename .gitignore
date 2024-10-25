@@ -4,3 +4,4 @@
 # Other ignores
 node_modules/
 .DS_Store
+slsk-batchdl/

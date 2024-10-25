@@ -117,15 +117,17 @@ const advancedOptionsData = [
 basicOptionsData.forEach(option => createOptionRow(option, basicOptionsTable));
 advancedOptionsData.forEach(option => createOptionRow(option, advancedOptionsTable));
 
-// Update the terminal with command
+// Modify the command update function to send a clean command
 function updateCommand() {
-    const username = usernameField.value ? ` --user ${usernameField.value}` : '';
-    const password = passwordField.value ? ` --pass ${passwordField.value}` : '';
-    const folderPath = folderPathField.value ? ` -p ${folderPathField.value}` : '';
-    const playlistURL = playlistURLField.value ? ` ${playlistURLField.value}` : '';
+    const username = usernameField.value ? `--user ${usernameField.value}` : '';
+    const password = passwordField.value ? `--pass ${passwordField.value}` : '';
+    const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
+    const playlistURL = playlistURLField.value ? `${playlistURLField.value}` : '';
 
-    const command = `${baseCommand}${username}${password}${folderPath}${playlistURL} ${Object.values(options).join(' ')}`;
-    mockTerminal.textContent = command;
+    const commandOptions = `${username} ${password} ${folderPath} ${playlistURL} ${Object.values(options).join(' ')}`;
+
+    // Display with the prompt for UI purposes
+    mockTerminal.textContent = `audiophile@unSpootify:~/sldl$ ./sldl ${commandOptions}`;
     scrollToBottom();
     addBlinkingCursor();
 }
@@ -135,7 +137,35 @@ function scrollToBottom() {
     mockTerminal.scrollTop = mockTerminal.scrollHeight;
 }
 
-// Advanced options toggle
+// Event listener for the Download button to send the command without the mock prompt
+document.getElementById('downloadButton').addEventListener('click', () => {
+    const username = usernameField.value ? `--user ${usernameField.value}` : '';
+    const password = passwordField.value ? `--pass ${passwordField.value}` : '';
+    const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
+    const playlistURL = playlistURLField.value ? `${playlistURLField.value}` : '';
+
+    const commandOptions = `${username} ${password} ${folderPath} ${playlistURL} ${Object.values(options).join(' ')}`;
+
+    fetch('/execute-command', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ command: commandOptions }), // Send clean commandOptions
+    })
+    .then(response => response.text())
+    .then(output => {
+        // Display the output in the mock terminal
+        mockTerminal.textContent += '\n' + output;
+        scrollToBottom();
+    })
+    .catch(error => {
+        mockTerminal.textContent += `\nError: ${error}`;
+        scrollToBottom();
+    });
+});
+
+// Toggle advanced options visibility
 document.getElementById('toggleAdvancedOptions').addEventListener('click', () => {
     const advancedOptions = document.getElementById('advancedOptionsContainer');
     advancedOptions.classList.toggle('hidden');
