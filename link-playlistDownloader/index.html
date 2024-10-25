@@ -8,47 +8,87 @@
 </head>
 <body>
 
-    <h1 class="header-title">
-        ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___ 
-        |\  \|\  \|\   ___  \|\   ____\|\   __  \|\   __  \|\   __  \|\___   ___\\  \|\  _____\\  \  /  /|
-        \ \  \\\  \ \  \\ \  \ \  \___|\ \  \|\  \ \  \|\  \ \  \|\  \|___ \  \_\ \  \ \  \__/\ \  \/  / /
-         \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / / 
-          \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /  
-           \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
-            \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
-                                \|_________|                                                 \|___|/      
-    </h1>
+    <header>
+        <div class="header-container">
+            <img src="unSpootify.png" alt="Header Photo" class="header-photo">
+        </div>
+    </header>
 
     <div class="grid-container">
+        <!-- Username input -->
         <div class="grid-item input-group">
             <label for="username">Soulseek Username:</label>
             <input type="text" id="username" name="username" placeholder="Enter your username">
         </div>
 
+        <!-- Password input -->
         <div class="grid-item input-group">
             <label for="password">Soulseek Password:</label>
             <input type="password" id="password" name="password" placeholder="Enter your password">
         </div>
 
+        <!-- Download folder text input -->
         <div class="grid-item input-group">
             <label for="downloadFolder">Download Folder:</label>
-            <input type="text" id="folderPath" name="folderPath" readonly placeholder="Choose a folder">
-            <button id="chooseFolderButton" class="custom-file-upload">Choose Folder</button>
+            <input type="text" id="folderPath" name="folderPath" placeholder="Enter absolute path to download folder">
         </div>
 
+        <!-- Spotify Playlist URL input -->
         <div class="grid-item input-group">
             <label for="playlistURL">Spotify Playlist URL:</label>
             <input type="text" id="playlistURL" name="playlistURL" placeholder="Paste Spotify playlist URL here">
         </div>
 
-        <div class="grid-item submit-group">
-            <button type="submit" class="submit-button">Download Playlist</button>
+        <!-- Basic Options -->
+        <div class="grid-item">
+            <h3>Basic Options</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Option Name</th>
+                            <th>User Input</th>
+                            <th>Description</th>
+                            <th>Toggle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="basicOptionsTable">
+                        <!-- Basic options table rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- Mock Terminal Section -->
-        <div class="grid-item mock-terminal">
-            <pre id="mockTerminal" class="terminal-output">audiophile@unSpootify:~/sldl$ ./sldl</pre>
+        <!-- Advanced Options -->
+        <div class="grid-item">
+            <h3><button id="toggleAdvancedOptions" class="toggle-advanced">Show Advanced Options</button></h3>
+            <div id="advancedOptionsContainer" class="table-container hidden">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Option Name</th>
+                            <th>User Input</th>
+                            <th>Description</th>
+                            <th>Toggle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="advancedOptionsTable">
+                        <!-- Advanced options table rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- Download Button -->
+        <div class="grid-item">
+            <button class="submit-button" id="downloadButton">Download</button>
+        </div>
+
+        <!-- Mock Terminal -->
+        <div class="grid-item mock-terminal" id="mockTerminal">
+            <!-- Terminal will be updated here -->
+        </div>
+
     </div>
 
     <div class="footer">

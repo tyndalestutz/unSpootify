@@ -9,6 +9,16 @@ body {
     flex-direction: column;
 }
 
+.header-container {
+    text-align: center; /* This centers the image horizontally */
+    margin-top: 20px;   /* Optional: Adjust the top margin for spacing */
+}
+
+.header-photo {
+    max-width: 75%;    /* Ensures the image scales if it's too large */
+    height: auto;       /* Maintains aspect ratio */
+}
+
 h1 {
     white-space: pre;
     color: #00FF00;
@@ -17,52 +27,32 @@ h1 {
     text-align: center;
 }
 
-/* Ensure all cells have equal widths */
 .grid-container {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 20px;
     width: 60%;
-    margin: 0 auto;  /* Center the grid */
-    max-width: 800px; /* Set a fixed maximum width for all */
+    margin: 0 auto;
+    max-width: 800px;
 }
 
 .grid-item {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
     background-color: #002200;
     border: 2px solid #00FF00;
     padding: 15px;
     color: #00FF00;
-    width: 100%;   /* Ensure uniform width */
-    box-sizing: border-box;  /* Include padding and border in width calculations */
+    box-sizing: border-box;
 }
 
-.grid-item label {
-    width: 180px;
-    text-align: left;
-}
-
-.grid-item input {
-    width: calc(100% - 200px);  /* Ensure inputs are aligned with the rest */
-    padding: 10px;
+input[type="text"], input[type="password"] {
+    width: 100%; 
     background-color: #001100;
     color: #00FF00;
     border: 1px solid #00FF00;
+    padding: 10px;
+    box-sizing: border-box;
     font-family: 'Courier New', monospace;
-    font-size: 16px;
-    margin-left: auto;
-}
-
-#folderPath {
-    width: calc(100% - 200px);  /* Match width with other inputs */
-    background-color: #001100;
-    color: #00FF00;
-    border: 1px solid #00FF00;
-    padding: 10px;
-    margin-right: 10px;
 }
 
 .custom-file-upload {
@@ -82,6 +72,39 @@ h1 {
     background-color: #00FF00;
     color: #000000;
     box-shadow: 5px 5px 8px #009900;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #00FF00;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #00FF00;
+    text-align: left;
+}
+
+.option-button {
+    background-color: #00AA00;
+    color: #000000;
+    padding: 10px;
+    border: 2px solid #00FF00;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+}
+
+.option-button.on {
+    background-color: #005500;
+    box-shadow: inset 2px 2px 5px #002200;
 }
 
 .submit-button {
@@ -104,39 +127,42 @@ h1 {
     box-shadow: 5px 5px 8px #009900;
 }
 
-/* Mock Terminal with equal margins and scrollable feature */
 .mock-terminal {
     background-color: #001100;
     color: #00FF00;
     border: 2px solid #00FF00;
     padding: 15px;
-    width: 100%;
     max-height: 50vh;
     overflow-y: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
-    box-sizing: border-box;  /* Ensure uniform width with other cells */
 }
 
-.terminal-output {
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    color: #00FF00;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-#blinkingCursor {
-    font-weight: bold;
-    display: inline;
-    visibility: visible;
-}
-
-/* Footer */
 .footer {
     font-size: 12px;
     color: #00FF00;
     text-align: center;
     margin-top: auto;
     padding: 20px 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.toggle-advanced {
+    background-color: #00AA00;
+    color: #000000;
+    padding: 10px 20px;
+    border: 2px solid #00FF00;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.toggle-advanced:hover {
+    background-color: #00FF00;
+    color: #000000;
 }
