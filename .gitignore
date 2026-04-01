@@ -1,7 +1,23 @@
-# Ignore all JSON files
-*.json
-
-# Other ignores
+# Node modules
 node_modules/
+
+# OS and editor files
 .DS_Store
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Binaries / local builds
+bin/
 slsk-batchdl/
+downloads/
+
+# Temp / runtime files
+tempascii.txt
+
+# Lock files (optional to track or not)
+package-lock.json
+
+# Ignore JSON config files (if you want)
+# *.json
