@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 1 final UI test (2026-11-23): adversarial-review fixes in, waiting for the owner's scenario run. Run: `uv run python -m unspootify --mockups`.
+**Status:** Phase 1 done (2026-11-23). Phase 2 prepped: UI contract drafted, sockseek offline mode proven. Next: Phase 2 build.
 
 ## Goal
 
@@ -23,7 +23,7 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 | Platforms | Linux first (build and test here), macOS Apple Silicon second. Intel Mac only if cheap (Backlog). No Windows, ever. |
 | Stack | Python 3.13 backend, HTML/CSS/JS UI shown in a native window by **pywebview** (no browser, no server, no port). Qt backend on Linux (self-contained in AppImage), native WebKit on macOS. |
 | Downloader | **sockseek** (formerly sldl / slsk-batchdl), pinned to v3.0.6, binary bundled per platform, run as a subprocess. Parse `--progress-json` for per-track progress. Soulseek needs no separate client: sockseek connects directly. |
-| Input | **Exportify CSV** is the primary path (exportify.net: log in with Spotify, export, done). Direct Spotify links are a Backlog nice-to-have, not relied on. |
+| Input | **Exportify CSV** is the primary path (exportify.net: log in with Spotify, export, done). Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium for any Spotify input. |
 | Playlist home | Imported CSVs are copied into an app-managed playlists folder. The app tracks, per playlist and per track, what was tried, downloaded, failed, or skipped. |
 | Soulseek login | Username and password fields always visible in the main window. Required on first run, editable any time, remembered between launches. Each friend uses their own account. |
 | Folder choice | Native OS folder picker (Finder on Mac, GTK/Qt dialog on Linux). Never make the user type a path. |
@@ -67,26 +67,36 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] Fake-data scenario picker (10 scenarios, `TEST DATA` corner menu) for the final UI test
 - [x] Owner's test round 1 fixes: centered gear (SVG), Retry/Test connection sized like Download, playlists list scrolls (not the sidebar), browse other playlists while downloading, built-in port test with suggested new port, Jukebox focus rings on segments, min window 940x760
 - [x] Second adversarial review (regressions): fixed empty button area while browsing, sidebar focus/click loss during background updates, port model (blocks every search), stale port-test results, Phosphor sidebar overflow at 761-780px, focus loss in the port test, Stop available from any playlist
-- [ ] Owner runs the final verification
+- [x] Owner verified; Phase 1 approved and merged (2026-11-23)
 
-### Phase 2: Pipeline core (no UI wiring)
-- [ ] Settings store (login, library folder, last options) in the OS app-data dir
-- [ ] Playlist home: import Exportify CSV, copy into playlists folder, parse tracks
-- [ ] Per-track state store (SQLite): pending / searching / downloading / done / failed / skipped, with format and path
-- [ ] sockseek runner: build args from options, stream output, parse per-track progress and results, cancel cleanly
-- [ ] Force-format flow: collect not-found tracks, re-run them in the other format on request
-- [ ] Skip-existing across runs
-- [ ] Small CLI entry point to run the whole pipeline headless for testing
-- [ ] Tests for arg building, CSV parsing, output parsing, state transitions
+### Phase 2: Pipeline core, built to the UI contract
+Everything the backend does is shaped by `docs/ui-contract.md` (commands, events, states, error codes).
+The backend never invents state the UI can't show, and the UI never shows state the backend can't produce.
+- [x] Draft UI contract (`docs/ui-contract.md`): every control and display mapped to a command/event
+- [x] De-risk: sockseek reads Exportify CSV columns automatically; `--progress-json` events observed; offline end-to-end works with `--mock-files-dir`
+- [ ] Offline test library: `scripts/make_mock_library.py` builds tagged audio files (ffmpeg) for a CSV, with deliberate gaps, MP3/FLAC mixes, and an "already have" set
+- [ ] Recorded sockseek output fixtures (scrubbed paths) for parser tests
+- [ ] Settings store (OS app-data dir; password stored locally, never logged)
+- [ ] Playlist store: import CSV (copy into app playlists folder), validate (`CSV_UNREADABLE`, `CSV_NO_TRACKS`), stable playlist ids
+- [ ] Track state store (SQLite) using the contract's states and reasons
+- [ ] Option → sockseek args mapping (table in the contract), unit-tested per option
+- [ ] Full albums (derived title-less CSV) and Whole artist (`-g`) verified with CSV input
+- [ ] sockseek runner: spawn, parse `--progress-json` into contract events, correlate `download_progress` (jobId) to tracks, detect rate-limit waiting, cancel cleanly, map failures to error codes (login, port, network, folder, crash)
+- [ ] Force-format follow-up run; skip-existing across runs (index + `--skip-music-dir`)
+- [ ] Naming: `Artist/Album [EXT]/NN. Title` from source tags (`{sartist}`, `{salbum}`, `{snum}`) with tag fallback
+- [ ] Port test design (Soulseek's port checker or equivalent), returns `{open, suggested_port}`
+- [ ] Headless CLI that emits contract events as JSON lines (same stream the window will consume)
+- [ ] Tests: CSV parsing, args, event mapping from fixtures, state transitions, end-to-end with the mock library
 
-### Phase 3: Wire the UI
-- [ ] JS-to-Python bridge (pywebview `js_api`), live progress events to the page
-- [ ] Login fields, native folder picker, CSV import (button + drag-and-drop)
-- [ ] "Get your playlist" guide: button opens Exportify in the default browser, short illustrated steps
-- [ ] Options panel, start/stop, per-track list, resizable verbose pane
-- [ ] Force-format follow-up dialog; end-of-run summary
-- [ ] Friendly errors for the predictable failures (bad login, port blocked, no results, folder missing)
-- [ ] Real port test (mockup simulates it): check the listen port is reachable from outside (e.g. Soulseek's own port checker), suggest and apply a new port if blocked
+### Phase 3: Wire the UI (no control left unconnected)
+- [ ] Refactor `mock.js` into a FakeBackend that implements the contract; UI logic moves to `app.js`, shared by fake and real
+- [ ] Real backend bridge: pywebview `js_api` commands + `unspootify` CustomEvents
+- [ ] Production page `index.html` from the approved mockup (both looks); TEST DATA picker only in mockup mode
+- [ ] Every row of the contract's "UI element → contract map" has a scripted check (screenshot_ui.py CHECK) against the FakeBackend
+- [ ] End-to-end in the real window against sockseek `--mock-files-dir`: import CSV, choose folder, download, stop, browse during run, retry, force follow-up, skip existing, port test, every error code
+- [ ] "Get your playlist" guide: opens Exportify in the default browser, short illustrated steps
+- [ ] Real port test wired to Advanced and Test connection
+- [ ] Adversarial review of the wired app (fresh agent), fixes, owner test run with a real Soulseek account
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage
