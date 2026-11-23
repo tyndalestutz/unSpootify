@@ -3,7 +3,8 @@
 Serves the page over HTTP rooted at the page's own folder, exactly like pywebview
 does in the app, so paths that break in the app also break here.
 
-Usage: uv run python scripts/screenshot_ui.py <page.html> <out.png> [query] [WxH]
+Usage: uv run python scripts/screenshot_ui.py <page.html> <out.png> [query] [WxH] [script.js]
+(script.js runs after load; its console.log output is printed, then the shot is taken.)
 """
 
 import functools
@@ -27,6 +28,8 @@ class ConsolePage(QWebEnginePage):
     def javaScriptConsoleMessage(self, level, message, line, source):  # noqa: N802
         if level != QWebEnginePage.JavaScriptConsoleMessageLevel.InfoMessageLevel:
             sys.stderr.write(f"JS {level.name}: {message} ({source}:{line})\n")
+        elif message.startswith("CHECK"):
+            print(message)
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -57,7 +60,14 @@ def main() -> None:
         view.grab().save(out)
         app.quit()
 
-    view.loadFinished.connect(lambda _ok: QTimer.singleShot(1500, snap))
+    script = open(sys.argv[5]).read() if len(sys.argv) > 5 else ""
+
+    def loaded(_ok: bool) -> None:
+        if script:
+            view.page().runJavaScript(script)
+        QTimer.singleShot(1500 if not script else 4000, snap)
+
+    view.loadFinished.connect(loaded)
     app.exec()
 
 

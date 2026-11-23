@@ -76,7 +76,7 @@ const SCENARIOS = {
     others: Array.from({ length: 60 }, (_, i) => ({ name: `playlist ${i + 1}`, total: 10000 + i, done: 9999 })),
     fail: () => Math.random() < 0.05, have: () => Math.random() < 0.1, speed: 6,
   },
-  allfail: { label: "5 · Everything fails (blocked port)", main: { name: "obscure b-sides", rows: BASE }, others: OTHER_PLAYLISTS, fail: () => true, portBlocked: true },
+  allfail: { label: "5 · Everything fails (blocked port)", main: { name: "obscure b-sides", rows: BASE }, others: OTHER_PLAYLISTS, fail: () => Math.random() < 0.1, portBlocked: true },
   allhave: { label: "6 · Already have everything", main: { name: "sunday morning", rows: BASE }, others: OTHER_PLAYLISTS, have: () => true },
   emptyPlaylist: { label: "7 · Empty playlist", main: { name: "new playlist", rows: [] }, others: OTHER_PLAYLISTS },
   noPlaylists: { label: "8 · First launch (no playlists)", main: null, others: [] },
@@ -110,6 +110,7 @@ function loadScenario(name) {
   $("#pass").value = scn.loggedOut ? "" : "hunter22";
   setPath(scn.path || DEFAULT_PATH);
   $("#listenPort").value = "";
+  flash = null; cancelPortTest();
   setPortResult("If nothing downloads, test the port. Some networks block it.");
   logEl.textContent = "";
   log("sockseek 3.0.6", " · ready");
@@ -123,7 +124,8 @@ function tracksFor(p) {
   if (p.tracks) return p.tracks;
   const rows = p.rows || Array.from({ length: Math.min(p.total, 3000) }, (_, i) => BASE[i % BASE.length]);
   p.tracks = mkTracks(rows, p.rows ? scn : { fail: () => Math.random() < 0.08 });
-  if (!p.rows) for (let k = 0; k < Math.min(p.done, p.tracks.length); k++) finish(p.tracks[k], true);
+  // already-downloaded songs keep the count shown in the sidebar
+  if (!p.rows) for (let k = 0; k < Math.min(p.done, p.tracks.length); k++) { p.tracks[k].willFail = false; finish(p.tracks[k], true); }
   return p.tracks;
 }
 
@@ -156,6 +158,7 @@ function tick() {
   }
   for (const t of active) {
     if (t.state === "searching" && --t.wait <= 0) {
+      if (!portOk()) t.willFail = true; // a blocked port means nobody can send us files
       if (t.willFail) { finish(t); continue; }
       t.user = USERS[Math.floor(Math.random() * USERS.length)];
       t.fmt = Math.random() < 0.8 ? "MP3" : "FLAC";
@@ -198,7 +201,7 @@ function endRun() {
 
 function retry() {
   const failed = current.tracks.filter((t) => t.state === "failed");
-  for (const t of failed) { t.state = "queued"; t.willFail = !portOk() ? true : Math.random() < (scn.portBlocked ? 0.15 : 0.5); }
+  for (const t of failed) { t.state = "queued"; t.willFail = Math.random() < (scn.portBlocked ? 0.15 : 0.5); }
   log(`Retrying ${failed.length} songs`, " with Try harder");
   start();
 }
@@ -271,9 +274,11 @@ function renderAll() {
   const title = $("#playlistTitle");
   title.textContent = current ? current.name : "No playlist yet";
   title.title = current ? current.name : "";
-  $("#counts").textContent = current
+  const countsEl = $("#counts");
+  countsEl.textContent = current
     ? `${c.n.toLocaleString()} songs · ${c.done.toLocaleString()} downloaded · ${c.skipped.toLocaleString()} already had · ${c.failed.toLocaleString()} not found`
     : "";
+  countsEl.title = countsEl.textContent;
   const empty = $("#emptyState");
   empty.hidden = !!(current && c.n);
   empty.innerHTML = !current
@@ -281,13 +286,13 @@ function renderAll() {
     : `<strong>This playlist has no songs.</strong><br>Pick another one, or export it again from Spotify.`;
 
   // buttons
-  const go = $("#goBtn"), can = canDownload(), mine = running && current === activePl;
-  go.textContent = mine ? "Stop" : "Download";
-  go.classList.toggle("running", mine);
-  go.disabled = !mine && !can.ok;
-  go.title = go.disabled ? can.why : "";
-  // after a finished run with misses, Retry/Test connection take Download's place
-  go.hidden = !mine && !!current && !!current.finished && c.queued === 0 && c.failed > 0;
+  const go = $("#goBtn"), can = canDownload();
+  go.textContent = running ? "Stop" : "Download";
+  go.classList.toggle("running", running);
+  go.disabled = !running && !can.ok;
+  go.title = running ? (current === activePl ? "" : `Stops downloading “${activePl.name}”`) : go.disabled ? can.why : "";
+  // after a finished run with misses (and nothing running), Retry/Test connection take Download's place
+  go.hidden = !running && !!current && !!current.finished && c.queued === 0 && c.failed > 0;
   const retryBtn = $("#retryBtn");
   retryBtn.hidden = running || !c.failed;
   retryBtn.textContent = `Retry ${c.failed.toLocaleString()} missing`;
@@ -315,7 +320,7 @@ function renderLcd(c, can) {
     b = where + (cur.state === "searching" ? "Searching Soulseek…" : `From ${cur.user} · ${(shownLib + shown.failed + 1).toLocaleString()} of ${shown.n.toLocaleString()}`);
   } else if (!can.ok) { a = can.why; b = !current ? "Your playlists will show up on the left." : $("#user").value.trim() ? "" : "No account? Just make one up."; }
   else if (current.finished) {
-    if (c.failed === c.n) { a = "Nothing was found"; b = "Often the network blocks Soulseek's port. Press Test connection."; }
+    if (c.failed === c.n) { a = "Nothing was found"; b = "Try Test connection."; }
     else if (c.done === 0 && c.failed === 0) { a = "Nothing new to download"; b = `All ${c.n.toLocaleString()} songs are already in your library.`; }
     else if (c.failed) { a = `Finished: ${lib.toLocaleString()} of ${c.n.toLocaleString()} in your library`; b = `${c.failed.toLocaleString()} couldn't be found. Press Retry to search harder.`; }
     else { a = `Finished: all ${c.n.toLocaleString()} in your library`; b = "Everything was found."; }
@@ -327,9 +332,22 @@ function renderLcd(c, can) {
 
 function renderPlaylists() {
   const list = $("#playlistList");
-  const key = playlists.map((p) => `${p.name}|${p.done}|${p.total}|${p === current}|${running && p === activePl}`).join("\n");
-  if (list.dataset.key === key) return;
-  list.dataset.key = key;
+  const structure = playlists.map((p) => `${p.name}|${p.total}`).join("\n");
+  if (list.dataset.structure === structure && playlists.length) {
+    [...list.children].forEach((li, i) => {
+      const p = playlists[i];
+      li.classList.toggle("sel", p === current);
+      li.classList.toggle("busy", running && p === activePl);
+      li.setAttribute("aria-selected", p === current);
+      const count = `${p.done.toLocaleString()}/${p.total.toLocaleString()}`;
+      const cEl = li.querySelector(".pl-count");
+      if (cEl.textContent !== count) cEl.textContent = count;
+      li.querySelector(".pl-meter span").style.width = `${p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0}%`;
+    });
+    return;
+  }
+  const focusedIdx = document.activeElement?.closest?.("#playlistList li")?.dataset.idx;
+  list.dataset.structure = structure;
   list.innerHTML = playlists.map((p, i) => {
     const pct = p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0;
     const cls = [p === current ? "sel" : "", running && p === activePl ? "busy" : ""].join(" ").trim();
@@ -339,6 +357,7 @@ function renderPlaylists() {
       <span class="pl-meter"><span style="width:${pct}%"></span></span>
     </li>`;
   }).join("") || `<li class="pl-empty">Nothing here yet</li>`;
+  if (focusedIdx !== undefined) list.querySelector(`li[data-idx="${focusedIdx}"]`)?.focus();
 }
 
 function followCurrent() {
@@ -373,7 +392,8 @@ $("#testBtn").addEventListener("click", () => { openSheet("#advancedSheet"); tes
 $("#portTestBtn").addEventListener("click", testPort);
 
 /* ---- port test (simulated; the real one asks a Soulseek port checker) ---- */
-let portTesting = false;
+let portTesting = false, portTestId = 0;
+function cancelPortTest() { portTestId++; portTesting = false; $("#portTestBtn").removeAttribute("aria-disabled"); }
 function setPortResult(text, kind = "", action = null) {
   const el = $("#portResult");
   el.className = `hint port-result ${kind}`;
@@ -390,13 +410,15 @@ async function testPort() {
   if (portTesting) return;
   const port = currentPort();
   if (!Number.isInteger(port) || port < 1024 || port > 65535) { setPortResult("Port must be a number between 1024 and 65535.", "bad"); return; }
+  const id = ++portTestId;
   portTesting = true;
-  $("#portTestBtn").disabled = true;
+  $("#portTestBtn").setAttribute("aria-disabled", "true");
   setPortResult(`Testing port ${port}…`, "testing");
   log("Port test", ` · asking whether port ${port} is reachable from the internet`);
   await new Promise((r) => setTimeout(r, 1400));
+  if (id !== portTestId) return; // scenario changed or defaults restored meanwhile
   portTesting = false;
-  $("#portTestBtn").disabled = false;
+  $("#portTestBtn").removeAttribute("aria-disabled");
   if (portOk()) {
     setPortResult(`Port ${port} is open. The network isn't the problem.`, "good");
     log("Port test", ` · port ${port} is open`);
@@ -408,6 +430,7 @@ async function testPort() {
         $("#listenPort").value = suggest;
         setPortResult(`Now using port ${suggest}. Press OK, then Retry.`, "good");
         log("Port changed", ` · now listening on ${suggest}`);
+        $("#advancedSheet .btn.default").focus();
       },
     });
     log("Port test", ` · port ${port} is blocked`);
@@ -503,6 +526,7 @@ document.querySelectorAll(".sheet-backdrop").forEach((bd) => bd.addEventListener
 $("#restoreDefaults").addEventListener("click", () => {
   $("#advancedSheet").querySelectorAll("input[type=text]").forEach((i) => (i.value = ""));
   $("#advancedSheet").querySelectorAll("input[type=checkbox]").forEach((i) => (i.checked = false));
+  cancelPortTest();
   setPortResult("If nothing downloads, test the port. Some networks block it.");
 });
 window.addEventListener("keydown", (e) => {

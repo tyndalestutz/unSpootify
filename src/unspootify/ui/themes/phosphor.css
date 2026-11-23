@@ -82,7 +82,7 @@ body[data-theme="phosphor"]::after {
 }
 [data-theme="phosphor"] .btn.go::before, [data-theme="phosphor"] .btn.default::before { content: "[ "; }
 [data-theme="phosphor"] .btn.go::after, [data-theme="phosphor"] .btn.default::after { content: " ]"; }
-[data-theme="phosphor"] .btn.go-alt { font-size: 13px; padding: 9px 12px; border: 1px solid var(--mid); }
+[data-theme="phosphor"] .btn.go-alt { font-size: 14px; padding: 9px 14px; border: 2px solid var(--mid); }
 [data-theme="phosphor"] .btn.go.running { color: var(--warn); border-color: var(--warn); box-shadow: 0 0 12px rgba(255,209,102,.35); }
 [data-theme="phosphor"] .btn.go.running:hover { background: var(--warn); color: #000; }
 [data-theme="phosphor"] .btn.tiny { padding: 2px 8px; font-size: 10px; }

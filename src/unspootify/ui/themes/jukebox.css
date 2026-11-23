@@ -215,3 +215,5 @@ body[data-theme="jukebox"] {
 [data-theme="jukebox"] .port-result.good { color: #2e7d32; }
 [data-theme="jukebox"] .port-result.bad { color: #c4281c; }
 [data-theme="jukebox"] .playlist-list li.busy .pl-count { font-weight: bold; }
+[data-theme="jukebox"] .seg button:first-child { border-radius: 11px 0 0 11px; }
+[data-theme="jukebox"] .seg button:last-child { border-radius: 0 11px 11px 0; }

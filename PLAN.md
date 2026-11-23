@@ -66,6 +66,7 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] Adversarial review (fresh agent): fixed HTML injection from names, stacked timers, empty-state crashes, hard-coded counts, frozen rows after Stop, splitter overflow, header misalignment, RTL truncation, tooltips, all-fail messaging, focus/keyboard, contrast, Restore Defaults
 - [x] Fake-data scenario picker (10 scenarios, `TEST DATA` corner menu) for the final UI test
 - [x] Owner's test round 1 fixes: centered gear (SVG), Retry/Test connection sized like Download, playlists list scrolls (not the sidebar), browse other playlists while downloading, built-in port test with suggested new port, Jukebox focus rings on segments, min window 940x760
+- [x] Second adversarial review (regressions): fixed empty button area while browsing, sidebar focus/click loss during background updates, port model (blocks every search), stale port-test results, Phosphor sidebar overflow at 761-780px, focus loss in the port test, Stop available from any playlist
 - [ ] Owner runs the final verification
 
 ### Phase 2: Pipeline core (no UI wiring)
