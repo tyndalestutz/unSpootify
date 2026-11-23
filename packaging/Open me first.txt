@@ -1,0 +1,18 @@
+unSpootify for Mac: first launch (one time only)
+================================================
+
+1. Drag "unSpootify" onto the "Applications" folder in this window.
+   (Don't open it from here: it would stop working once this window is closed.)
+
+2. Open your Applications folder and double-click unSpootify.
+   macOS says it "can't be opened" or "can't check it for malicious software". Click "Done" (or "OK").
+
+3. Open System Settings > Privacy & Security, scroll down, and next to
+   "unSpootify was blocked" click "Open Anyway". Enter your Mac password, then click "Open Anyway" again.
+
+That's it. From now on it opens like any other app (you can keep it in the Dock).
+
+If macOS asks whether "sockseek" may accept incoming network connections, click "Allow".
+(sockseek is the part of unSpootify that talks to Soulseek.)
+
+Didn't see "Open Anyway"? Ask whoever sent you the app; there's a one-line fix.

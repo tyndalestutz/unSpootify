@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 4 done (Linux v1.0.0, 2026-11-23). Phase 5 planned and reviewed: Mac Apple Silicon (Intel on request) → v1.0.1.
+**Status:** Phase 5 (2026-11-23): Apple Silicon + Intel dmgs build and pass the CI checks (from the dmg, quarantined: signature, offline download, window). Next: v1.0.1-rc.1 for the friend test.
 
 ## Goal
 
@@ -135,24 +135,24 @@ Claude can't run macOS locally: every Mac check runs on GitHub's Mac runners or 
 Plan reviewed by a fresh agent (2026-11-23); its fixes are folded in below.
 
 Build (CI)
-- [ ] Apple Silicon job on `macos-15` (pinned; `macos-14` was retired 2026-11-02), sockseek `osx-arm64`
-- [ ] Intel: one extra matrix line (`macos-15-intel`, sockseek `osx-x64`; Intel runners end Fall 2027), **off unless someone
+- [x] Apple Silicon job on `macos-15` (pinned; `macos-14` was retired 2026-11-02), sockseek `osx-arm64`
+- [x] Intel included (owner has a friend on Intel): `macos-15-intel`, sockseek `osx-x64`; Intel runners end Fall 2027), **off unless someone
       in the group has an Intel Mac** (friends are on recent Apple Silicon; an Intel build couldn't be tested on real hardware)
-- [ ] Same PyInstaller spec, `BUNDLE` → `unSpootify.app` (Cocoa/WebKit via pyobjc, no Qt); version read from `__version__`;
+- [x] Same PyInstaller spec, `BUNDLE` → `unSpootify.app` (Cocoa/WebKit via pyobjc, no Qt); version read from `__version__`;
       generate `assets/icon/unspootify.icns` (`iconutil`)
-- [ ] Ad-hoc sign inside out (sockseek, dylibs, app) as the last step; the app never writes inside its own bundle
-- [ ] `.dmg` (`hdiutil`): the app, an Applications shortcut, and `Open me first.txt`; `unSpootify-<v>-arm64.dmg`
+- [x] Ad-hoc sign inside out (sockseek, dylibs, app) as the last step; the app never writes inside its own bundle
+- [x] `.dmg` (`hdiutil`): the app, an Applications shortcut, and `Open me first.txt`; `unSpootify-<v>-arm64.dmg`
 - [ ] Attach the `.dmg` to tagged releases next to the AppImage; the mac job becomes a required check
 
 Verify on the Mac runner, using the app copied *out of the mounted dmg* with a quarantine flag set (as a download would have)
-- [ ] `codesign --verify --deep --strict` passes
+- [x] `codesign --verify --deep --strict` passes
 - [ ] `finalize` answered headless (no window/Dock icon), timed (expect ~0.5–1.5 s cold start per song)
-- [ ] Offline end-to-end run through the built app (sockseek launches despite quarantine)
+- [x] Offline end-to-end run through the built app (sockseek launches despite quarantine)
 - [ ] `--smoke-test` opens the real Cocoa window; screenshots of both looks are best-effort (runner screen capture can be blank)
 - [ ] Quitting (Cmd+Q, red close button, app quit) stops sockseek on every path; CI asserts the process is gone
 
 App changes for macOS
-- [ ] On start, remove the quarantine flag from the app's own bundled sockseek (belt and braces)
+- [x] On start, remove the quarantine flag from the app's own bundled sockseek (belt and braces)
 - [ ] Kill sockseek from the window-closed / app-quit handlers, not only `atexit` (Cocoa can exit without it)
 - [ ] App menu: Settings… (Cmd+,) and standard Edit menu so Cmd+C/V/X/A work in text fields
 - [ ] App data in `~/Library/Application Support/unSpootify`, music in `~/Music/unSpootify` (already the defaults; confirm)

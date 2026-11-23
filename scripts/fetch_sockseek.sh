@@ -4,11 +4,14 @@
 set -euo pipefail
 
 VERSION="3.0.6"
-declare -A SHA256=(
-  [linux-x64]=91d7d14fa1293afe94ccb0299e0103f8477a558223f62f4027f5712e4bbf521a
-  [osx-arm64]=b7b9602b3ea0d8724b2a4dd1370c97f2f1f7175f901e7088dad714352c4926d9
-  [osx-x64]=6211374e1fca1f0b0bb4bfc6395e493c5969416e116a976f87bac4bdb99320fd
-)
+sha_for() {  # plain case statement: macOS ships bash 3.2 (no associative arrays)
+  case "$1" in
+    linux-x64) echo 91d7d14fa1293afe94ccb0299e0103f8477a558223f62f4027f5712e4bbf521a ;;
+    osx-arm64) echo b7b9602b3ea0d8724b2a4dd1370c97f2f1f7175f901e7088dad714352c4926d9 ;;
+    osx-x64) echo 6211374e1fca1f0b0bb4bfc6395e493c5969416e116a976f87bac4bdb99320fd ;;
+    *) echo "Unknown platform: $1" >&2; exit 1 ;;
+  esac
+}
 
 detect() {
   case "$(uname -s)-$(uname -m)" in
@@ -20,7 +23,7 @@ detect() {
 }
 
 PLATFORM="${1:-$(detect)}"
-EXPECTED="${SHA256[$PLATFORM]:?Unknown platform: $PLATFORM}"
+EXPECTED="$(sha_for "$PLATFORM")"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="$ROOT/vendor/sockseek/$PLATFORM"
 ARCHIVE="sockseek_${VERSION}_${PLATFORM}.tar.gz"

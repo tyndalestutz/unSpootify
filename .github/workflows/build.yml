@@ -53,3 +53,40 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${GITHUB_REF_NAME}" dist/*.AppImage --clobber
+
+  macos:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15        # Apple Silicon
+            arch: arm64
+          - runner: macos-15-intel  # Intel (GitHub keeps these until fall 2027)
+            arch: x86_64
+    name: macos (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: ffmpeg (offline test share)
+        run: brew install ffmpeg
+      - run: uv sync
+      - name: Unit + backend tests on macOS
+        run: |
+          scripts/fetch_sockseek.sh
+          uv run pytest -q --ignore=tests/test_ui.py --ignore=tests/test_ui_real.py
+      - name: Build dmg
+        run: scripts/build_macos.sh
+      - name: Check the app as a user gets it (from the dmg, quarantined)
+        run: packaging/test/macos_check.sh dist/*.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unSpootify-macos-${{ matrix.arch }}
+          path: dist/*.dmg
+          retention-days: 14
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.dmg --clobber

@@ -333,6 +333,14 @@ class EventMapper:
 
 Emit = Callable[[dict[str, Any]], None]
 
+def _clear_quarantine(path: Path) -> None:
+    """macOS: approving the app once should cover the downloader inside it, but clear the
+    'downloaded from the internet' flag on it anyway so it can never be blocked on its own."""
+    if sys.platform == "darwin":
+        subprocess.run(["xattr", "-d", "com.apple.quarantine", str(path)],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+
+
 def child_env() -> dict[str, str]:
     """Environment for sockseek. A PyInstaller build points LD_LIBRARY_PATH (Linux) /
     DYLD_LIBRARY_PATH (macOS) at its own bundled libraries; sockseek must get the user's originals."""
@@ -388,6 +396,7 @@ class Runner:
     def start(self) -> None:
         if not self.sockseek.exists():
             raise AppError("SOCKSEEK_MISSING", str(self.sockseek))
+        _clear_quarantine(self.sockseek)
         try:
             self.proc = subprocess.Popen(
                 [str(self.sockseek), *self.plan.args], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

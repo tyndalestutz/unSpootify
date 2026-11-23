@@ -5,7 +5,7 @@
 Pick a playlist, press Download, and the songs land in your music folder, neatly sorted as
 `Artist / Album [MP3] / Song.mp3`. It finds them on Soulseek, a long-running music-sharing network.
 
-> **v1.0.0 for Linux is out.** The Mac version is in beta testing. Tell us what's confusing or broken (see [Feedback](#feedback)).
+> **Linux: v1.0.0. Mac (Apple chip and Intel): in testing (v1.0.1 release candidates).** Tell us what's confusing or broken (see [Feedback](#feedback)).
 
 ## Install
 
@@ -14,7 +14,10 @@ Download the newest file from **[Releases](../../releases)** (test builds are ma
 | Computer | File |
 |---|---|
 | Linux (64-bit Intel/AMD) | `unSpootify-…-x86_64.AppImage` |
-| Mac (Apple Silicon) | coming in the next beta |
+| Mac with Apple chip (M1, M2, M3…) | `unSpootify-…-arm64.dmg` |
+| Mac with Intel chip | `unSpootify-…-x86_64.dmg` |
+
+Not sure which Mac you have? Apple menu → **About This Mac**: "Chip: Apple M…" means Apple chip, "Processor: Intel" means Intel.
 
 ### Linux
 1. Download `unSpootify-…-x86_64.AppImage` (about 220 MB).
@@ -23,6 +26,16 @@ Download the newest file from **[Releases](../../releases)** (test builds are ma
 3. Double-click it. Nothing else to install. You can move the file anywhere, e.g. into a `~/Applications` folder.
    Don't run it with `sudo`; it runs as you, like any app.
 
+### Mac
+1. Open the downloaded `.dmg` and **drag unSpootify onto the Applications folder** (don't open it from the dmg window).
+2. Open **Applications** and double-click unSpootify. macOS says it can't check the app: click **Done**.
+3. Open **System Settings → Privacy & Security**, scroll down, click **Open Anyway** next to "unSpootify was blocked",
+   enter your Mac password, then **Open Anyway** again. Only needed once.
+4. If macOS asks whether **sockseek** may accept incoming connections, click **Allow** (it's the part that talks to Soulseek).
+
+No "Open Anyway" button? Open **Terminal** and paste `xattr -dr com.apple.quarantine /Applications/unSpootify.app`, then open the app again.
+
+### Linux troubleshooting
 If double-clicking does nothing, run it from a terminal (`./unSpootify-*.AppImage`) to see why. On some
 minimal systems it needs FUSE (`sudo apt install fuse3`), or you can run it with
 `./unSpootify-*.AppImage --appimage-extract-and-run`.
@@ -67,7 +80,7 @@ Quit the app and delete that folder to start as a brand-new user.
 
 - [x] Downloading works (MP3/FLAC, full albums, whole artist, skip what you have)
 - [x] Linux app (v1.0.0)
-- [ ] Mac app (Apple Silicon)
+- [ ] Mac app (Apple chip + Intel): in testing
 - [ ] Later: download several playlists in a row, automatic tagging and tidy file names
 
 ---

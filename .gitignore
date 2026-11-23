@@ -28,3 +28,6 @@ package-lock.json
 # PyInstaller output
 build/
 dist/
+
+# generated on macOS by scripts/build_macos.sh
+assets/icon/unspootify.icns
