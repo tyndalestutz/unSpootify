@@ -31,3 +31,17 @@ def test_final_path(tmp_path):
     assert unique(p).name == "01. Mr. Brightside (2).mp3"
     assert final_path(Path("/m"), artist="", album="", title="", number=None, ext="flac").parts[-3:] == (
         "Unknown Artist", "Unknown Album [FLAC]", "Untitled.flac")
+
+
+def test_settings_survive_restart(tmp_path):
+    """rc.3 saved version as text and then crashed on the next launch."""
+    path = tmp_path / "s.json"
+    SettingsStore(path).update({"username": "u"})
+    SettingsStore(path).update({"look": "jukebox"})  # second launch
+    path.write_text('{"version": "3", "advanced": {"fast": true}}')  # what rc.3 left behind
+    s = SettingsStore(path).settings
+    assert s.version == 3 and s.advanced.fast is True
+    import json
+    assert json.loads(path.read_text())["version"] == "3"  # untouched until next save
+    SettingsStore(path).update({})
+    assert json.loads(path.read_text())["version"] == 3

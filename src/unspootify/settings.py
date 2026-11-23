@@ -72,6 +72,8 @@ def _merge(dc: Any, data: dict[str, Any]) -> None:
             setattr(dc, f.name, bool(value))
         elif f.type in ("int | None",):
             setattr(dc, f.name, _int_or_none(value))
+        elif f.type == "int":
+            setattr(dc, f.name, _int_or_none(value) or getattr(dc, f.name))
         else:
             setattr(dc, f.name, "" if value is None else str(value))
     _validate(dc)
@@ -114,7 +116,11 @@ class SettingsStore:
             data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return s
-        if data.get("version", 1) < 3:  # v3: fast search off again (it made most songs fail)
+        try:  # an earlier build saved the version as text ("3"); never let that stop the app
+            version = int(data.get("version", 1))
+        except (TypeError, ValueError):
+            version = 1
+        if version < 3:  # v3: fast search off again (it made most songs fail)
             data.setdefault("advanced", {})["fast"] = False
         _merge(s, data)
         return s
