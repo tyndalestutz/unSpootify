@@ -103,3 +103,11 @@ def test_search_cleanup():
 def test_flac_prefers_cd_quality():
     joined = " ".join(args_for(format="flac"))
     assert "--pref-max-bitdepth 16" in joined and "--fast-search" in joined
+
+
+def test_same_album_songs_are_searched_together():
+    from unspootify.store import Track as T
+    rows = [T(0, "A1", "Band", "LP", None), T(1, "B1", "Other", "EP", None), T(2, "A2", "Band;Guest", "LP", None)]
+    jobs = make_jobs("songs", rows)
+    assert [j.indexes[0] for j in jobs] == [0, 2, 1]
+    assert "--pref-strict-album" in args_for()

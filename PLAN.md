@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 3 built and reviewed (2026-11-23); waiting for the owner's real-account test. Run: `uv run python -m unspootify`.
+**Status:** Phase 3 complete pending owner sign-off (2026-11-23). Next: Phase 4, Linux AppImage (CHECKPOINT). Run: `uv run python -m unspootify`.
 
 ## Goal
 
@@ -101,7 +101,8 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [x] Adversarial review of the wired app (fresh agent) and fixes: double-click start/stop, failed Retry stranding rows, Full albums after songs, Download again, unlaunchable sockseek, crash-after-success, Only/Skip-first claiming done, password off the command line (private config), log scrubbing, login timeout + status, encodings, follow-up format
 - [x] Owner real-account test round 1 (2026-11-23): downloads work. Fixes from it: search with the first artist and without 'Remastered'/'feat.' (multi-artist songs were missed), fast search on by default + 4 concurrent searches (speed), FLAC prefers CD quality (16-bit/48 kHz max) instead of huge hi-res files, no fake track numbers, Exportify first in the guide
 - [x] Playlist management (owner request): sort playlists by Date added / Name / Size, Archive (collapsible Archived group), Remove from unSpootify (confirm; music untouched) via right-click / ⋯ / keyboard; click song column headers to sort
-- [ ] Owner real-account test round 2
+- [x] Owner real-account test round 2 (2026-11-23): playlist sort/archive/remove confirmed; removal verified to delete the app's copy, state and run files
+- [x] Album-mates searched together + `--pref-strict-album`; failed songs say "Couldn't download" (found but transfer failed) vs "Not found"
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage (the frozen app must handle the `finalize` subcommand sockseek calls back into)

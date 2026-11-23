@@ -128,7 +128,7 @@ so `snum` in sockseek maps back to playlist rows through the run manifest.
 |---|---|
 | login | private per-run sockseek config (0600, deleted after the run) via `--config`, so it's never on the command line and no user config file can interfere; password scrubbed from log lines |
 | Save to | files staged by sockseek, then moved by `unspootify finalize` (sockseek `--on-complete ... update-index`) to `Artist/Album [EXT]/NN. Title.ext` |
-| Just these songs | CSV `Artist,Title,Album,Length` |
+| Just these songs | CSV `Artist,Title,Album,Length` (first artist only; 'Remastered'/'feat.' removed; songs from the same album listed back to back) + `--pref-strict-album` so album-mates tend to come from the same shared folder |
 | Full albums | CSV `Artist,Album` (title-less rows are album jobs); every song of that album follows the album's state |
 | Whole artist | list file of `"artist=NAME"` lines + `-g`; every song by that artist follows the artist's state |
 | MP3/FLAC + Automatic | `--pref-format mp3\|flac` |

@@ -72,7 +72,14 @@ def make_jobs(mode: str, tracks: list[Track]) -> list[Job]:
     these back in its events and they become the file and folder names."""
     jobs: list[Job] = []
     if mode == "songs":
+        # Songs from the same album are searched back to back (first appearance order), and
+        # --pref-strict-album favours real album folders, so they tend to come from the same
+        # shared folder in the same format instead of being picked from different places.
+        order: dict[tuple[str, str], int] = {}
         for t in tracks:
+            order.setdefault((primary_artist(t.artist).lower(), t.album.lower()), len(order))
+        grouped = sorted(tracks, key=lambda t: (order[(primary_artist(t.artist).lower(), t.album.lower())], t.index))
+        for t in grouped:
             # no track number: a playlist position isn't the album's track number
             jobs.append(Job(len(jobs) + 1, primary_artist(t.artist), t.album, search_title(t.title), [t.index]))
     elif mode == "albums":
@@ -138,6 +145,8 @@ def build_args(
     if mode in ("albums", "artist") and o.album_art:
         args += ["--album-art", "largest"]
     args += ["--format", fmt] if force else ["--pref-format", fmt]
+    if mode == "songs":
+        args.append("--pref-strict-album")
     if fmt == "flac":  # prefer CD-quality lossless: hi-res 24-bit files are huge and slow to fetch
         args += ["--pref-max-bitdepth", "16", "--pref-max-samplerate", "48000"]
     args += ["--concurrent-searches", "4"]  # still inside sockseek's Soulseek rate limit

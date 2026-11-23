@@ -362,6 +362,12 @@ function renderTable() {
   [...rows.children].forEach((el, k) => { view[k]._el = el; view[k]._key = ""; });
 }
 
+// a failed song was either never found, or found but every transfer failed (worth a Retry)
+function failLabel(t) {
+  if (t.state !== "failed") return "";
+  return { error: "Couldn't download", wrong_format: "Not in that format" }[t.reason] || "Not found";
+}
+
 function asciiBar(p) { const n = Math.round((p / 100) * 12); return "[" + "#".repeat(n) + ".".repeat(12 - n) + "]"; }
 
 function updateRow(t) {
@@ -370,13 +376,15 @@ function updateRow(t) {
   if (key === t._key || !t._el) return;
   t._key = key;
   t._el.classList.toggle("active", BUSY.includes(t.state));
-  t._el.title = t.path ? `Saved to ${t.path}` : t.state === "failed" && t.reason === "wrong_format" ? "Not found in that format" : "";
+  t._el.title = t.path ? `Saved to ${t.path}`
+    : t.state === "failed" && t.reason === "error" ? "Found on Soulseek, but the people sharing it didn't send it. Retry usually works."
+    : t.state === "failed" ? "Nobody on Soulseek is sharing a matching file right now." : "";
   t._el.querySelector(".c-fmt").innerHTML = t.format && t.state !== "skipped" && t.state !== "failed" ? `<span>${esc(t.format)}</span>` : "";
   const st = t._el.querySelector(".c-status");
   st.className = `c-status st-${t.state}`;
   st.innerHTML = t.state === "downloading"
     ? `<span class="st-text">${pct}%</span><span class="bar"><i style="width:${pct}%"></i></span><span class="asciibar">${asciiBar(pct)}</span>`
-    : `<span class="st-text">${LABEL[t.state] || esc(t.state)}</span>`;
+    : `<span class="st-text">${failLabel(t) || LABEL[t.state] || esc(t.state)}</span>`;
 }
 
 function render() {
