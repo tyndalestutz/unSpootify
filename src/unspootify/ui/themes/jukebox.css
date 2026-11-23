@@ -25,7 +25,8 @@ body[data-theme="jukebox"] {
 
 /* ---- metal toolbar ---- */
 [data-theme="jukebox"] .masthead {
-  padding: 4px 6px 10px; border-bottom: 1px solid #8e939b; box-shadow: 0 1px 0 rgba(255,255,255,.6);
+  display: grid; grid-template-columns: 190px minmax(0, 1fr) 190px; align-items: center;
+  padding: 4px 6px 8px; border-bottom: 1px solid #8e939b; box-shadow: 0 1px 0 rgba(255,255,255,.6);
 }
 [data-theme="jukebox"] .logo { display: none; }
 [data-theme="jukebox"] .wordmark {
@@ -34,7 +35,7 @@ body[data-theme="jukebox"] {
   color: #474d57; text-shadow: 0 1px 0 rgba(255,255,255,.85);
 }
 [data-theme="jukebox"] .lcd {
-  max-width: 540px; margin: 0 auto; text-align: center;
+  width: 100%; max-width: 540px; justify-self: center; text-align: center;
   background: linear-gradient(#eef3e2, var(--lcd) 45%, #cfd8bd);
   color: var(--lcd-ink); border: 1px solid #7d8572; border-radius: 9px;
   padding: 7px 18px 9px;
@@ -45,13 +46,16 @@ body[data-theme="jukebox"] {
 [data-theme="jukebox"] .lcd-bar { height: 9px; border: 1px solid #6c7461; border-radius: 5px; background: #c9d2b4; margin: 5px 30px 0; }
 [data-theme="jukebox"] .lcd-bar span { background: repeating-linear-gradient(90deg, #3e4834 0 6px, #56624a 6px 8px); }
 
-/* round metal toolbar button */
-[data-theme="jukebox"] .icon-btn {
-  width: 34px; height: 34px; border-radius: 50%; align-self: center; margin-left: 156px;
-  border: 1px solid #7c818a; background: radial-gradient(circle at 50% 30%, #ffffff, #d9dce1 60%, #b7bcc4);
-  box-shadow: 0 1px 1px rgba(0,0,0,.25), inset 0 1px 0 #fff; color: #4a4f58; font-size: 17px; line-height: 1;
+/* round metal toolbar button with an embossed label underneath */
+[data-theme="jukebox"] .tool-btn { justify-self: end; gap: 3px; margin-right: 6px; color: #3c4149; }
+[data-theme="jukebox"] .tb-face {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid #6f747d; font-size: 17px; line-height: 1; color: #4a4f58;
+  background: radial-gradient(circle at 50% 28%, #ffffff 0, #e4e6ea 45%, #b9bec6 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.8), inset 0 -2px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.25);
 }
-[data-theme="jukebox"] .icon-btn:active { background: radial-gradient(circle at 50% 70%, #f3f4f6, #c3c8cf); }
+[data-theme="jukebox"] .tool-btn:active .tb-face { background: radial-gradient(circle at 50% 70%, #f3f4f6, #b3b8c0); }
+[data-theme="jukebox"] .tb-label { font-size: 10px; font-weight: bold; text-shadow: 0 1px 0 rgba(255,255,255,.8); }
 
 /* ---- source list ---- */
 [data-theme="jukebox"] .sidebar {

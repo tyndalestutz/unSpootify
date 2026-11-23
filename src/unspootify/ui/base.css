@@ -40,7 +40,8 @@ h2 { margin: 0; }
 .lcd-line1, .lcd-line2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lcd-bar { height: 6px; margin-top: 8px; overflow: hidden; }
 .lcd-bar span { display: block; height: 100%; width: 0; transition: width .3s linear; }
-.icon-btn { flex: none; align-self: flex-start; }
+.tool-btn { flex: none; display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; }
+.tb-key { display: none; }
 
 .panel h2 { margin-bottom: 8px; }
 .field { display: block; }

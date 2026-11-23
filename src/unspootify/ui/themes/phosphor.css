@@ -32,11 +32,18 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .lcd-bar { background: var(--faint); height: 4px; }
 [data-theme="phosphor"] .lcd-bar span { background: var(--fg); box-shadow: 0 0 8px var(--fg); }
 
-[data-theme="phosphor"] .icon-btn {
-  background: none; border: 1px solid var(--dim); color: var(--mid); width: 30px; height: 30px;
-  font-size: 16px; line-height: 1; text-shadow: inherit;
+[data-theme="phosphor"] .tool-btn {
+  align-self: stretch; justify-content: center; gap: 2px; min-width: 96px; padding: 0 12px;
+  border: 1px solid var(--dim); background: rgba(0,0,0,.35); color: var(--mid); text-shadow: inherit;
 }
-[data-theme="phosphor"] .icon-btn:hover { border-color: var(--fg); color: var(--fg); }
+[data-theme="phosphor"] .tb-face { display: none; }
+[data-theme="phosphor"] .tb-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+[data-theme="phosphor"] .tb-label::before { content: "[ "; color: var(--dim); }
+[data-theme="phosphor"] .tb-label::after { content: " ]"; color: var(--dim); }
+[data-theme="phosphor"] .tb-key { display: block; font-size: 10px; color: var(--dim); }
+[data-theme="phosphor"] .tool-btn:hover { border-color: var(--fg); color: var(--fg); }
+[data-theme="phosphor"] .tool-btn:hover .tb-label::before,
+[data-theme="phosphor"] .tool-btn:hover .tb-label::after { color: var(--fg); }
 
 /* boxes: every title sits inside its box */
 [data-theme="phosphor"] .panel { border: 1px solid var(--dim); background: var(--panel); padding: 9px 12px 10px; }

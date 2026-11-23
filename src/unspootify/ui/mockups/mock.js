@@ -209,7 +209,10 @@ document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("cli
 document.querySelectorAll(".sheet-backdrop").forEach((bd) =>
   bd.addEventListener("click", (e) => { if (e.target === bd) closeSheets(); })
 );
-window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheets(); });
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSheets();
+  if (e.key === "," && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSheet("#settingsSheet"); }
+});
 
 /* ---- looks ---- */
 const LOOKS = ["phosphor", "jukebox"];
