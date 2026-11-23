@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 0 done (2026-11-23). Next: Phase 1 UI directions.
+**Status:** Phase 1 final UI test (2026-11-23): adversarial-review fixes in, waiting for the owner's scenario run. Run: `uv run python -m unspootify --mockups`.
 
 ## Goal
 
@@ -31,7 +31,8 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 | Naming (pre-tagging) | `Artist/Album [EXT]/NN. Title.ext` via sockseek `--name-format`. The `[EXT]` in the folder keeps encodings of the same album apart. |
 | Naming (post-tagging, bonus) | Port the owner's Picard script **ULTIMATE-03** (`Artist/[Year] Album (EP) [FLAC]/NN. Title`, standardized album artist). Source: `~/.config/MusicBrainz/Picard.ini`. |
 | Tagging | **Last, bonus phase.** beets as a library (MusicBrainz + AcoustID fingerprinting), headless. Picard itself is not automatable enough to embed. |
-| UI layout | Per-track progress list is the main view; collapsible/resizable verbose terminal pane shows raw sockseek output. |
+| UI layout | Per-track progress list is the main view; collapsible/resizable verbose terminal pane shows raw sockseek output. The window never scrolls: sidebar is fixed (login, playlists, options), only the playlist list, song list, and log scroll. Advanced options open in a sheet (dialog). |
+| Looks | Two built-in looks, switchable from the gear (Settings) in the top bar: **Phosphor** (green terminal) and **Jukebox** (early-2000s iTunes-style). Layout in `ui/base.css`, each look in `ui/themes/<name>.css` following `ui/themes/THEMING.md`. |
 | Repo | Same repo and name (`unSpootify`), history kept, stays **public**. README is for friends, not developers: short and friendly. Legacy web app moves to `legacy/` in Phase 0 and is deleted at v1. Feature branches + PRs into `main`; Claude handles commits, pushes, PRs, merges. |
 
 ## Main-screen sockseek options
@@ -57,9 +58,16 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] `.gitignore`, friend-facing README with roadmap
 
 ### Phase 1: v0 UI directions (CHECKPOINT)
-- [ ] 2-3 visual directions (refined green terminal + refreshed takes) rendered in the real window with fake data
-- [ ] Each shows: login fields, folder picker, playlist list, options, per-track progress, verbose pane
-- [ ] Owner picks one (or a mix). Record the choice under Decisions.
+- [x] 3 visual directions (A Phosphor, B Jukebox 2003, C Midnight) in the real window with fake data and simulated downloads (`--mockups`)
+- [x] Each shows: login fields, folder picker (real native dialog), playlist list, options, per-track progress, resizable verbose pane
+- [x] Owner picked: keep Phosphor + Jukebox, drop Midnight (recorded under Decisions)
+- [x] Round 2: fixed sidebar, Advanced as a sheet, gear + Settings look picker, Phosphor titles inside boxes, tighter Jukebox styling, theme contract (`THEMING.md`)
+- [x] Owner signed off on round 2; Settings became a labeled toolbar button (Ctrl/Cmd+,)
+- [x] Adversarial review (fresh agent): fixed HTML injection from names, stacked timers, empty-state crashes, hard-coded counts, frozen rows after Stop, splitter overflow, header misalignment, RTL truncation, tooltips, all-fail messaging, focus/keyboard, contrast, Restore Defaults
+- [x] Fake-data scenario picker (10 scenarios, `TEST DATA` corner menu) for the final UI test
+- [x] Owner's test round 1 fixes: centered gear (SVG), Retry/Test connection sized like Download, playlists list scrolls (not the sidebar), browse other playlists while downloading, built-in port test with suggested new port, Jukebox focus rings on segments, min window 940x760
+- [x] Second adversarial review (regressions): fixed empty button area while browsing, sidebar focus/click loss during background updates, port model (blocks every search), stale port-test results, Phosphor sidebar overflow at 761-780px, focus loss in the port test, Stop available from any playlist
+- [ ] Owner runs the final verification
 
 ### Phase 2: Pipeline core (no UI wiring)
 - [ ] Settings store (login, library folder, last options) in the OS app-data dir
@@ -78,6 +86,7 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [ ] Options panel, start/stop, per-track list, resizable verbose pane
 - [ ] Force-format follow-up dialog; end-of-run summary
 - [ ] Friendly errors for the predictable failures (bad login, port blocked, no results, folder missing)
+- [ ] Real port test (mockup simulates it): check the listen port is reachable from outside (e.g. Soulseek's own port checker), suggest and apply a new port if blocked
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage
@@ -103,6 +112,9 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - Auto-detect new Exportify CSVs in `~/Downloads`
 - Exportify inside the app window instead of the browser
 - Auto-update / "new version available" notice
+- Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
+- Compact settings panel growing out of the gear sheet (look, defaults, account)
+- Other services' CSVs (Bandcamp, Apple Music, via converter sites like TuneMyMusic/Soundiiz): a later version with its own friendly import guide. v1 is Spotify + Exportify only.
 - Apple Developer signing + notarization (removes the first-launch warning)
 
 ## Risks
