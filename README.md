@@ -16,7 +16,7 @@ That's it. No terminal, nothing else to install.
 
 - [x] Plan it out
 - [x] App skeleton
-- [ ] Pick the look
+- [x] Pick the look
 - [ ] Downloading works (FLAC or MP3, full albums, skip what you have)
 - [ ] Linux app
 - [ ] Mac app (Apple Silicon)

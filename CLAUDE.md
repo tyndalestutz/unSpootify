@@ -10,6 +10,9 @@
 - Decisions in `PLAN.md` are settled. To change one, ask the owner, then update the table.
 - Tick checkboxes as items land and update the **Status** line at the end of each session.
 
+## UI contract
+`docs/ui-contract.md` is binding. Backend work starts from it; any new state, command, event, or error goes into the contract first, then gets a UI home in both looks and a scripted check. No button without a working command; no state the UI can't display.
+
 ## Users
 Four people; three are non-technical and can't debug. Every error the app shows must say what happened and what to do, in plain words. No terminal steps for end users, ever.
 
