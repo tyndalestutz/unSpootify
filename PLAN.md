@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 3 complete pending owner sign-off (2026-11-23). Next: Phase 4, Linux AppImage (CHECKPOINT). Run: `uv run python -m unspootify`.
+**Status:** Phase 3 merged (2026-11-23); `main` protected. Next: Phase 4, Linux AppImage → v1.0.0.
 
 ## Goal
 
@@ -104,15 +104,44 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [x] Owner real-account test round 2 (2026-11-23): playlist sort/archive/remove confirmed; removal verified to delete the app's copy, state and run files
 - [x] Album-mates searched together + `--pref-strict-album`; failed songs say "Couldn't download" (found but transfer failed) vs "Not found"
 
-### Phase 4: Linux AppImage = v1 (CHECKPOINT)
-- [ ] PyInstaller build with sockseek bundled; wrap as AppImage (the frozen app must handle the `finalize` subcommand sockseek calls back into)
-- [ ] Test on a clean machine/VM: download, open, export, import, download
-- [ ] Delete `legacy/`, rewrite README for end users, tag `v1.0.0`
+### Phase 4: Linux AppImage = v1.0.0 (CHECKPOINT)
+Readiness check (2026-11-23, brief fresh-agent review): ready; the three must-fixes below are built into this phase.
+Goal: one downloadable `unSpootify-1.0.0-x86_64.AppImage` that opens the app with nothing else installed.
 
-### Phase 5: macOS Apple Silicon `.dmg`
-- [ ] GitHub Actions `macos-14` runner builds `.app` (PyInstaller) + `.dmg`
-- [ ] First-launch instructions for unsigned app (right-click > Open)
-- [ ] Friend test on a real Apple Silicon Mac; fix what breaks
+Build
+- [ ] PyInstaller spec `packaging/unspootify.spec`, **onedir** (sockseek calls the app once per finished song; onefile would unpack ~150 MB each time)
+- [ ] Entry script `src/unspootify/__main__.py` so the frozen app answers `finalize` (and other CLI commands) without opening a window
+- [ ] Bundle `ui/` as data and `vendor/sockseek/<platform>/sockseek` as a binary (keeps its exec bit); trim unused Qt modules
+- [ ] Start sockseek with a clean environment (restore `LD_LIBRARY_PATH_ORIG`; PyInstaller's library path can break the .NET binary)
+- [ ] App icon (both looks feel right at small size) + `.desktop` entry
+- [ ] AppDir + pinned `appimagetool` → `unSpootify-<version>-x86_64.AppImage` via `scripts/build_appimage.sh`
+
+Verify
+- [ ] Built-binary tests: `<exe> finalize …` works headless; `--smoke-test` passes on the built app; offline end-to-end (`--offline-test`) through the built app
+- [ ] Clean-machine test in a fresh Docker container (Ubuntu LTS + Xvfb): open, add CSV, download offline, files land in the library
+- [ ] GitHub Actions: run tests and build the AppImage on every PR; attach the AppImage to tagged releases. Then make the test job a required check on `main`.
+
+Release
+- [ ] Delete `legacy/`; README rewritten for friends (download, make executable, open; first-run steps; Exportify guide)
+- [ ] Version 1.0.0 in `pyproject.toml` / `__init__.py`; tag `v1.0.0`; GitHub Release with the AppImage
+- [ ] CHECKPOINT: owner downloads the release AppImage and does a real run
+
+### Phase 5: macOS Apple Silicon `.dmg` = v1.0.x for the friend test
+Goal: a `.dmg` the friend opens, drags to Applications, and uses with zero terminal.
+
+Build (GitHub Actions `macos-14`, Apple Silicon; Claude can't run macOS locally)
+- [ ] Same spec with a `BUNDLE` step → `unSpootify.app` (Cocoa/WebKit window via pyobjc, no Qt: much smaller)
+- [ ] sockseek `osx-arm64` bundled as a binary; ad-hoc codesign sockseek and the whole `.app` (`codesign --force --deep -s -`)
+- [ ] `.dmg` with the app and an Applications shortcut (`hdiutil`), named `unSpootify-<version>-arm64.dmg`, attached to the release
+- [ ] CI smoke test on the macOS runner: launch `--smoke-test`, and a headless `finalize` + offline run
+
+First launch (unsigned app)
+- [ ] macOS 15+ blocks unsigned apps until "Open Anyway" in System Settings › Privacy & Security; write a short illustrated guide (README + a text file inside the dmg)
+- [ ] Mac-specific checks for the owner/friend: Finder folder picker, Cmd+, , app data in ~/Library/Application Support, default library ~/Music/unSpootify, both looks in WebKit
+
+Friend test
+- [ ] Friend installs from the release link and does a real run; collect feedback as GitHub issues (or a shared list); fix blockers; v1.0.1+
+- [ ] Decide on Apple Developer ID ($99/yr) only if the first-launch warning proves too confusing
 
 ### Phase 6 (bonus): Tagging and canonical naming
 - [ ] Bundle beets + `fpcalc`; run after each album/track completes (sockseek `--on-complete` or post-run batch)
