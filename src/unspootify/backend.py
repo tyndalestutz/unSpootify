@@ -35,6 +35,7 @@ class Backend:
         self.mock_dir = mock_dir  # offline test mode: sockseek "downloads" from this folder
         self.sockseek = sockseek or sockseek_path()
         self.extra_args = extra_args or []  # tests only (e.g. --mock-files-slow)
+        self.login_timeout = 120.0
         self.runner: Runner | None = None
         self._lock = threading.Lock()
         for p in self.store.playlists():  # anything left mid-flight by a crash goes back to Waiting
@@ -85,10 +86,13 @@ class Backend:
 
     def _launch(self, playlist_id: str, *, only: list[int] | None = None, format_override: str | None = None,
                 force_override: bool | None = None, try_harder: bool | None = None,
-                offer_followup: bool = True) -> dict[str, Any]:
+                offer_followup: bool = True, requeue: list[int] | None = None) -> dict[str, Any]:
         with self._lock:
-            self._check_ready()
+            self._check_ready()  # nothing changes until we know the run can start
             s = self.settings.settings
+            if requeue:
+                self.store.requeue(playlist_id, requeue)
+            self._forget_missing_files(playlist_id)
             run_dir = self.root / "runs" / playlist_id
             shutil.rmtree(run_dir / "stage", ignore_errors=True)
             run_dir.mkdir(parents=True, exist_ok=True)
@@ -96,14 +100,17 @@ class Backend:
                            format_override=format_override, force_override=force_override,
                            try_harder=try_harder, mock_dir=self.mock_dir, extra_args=self.extra_args)
             if not plan.jobs:
-                self.store.set_finished(playlist_id, True)
+                # finished only if nothing is left; Advanced "Only first / Skip first" can leave rows untried
+                left = any(t.state == "queued" for t in self.store.tracks(playlist_id))
+                self.store.set_finished(playlist_id, not left)
                 self.emit(event("run_finished", playlist_id=playlist_id, stopped=False,
                                 counts=self.store.playlist(playlist_id), missing_format=None, force_format=None,
                                 nothing_to_do=True))
                 return {"ok": True, "nothing_to_do": True}
             force = s.options.mode == "force" if force_override is None else force_override
             self.runner = Runner(self.store, playlist_id, plan, self.sockseek, self.emit, secret=s.password,
-                                 force_format=(format_override or s.options.format) if force and offer_followup else None)
+                                 force_format=(format_override or s.options.format) if force and offer_followup else None,
+                                 login_timeout=self.login_timeout)
             self.runner.start()
             return {"ok": True}
 
@@ -122,19 +129,38 @@ class Backend:
     def retry(self, playlist_id: str) -> dict[str, Any]:
         """Search again for the misses, trying harder."""
         missing = self.failed_indexes(playlist_id)
-        self.store.requeue(playlist_id, missing)
-        return self._launch(playlist_id, only=missing, try_harder=True)
+        return self._launch(playlist_id, only=missing, try_harder=True, requeue=missing)
 
-    def force_followup(self, playlist_id: str, accept: bool) -> dict[str, Any]:
-        """Force mode missed some songs: get them in the other format (or leave them)."""
+    def force_followup(self, playlist_id: str, accept: bool, forced_format: str | None = None) -> dict[str, Any]:
+        """Force mode missed some songs: get them in the other format (or leave them).
+        forced_format is the format the finished run was forced to (from run_finished)."""
         if not accept:
             return {"ok": True}
-        fmt = self.settings.settings.options.format
+        fmt = forced_format if forced_format in ("mp3", "flac") else self.settings.settings.options.format
         other = "flac" if fmt == "mp3" else "mp3"
         missing = self.failed_indexes(playlist_id)
-        self.store.requeue(playlist_id, missing)
         return self._launch(playlist_id, only=missing, format_override=other, force_override=True,
-                            offer_followup=False)
+                            offer_followup=False, requeue=missing)
+
+    def reset_playlist(self, playlist_id: str) -> dict[str, Any]:
+        """'Download again': forget results so every song is tried (what's in the library is skipped)."""
+        if self.runner and self.runner.running and self.runner.playlist_id == playlist_id:
+            raise AppError("ALREADY_RUNNING")
+        self._forget_missing_files(playlist_id)
+        self.store.reset_all(playlist_id)
+        return self.store.playlist(playlist_id)
+
+    def _forget_missing_files(self, playlist_id: str) -> None:
+        """Songs marked downloaded whose file is gone (folder changed, deleted, drive unplugged) get retried."""
+        gone = [t.index for t in self.store.tracks(playlist_id)
+                if t.state == "done" and t.path and not Path(t.path).exists()]
+        if gone:
+            self.store.requeue(playlist_id, gone)
+            # sockseek's own index would still call them downloaded; let it rebuild
+            for index in (self.root / "runs").glob(f"index-{playlist_id}-*.csv"):
+                index.unlink(missing_ok=True)
+            self.emit(event("log", bold="Note:", text=f" {len(gone)} downloaded songs aren't in the music folder"
+                            " anymore; they'll be downloaded again."))
 
     # ---- connection ----
     def test_port(self, port: int | None = None) -> dict[str, Any]:

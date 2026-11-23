@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -25,7 +26,7 @@ class Job:
 
 
 @dataclass
-class RunPlan:
+class RunPlan:  # noqa: D101
     mode: str  # songs | albums | artist
     input_path: Path
     manifest_path: Path
@@ -95,25 +96,28 @@ def write_input(mode: str, jobs: list[Job], tracks_by_index: dict[int, Track], p
 def build_args(
     settings: Settings, *, mode: str, input_path: Path, stage: Path, index_path: Path, manifest_path: Path,
     format_override: str | None = None, force_override: bool | None = None, try_harder: bool | None = None,
-    mock_dir: Path | None = None,
+    mock_dir: Path | None = None, config_path: Path | None = None,
 ) -> list[str]:
     o, adv = settings.options, settings.advanced
     fmt = format_override or o.format
     force = o.mode == "force" if force_override is None else force_override
     args = [str(input_path), "--input-type", "list" if mode == "artist" else "csv",
             "-p", str(stage), "--index-path", str(index_path), "--progress-json", "--no-progress"]
+    # Login lives in a private per-run config file (never on the command line, where `ps` shows it).
+    # Using our own config also means a stray ~/.config/sockseek/sockseek.conf can't change behaviour.
+    args += ["--config", str(config_path)] if config_path else ["--no-config"]
     if mock_dir is not None:
-        args += ["--mock-files-dir", str(mock_dir), "--user", settings.username or "offline-test",
-                 "--pass", settings.password or "offline-test"]
-    else:
-        args += ["--user", settings.username, "--pass", settings.password]
+        args += ["--mock-files-dir", str(mock_dir)]
     if mode == "artist":
         args.append("-g")
     if mode in ("albums", "artist") and o.album_art:
         args += ["--album-art", "largest"]
     args += ["--format", fmt] if force else ["--pref-format", fmt]
     if o.skip_existing:
-        args += ["--skip-music-dir", settings.library_path]
+        # Songs: also skip anything already in the library. Albums/artists: rely on sockseek's index only,
+        # otherwise owning one song of an album counts as owning the album.
+        if mode == "songs":
+            args += ["--skip-music-dir", settings.library_path]
     else:
         args.append("--no-skip-existing")
     if o.try_harder if try_harder is None else try_harder:
@@ -135,6 +139,16 @@ def build_args(
     return args
 
 
+def write_config(path: Path, settings: Settings, offline: bool) -> None:
+    """Private sockseek config with the login (0600, deleted after the run)."""
+    user = settings.username or ("offline-test" if offline else "")
+    password = settings.password or ("offline-test" if offline else "")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(f"username = {user.strip()}\npassword = {password}\n")
+
+
 def write_manifest(path: Path, *, mode: str, library: Path, stage: Path, jobs: list[Job]) -> None:
     path.write_text(json.dumps({"mode": mode, "library": str(library), "stage": str(stage),
                                 "jobs": [asdict(j) for j in jobs]}), encoding="utf-8")
@@ -154,9 +168,12 @@ def prepare(
     write_input(mode, jobs, by_index, input_path)
     library = Path(settings.library_path).expanduser()
     write_manifest(manifest, mode=mode, library=library, stage=run_dir / "stage", jobs=jobs)
+    config = run_dir / "sockseek.conf"
+    write_config(config, settings, offline=mock_dir is not None)
     args = build_args(
         settings, mode=mode, input_path=input_path, stage=run_dir / "stage",
         index_path=run_dir.parent / f"index-{playlist_id}-{mode}.csv", manifest_path=manifest,
         format_override=format_override, force_override=force_override, try_harder=try_harder, mock_dir=mock_dir,
+        config_path=config,
     ) + list(extra_args or [])
     return RunPlan(mode, input_path, manifest, args, jobs, library)

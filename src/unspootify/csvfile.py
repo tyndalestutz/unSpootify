@@ -50,13 +50,33 @@ def _length_ms(raw: str, column: str) -> int | None:
     return int(value if "ms" in column.lower() else value * 1000)
 
 
+def decode(data: bytes) -> str:
+    """UTF-8 (with or without BOM), UTF-16 (Excel 'Unicode text'), else Windows-1252."""
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        try:
+            text = data.decode("utf-16")
+        except UnicodeDecodeError as exc:
+            raise AppError("CSV_UNREADABLE") from exc
+        if "\x00" in text:
+            raise AppError("CSV_UNREADABLE")
+        return text
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    text = data.decode("cp1252", errors="replace")
+    if "\x00" in text:  # binary file, not a CSV
+        raise AppError("CSV_UNREADABLE")
+    return text
+
+
 def read_tracks(path: Path) -> list[CsvTrack]:
     """Parse a playlist CSV. Raises AppError(CSV_UNREADABLE / CSV_NO_TRACKS)."""
     try:
         if path.stat().st_size > MAX_BYTES:
             raise AppError("CSV_UNREADABLE")
-        text = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as exc:
+        text = decode(path.read_bytes())
+    except OSError as exc:
         raise AppError("CSV_UNREADABLE") from exc
 
     # Exports differ: Exportify/Soundiiz use commas, some tools use ; or tabs.

@@ -18,13 +18,13 @@ def args_for(**opts):
 
 
 @pytest.mark.parametrize("opts, present, absent", [
-    ({}, ["--pref-format mp3", "--skip-music-dir /lib", "--progress-json", "--user u", "--pass p"], ["-d", "-g", "--format "]),
+    ({}, ["--pref-format mp3", "--skip-music-dir /lib", "--progress-json", "--no-config"], ["-d", "-g", "--format ", "--user", "--pass"]),
     ({"format": "flac", "mode": "force"}, ["--format flac"], ["--pref-format"]),
     ({"skip_existing": False}, ["--no-skip-existing"], ["--skip-music-dir"]),
     ({"try_harder": True}, ["-d"], []),
     ({"fast": True, "strict_title": True}, ["--fast-search", "--strict-title"], []),
     ({"min_bitrate": 256, "listen_port": 50123}, ["--min-bitrate 256", "--listen-port 50123"], []),
-    ({"grab": "albums", "album_art": True}, ["--album-art largest", "--input-type csv"], ["-g"]),
+    ({"grab": "albums", "album_art": True}, ["--album-art largest", "--input-type csv"], ["-g", "--skip-music-dir"]),
     ({"grab": "artist"}, ["-g", "--input-type list"], []),
     ({"grab": "songs", "album_art": True}, [], ["--album-art"]),
 ])
@@ -75,3 +75,15 @@ def test_prepare_writes_inputs(tmp_path):
     s.options.grab = "artist"
     plan = prepare(s, pid, store.tracks(pid), tmp_path / "run2")
     assert plan.input_path.read_text().splitlines()[0] == '"artist=The Killers"'
+
+
+def test_login_goes_in_private_config_not_args(tmp_path):
+    store = Store()
+    pid = store.import_csv(ROAD_TRIP)["id"]
+    s = Settings(username="me", password="s3cret-pass", library_path=str(tmp_path / "lib"))
+    plan = prepare(s, pid, store.tracks(pid), tmp_path / "run")
+    assert "s3cret-pass" not in " ".join(plan.args) and "--user" not in plan.args
+    conf = tmp_path / "run" / "sockseek.conf"
+    assert plan.args[plan.args.index("--config") + 1] == str(conf)
+    assert conf.read_text() == "username = me\npassword = s3cret-pass\n"
+    assert conf.stat().st_mode & 0o777 == 0o600

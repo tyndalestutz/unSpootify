@@ -117,6 +117,7 @@
         _fail: !!(rules.fail && rules.fail(i)), _have: !!(rules.have && rules.have(i)), _flacOnly: !!(rules.flacOnly && rules.flacOnly(i)),
       }));
       this.playlists.push({ id, name, total: rows.length, done: 0, downloaded: 0, skipped: 0, failed: 0, finished: false });
+      if (this.listener) this.log("Added playlist ", `"${name}" (${rows.length} songs)`);
       return this.playlists[this.playlists.length - 1];
     }
     addSummary(o) {
@@ -167,7 +168,9 @@
       const p = this.addPlaylist(`imported playlist ${this.playlists.length + 1}`, BASE.slice(0, 6));
       return this.public(p);
     }
-    async importCsvText(name, text) {
+    async importCsvData(name, base64) {
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const text = new TextDecoder("utf-8").decode(bytes);
       const lines = text.split(/\r?\n/).filter((l) => l.trim());
       if (lines.length < 2) return this.error("CSV_NO_TRACKS", "That CSV has no songs in it.", null);
       const rows = lines.slice(1).map((l) => { const c = l.split(","); return [c[0] || "", c[1] || "", c[2] || ""]; });
@@ -186,7 +189,7 @@
       if (a.first_n) rows = rows.slice(0, a.first_n);
       rows = opts.only ? rows.filter((x) => opts.only.includes(x.index)) : rows.filter((x) => x.state === "queued");
       if (!rows.length) {
-        p.finished = true;
+        p.finished = !t.some((x) => x.state === "queued");
         this.emit({ type: "run_finished", playlist_id: id, stopped: false, counts: this.public(this.summarize(id)), missing_format: null, force_format: null, nothing_to_do: true });
         return { ok: true, nothing_to_do: true };
       }
@@ -269,11 +272,18 @@
       this.log("Retrying ", `${failed.length} songs with Try harder`);
       return this.start(id, { only: failed.map((t) => t.index) });
     }
-    async forceFollowup(id, accept) {
+    async resetPlaylist(id) {
+      if (this.active === id) return this.error("ALREADY_RUNNING", "A download is already running.", null);
+      for (const t of this.tracks(id)) Object.assign(t, { state: "queued", pct: 0, format: null, user: null, path: null, reason: null });
+      const p = this.summarize(id);
+      p.finished = false;
+      return this.public(p);
+    }
+    async forceFollowup(id, accept, forcedFormat) {
       if (!accept) return { ok: true };
       const failed = this.tracks(id).filter((t) => t.state === "failed");
       for (const t of failed) { t.state = "queued"; t.reason = null; }
-      const other = this.settings.options.format === "mp3" ? "flac" : "mp3";
+      const other = (forcedFormat || this.settings.options.format) === "mp3" ? "flac" : "mp3";
       return this.start(id, { only: failed.map((t) => t.index), format: other, force: true, followup: true });
     }
     async testPort(port) {

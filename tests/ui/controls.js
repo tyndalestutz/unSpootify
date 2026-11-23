@@ -89,6 +89,14 @@ T.run([
     T.click(".look-card[data-look='phosphor']");
     T.click("#settingsSheet [data-close]");
   }],
+  ["double-click Download", async () => {
+    T.$("#goBtn").click(); await T.sleep(150); T.$("#goBtn").click();
+    await T.sleep(600);
+    T.check("double-clicking Download doesn't start-then-stop", !!window.UI.run, "run=" + JSON.stringify(window.UI.run));
+    await T.sleep(1200);
+    T.click("#goBtn");
+    await T.waitFor(() => !window.UI.run, 3000, "stopped");
+  }],
   ["download, stop, resume", async () => {
     T.click("#goBtn");
     await T.waitFor(() => T.text("#goBtn") === "Stop", 3000, "Stop button");
@@ -109,10 +117,18 @@ T.run([
     await T.waitFor(() => !window.UI.run && window.UI.playlists[0].finished && T.visible("#retryBtn"), 60000, "run finished");
     T.check("finished run shows a summary", T.text("#lcdTitle").startsWith("Finished"), T.text("#lcdTitle"));
     T.check("Retry appears for missing songs", T.visible("#retryBtn") && T.text("#retryBtn").startsWith("Retry 2"), T.text("#retryBtn"));
+    T.check("Download becomes Download again", T.text("#goBtn") === "Download again" && T.visible("#goBtn"), T.text("#goBtn"));
     T.click("#retryBtn");
     await T.waitFor(() => window.UI.run, 3000, "retry started");
     await T.waitFor(() => !window.UI.run, 30000, "retry finished");
     T.check("Retry runs only the missing songs", true);
+    await T.sleep(300);
+    T.click("#goBtn");
+    await T.waitFor(() => window.UI.run, 3000, "download again started");
+    T.check("Download again re-runs the playlist", window.UI.tracks[window.UI.current].some((t) => t.state !== "done"));
+    await T.sleep(1700);
+    T.click("#goBtn");
+    await T.waitFor(() => !window.UI.run, 5000, "stopped");
   }],
   ["details pane", async () => {
     T.check("Details shows the downloader log", T.text("#log").includes("Searching"));

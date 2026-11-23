@@ -25,6 +25,9 @@ ERRORS: dict[str, tuple[str, str | None]] = {
     "SOCKSEEK_CRASHED": ("The downloader stopped unexpectedly. Details has more.", "retry"),
     "NO_LOGIN": ("Enter a Soulseek username and password first.", "focus_login"),
     "ALREADY_RUNNING": ("A download is already running.", None),
+    "LOGIN_TIMEOUT": ("Couldn't get connected to Soulseek. Check your internet or test your connection.",
+                      "test_connection"),
+    "UNEXPECTED": ("Something went wrong. Details has more.", None),
 }
 
 

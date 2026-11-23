@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import sys
 import tempfile
@@ -28,6 +29,11 @@ def _guard(fn):
             return {"error": exc.to_event()}
         except KeyError:
             return {"error": {"code": "NOT_FOUND", "message": "That playlist isn't there anymore.", "action": None}}
+        except Exception as exc:  # never leave the page waiting on a rejected promise
+            import traceback
+
+            traceback.print_exc()
+            return {"error": AppError("UNEXPECTED", f"{type(exc).__name__}: {exc}").to_event()}
 
     wrapper.__name__ = fn.__name__
     return wrapper
@@ -80,11 +86,15 @@ class Api:
         return self._backend.import_csv_path(result[0])
 
     @_guard
-    def import_csv_text(self, name: str, text: str) -> dict:
-        safe = "".join(c for c in Path(name).name if c.isalnum() or c in " ._-()") or "playlist.csv"
+    def import_csv_data(self, name: str, data_b64: str) -> dict:
+        """A CSV dropped on the window: the page sends the raw bytes (base64) so any encoding works."""
+        raw = base64.b64decode(data_b64, validate=False)
+        if len(raw) > 50 * 1024 * 1024:
+            raise AppError("CSV_UNREADABLE", "too big")
+        stem = "".join(c for c in Path(name).stem if c.isalnum() or c in " ._-()").strip(" .")[:80] or "playlist"
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / safe
-            path.write_text(text, encoding="utf-8")
+            path = Path(tmp) / f"{stem}.csv"
+            path.write_bytes(raw)
             return self._backend.import_csv_path(str(path))
 
     def open_url(self, which: str) -> None:
@@ -120,8 +130,12 @@ class Api:
         return self._backend.retry(playlist_id)
 
     @_guard
-    def force_followup(self, playlist_id: str, accept: bool) -> dict:
-        return self._backend.force_followup(playlist_id, bool(accept))
+    def force_followup(self, playlist_id: str, accept: bool, forced_format: str | None = None) -> dict:
+        return self._backend.force_followup(playlist_id, bool(accept), forced_format)
+
+    @_guard
+    def reset_playlist(self, playlist_id: str) -> dict:
+        return self._backend.reset_playlist(playlist_id)
 
     @_guard
     def test_port(self, port: int | None = None) -> dict:

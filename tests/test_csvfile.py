@@ -53,3 +53,12 @@ def test_soundiiz_style_and_semicolons(tmp_path):
     q.write_text("Track name;Artist name;Album\nFloat On;Modest Mouse;Good News\n", encoding="utf-8")
     (t,) = read_tracks(q)
     assert (t.title, t.artist) == ("Float On", "Modest Mouse")
+
+
+def test_other_encodings(tmp_path):
+    p = tmp_path / "excel.csv"
+    p.write_bytes("Title,Artist\nCaf\u00e9 Song,Beyonc\u00e9\n".encode("utf-16"))
+    assert read_tracks(p)[0].artist == "Beyonc\u00e9"
+    q = tmp_path / "win.csv"
+    q.write_bytes("Title,Artist\nCaf\u00e9 Song,Beyonc\u00e9\n".encode("cp1252"))
+    assert read_tracks(q)[0].title == "Caf\u00e9 Song"

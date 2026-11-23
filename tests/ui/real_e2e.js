@@ -40,7 +40,7 @@ T.run([
     T.check("Retry searched again and still can't find the missing song", rows()[7].state === "failed");
   }],
   ["nothing left", async () => {
-    T.check("after a finished run with a miss, Retry replaces Download", T.$("#goBtn").hidden && T.visible("#retryBtn"));
+    T.check("after a finished run, Download says Download again and Retry is offered", T.text("#goBtn") === "Download again" && T.visible("#retryBtn"), T.text("#goBtn"));
   }],
   ["port field saves", async () => {
     T.click("#openAdvanced");

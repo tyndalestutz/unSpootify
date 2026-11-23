@@ -1,5 +1,6 @@
 // RealBackend: the Python backend via pywebview. Commands -> window.pywebview.api.*,
-// events arrive as window CustomEvent("unspootify", {detail}).
+// events arrive as window CustomEvent("unspootify", {detail}). A failed call never rejects:
+// it resolves to {error: {code, message, action}} like the backend's own errors.
 class RealBackend {
   constructor(api) {
     this.api = api;
@@ -7,17 +8,25 @@ class RealBackend {
     window.addEventListener("unspootify", (e) => this.listener(e.detail));
   }
   on(fn) { this.listener = fn; }
-  getState() { return this.api.get_state(); }
-  saveSettings(partial) { return this.api.save_settings(partial); }
-  chooseFolder() { return this.api.choose_folder(); }
-  importCsv() { return this.api.import_csv(); }
-  importCsvText(name, text) { return this.api.import_csv_text(name, text); }
-  openUrl(which) { return this.api.open_url(which); }
-  getTracks(id) { return this.api.get_tracks(id); }
-  start(id) { return this.api.start(id); }
-  stop() { return this.api.stop(); }
-  retry(id) { return this.api.retry(id); }
-  forceFollowup(id, accept) { return this.api.force_followup(id, accept); }
-  testPort(port) { return this.api.test_port(port); }
+  async call(name, ...args) {
+    try {
+      return await this.api[name](...args);
+    } catch (e) {
+      return { error: { code: "UNEXPECTED", message: "Something went wrong. Details has more.", action: null, detail: String(e) } };
+    }
+  }
+  getState() { return this.call("get_state"); }
+  saveSettings(partial) { return this.call("save_settings", partial); }
+  chooseFolder() { return this.call("choose_folder"); }
+  importCsv() { return this.call("import_csv"); }
+  importCsvData(name, base64) { return this.call("import_csv_data", name, base64); }
+  openUrl(which) { return this.call("open_url", which); }
+  getTracks(id) { return this.call("get_tracks", id); }
+  start(id) { return this.call("start", id); }
+  stop() { return this.call("stop"); }
+  retry(id) { return this.call("retry", id); }
+  forceFollowup(id, accept, forcedFormat) { return this.call("force_followup", id, accept, forcedFormat || null); }
+  resetPlaylist(id) { return this.call("reset_playlist", id); }
+  testPort(port) { return this.call("test_port", port); }
 }
 window.RealBackend = RealBackend;

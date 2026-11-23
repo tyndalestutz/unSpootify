@@ -137,3 +137,87 @@ def test_errors_are_contract_codes(tmp_path, mock_share):
         backend.import_csv_path(str(bad))
     assert e.value.code == "CSV_UNREADABLE"
     backend.close()
+
+
+# ---- regressions from the Phase 3 adversarial review ----
+
+def test_failed_retry_start_keeps_rows(setup, tmp_path):
+    backend, rec, pid, lib = setup
+    backend.start(pid)
+    rec.wait(backend)
+    backend.save_settings({"library_path": "/nonexistent-drive/Music"})
+    with pytest.raises(AppError):
+        backend.retry(pid)
+    assert states(backend, pid)[7] == "failed"  # still retryable
+    backend.save_settings({"library_path": str(lib)})
+    backend.retry(pid)
+    rec.wait(backend)
+    assert rec.of("run_started")[-1]["total"] == 1
+
+
+def test_albums_after_songs_are_not_marked_missing(setup):
+    backend, rec, pid, lib = setup
+    backend.start(pid)
+    rec.wait(backend)
+    backend.save_settings({"options": {"grab": "albums"}})
+    backend.reset_playlist(pid)
+    backend.start(pid)
+    rec.wait(backend)
+    st = states(backend, pid)
+    assert st[:7] == ["done"] * 7, st  # full albums fetched even though one song of each was owned
+    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "02. Album Track 1.mp3").exists()
+
+
+def test_download_again_after_files_deleted(setup):
+    import shutil
+
+    backend, rec, pid, lib = setup
+    backend.start(pid)
+    rec.wait(backend)
+    shutil.rmtree(lib)
+    lib.mkdir()
+    backend.start(pid)  # done rows whose files vanished are retried
+    rec.wait(backend)
+    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3").exists()
+
+
+def test_only_first_n_does_not_claim_finished(setup):
+    backend, rec, pid, _ = setup
+    backend.save_settings({"advanced": {"first_n": 3}})
+    backend.start(pid)
+    fin = rec.wait(backend)
+    assert not fin["counts"]["finished"]
+    assert states(backend, pid)[3:] == ["queued"] * 5
+    r = backend.start(pid)
+    assert r["nothing_to_do"] and not backend.store.playlist(pid)["finished"]
+
+
+def test_unlaunchable_sockseek_is_a_clear_error(tmp_path, mock_share):
+    fake = tmp_path / "sockseek"
+    fake.write_text("#!/bin/sh\n")
+    fake.chmod(0o644)  # not executable
+    rec = Recorder()
+    backend = Backend(rec, root=tmp_path / "home", mock_dir=mock_share, sockseek=fake)
+    backend.save_settings({"library_path": str(tmp_path / "lib")})
+    pid = backend.import_csv_path(str(ROAD_TRIP))["id"]
+    with pytest.raises(AppError) as e:
+        backend.start(pid)
+    assert e.value.code == "SOCKSEEK_MISSING" and not rec.of("run_started")
+    assert not (tmp_path / "home" / "runs" / pid / "sockseek.conf").exists()
+    backend.close()
+
+
+def test_login_timeout(tmp_path, mock_share):
+    fake = tmp_path / "sockseek"
+    fake.write_text("#!/bin/sh\necho '[cli] Starting'\nexec sleep 30\n")
+    fake.chmod(0o755)
+    rec = Recorder()
+    backend = Backend(rec, root=tmp_path / "home", mock_dir=mock_share, sockseek=fake)
+    backend.login_timeout = 1.0
+    backend.save_settings({"library_path": str(tmp_path / "lib")})
+    pid = backend.import_csv_path(str(ROAD_TRIP))["id"]
+    backend.start(pid)
+    rec.wait(backend, timeout=20)
+    assert [e["code"] for e in rec.of("error")] == ["LOGIN_TIMEOUT"]
+    assert states(backend, pid) == ["queued"] * 8
+    backend.close()

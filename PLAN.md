@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 2 done (2026-11-23): backend complete and tested offline end-to-end (43 tests). Next: Phase 3, wire the UI.
+**Status:** Phase 3 built and reviewed (2026-11-23); waiting for the owner's real-account test. Run: `uv run python -m unspootify`.
 
 ## Goal
 
@@ -91,14 +91,15 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [ ] Unverified until a real account is used (Phase 3): sockseek's wording for login failure / blocked network, and how rate-limit waiting is reported
 
 ### Phase 3: Wire the UI (no control left unconnected)
-- [ ] Refactor `mock.js` into a FakeBackend that implements the contract; UI logic moves to `app.js`, shared by fake and real
-- [ ] Real backend bridge: pywebview `js_api` commands + `unspootify` CustomEvents
-- [ ] Production page `index.html` from the approved mockup (both looks); TEST DATA picker only in mockup mode
-- [ ] Every row of the contract's "UI element → contract map" has a scripted check (screenshot_ui.py CHECK) against the FakeBackend
-- [ ] End-to-end in the real window against sockseek `--mock-files-dir`: import CSV, choose folder, download, stop, browse during run, retry, force follow-up, skip existing, port test, every error code
-- [ ] "Get your playlist" guide: opens Exportify in the default browser, short illustrated steps
-- [ ] Real port test wired to Advanced and Test connection
-- [ ] Adversarial review of the wired app (fresh agent), fixes, owner test run with a real Soulseek account
+- [x] Refactor `mock.js` into a FakeBackend that implements the contract; UI logic moves to `app.js`, shared by fake and real
+- [x] Real backend bridge: pywebview `js_api` commands + `unspootify` CustomEvents
+- [x] Production page `index.html` from the approved mockup (both looks); TEST DATA picker only in mockup mode
+- [x] Every row of the contract's "UI element → contract map" has a scripted check (screenshot_ui.py CHECK) against the FakeBackend
+- [x] End-to-end in the real window against sockseek `--mock-files-dir`: import CSV, choose folder, download, stop, browse during run, retry, force follow-up, skip existing, port test, every error code
+- [x] "Get your playlist" guide: opens Exportify in the default browser, short illustrated steps
+- [x] Real port test wired to Advanced and Test connection
+- [x] Adversarial review of the wired app (fresh agent) and fixes: double-click start/stop, failed Retry stranding rows, Full albums after songs, Download again, unlaunchable sockseek, crash-after-success, Only/Skip-first claiming done, password off the command line (private config), log scrubbing, login timeout + status, encodings, follow-up format
+- [ ] Owner test run with a real Soulseek account and a Soundiiz CSV (confirms login-failure wording and Soundiiz columns)
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage (the frozen app must handle the `finalize` subcommand sockseek calls back into)
@@ -127,6 +128,8 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
 - (moved into v1) Soundiiz covers other services' playlists. Verify Soundiiz's real CSV columns and whether its file export needs a paid plan.
+- Kill sockseek if the app is force-quit or crashes (atexit + window close cover normal exits; PDEATHSIG can't be used because pywebview spawns from worker threads)
+- Remove playlists from the sidebar; handle re-exported playlists with the same name
 - Apple Developer signing + notarization (removes the first-launch warning)
 
 ## Risks

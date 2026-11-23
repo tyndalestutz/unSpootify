@@ -1,6 +1,6 @@
 // unSpootify UI. Talks to a backend that implements docs/ui-contract.md:
-//   commands: async methods (getState, saveSettings, chooseFolder, importCsv, importCsvText, openUrl,
-//             getTracks, start, stop, retry, forceFollowup, testPort)
+//   commands: async methods (getState, saveSettings, chooseFolder, importCsv, importCsvData, openUrl,
+//             getTracks, start, stop, retry, forceFollowup, resetPlaylist, testPort)
 //   events:   backend.on(fn) delivers {type: run_started|track|run_finished|log|error|port_result, ...}
 // The same code runs against FakeBackend (look check, UI tests) and RealBackend (pywebview + Python).
 // Every user-supplied string goes through esc() or textContent.
@@ -16,6 +16,7 @@ const UI = {
   backend: null, settings: null, offline: false,
   playlists: [], current: null, tracks: {}, run: null, // run = {playlist_id}
   flash: null, notice: null, lastUserScroll: 0, renderedFor: undefined, renderedLen: -1,
+  goBusy: false, runStartedAt: 0, status: "idle",
 };
 
 /* ================= helpers ================= */
@@ -96,7 +97,12 @@ function saveSettings(partial, immediate = false) {
     const body = pendingSave;
     pendingSave = {};
     const r = await UI.backend.saveSettings(body);
-    if (r && !isError(r)) UI.settings = r;
+    if (r && !isError(r)) {
+      UI.settings = r;
+      // the backend may correct values (e.g. an out-of-range port); show what it actually saved
+      const port = $("#listenPort");
+      if (document.activeElement !== port && String(r.advanced.listen_port ?? "") !== port.value.trim()) port.value = r.advanced.listen_port ?? "";
+    }
   };
   if (immediate) return flush();
   saveTimer = setTimeout(flush, 350);
@@ -146,6 +152,13 @@ async function loadTracks(id) {
   syncPlaylistCounts(id);
 }
 
+async function refreshTracks(id) {
+  if (!tracksOf(id)) return;
+  await loadTracks(id);
+  if (id === UI.current) UI.renderedFor = undefined; // rebuild rows
+  render();
+}
+
 async function selectPlaylist(id) {
   UI.current = id;
   render();
@@ -160,7 +173,6 @@ function addPlaylist(p) {
   if (existing) Object.assign(existing, p);
   else UI.playlists.push(p);
   delete UI.tracks[p.id];
-  log("Added playlist ", `"${p.name}" (${p.total} songs)`);
   selectPlaylist(p.id);
 }
 
@@ -184,11 +196,16 @@ function onEvent(ev) {
   switch (ev.type) {
     case "run_started": {
       UI.run = { playlist_id: ev.playlist_id };
+      UI.runStartedAt = Date.now();
       const p = byId(ev.playlist_id);
       if (p) p.finished = false;
       UI.notice = null;
+      refreshTracks(ev.playlist_id); // the backend re-queued rows for this run
       break;
     }
+    case "status":
+      UI.status = ev.phase;
+      break;
     case "track": {
       const list = tracksOf(ev.playlist_id);
       if (list && list[ev.index]) {
@@ -201,8 +218,10 @@ function onEvent(ev) {
     }
     case "run_finished": {
       UI.run = null;
+      UI.status = "idle";
       const p = byId(ev.playlist_id);
       if (p && ev.counts) Object.assign(p, ev.counts);
+      refreshTracks(ev.playlist_id); // settle every row to the backend's final state
       if (ev.nothing_to_do) flashLcd("Nothing left to download", "Everything in this playlist has been tried.");
       if (ev.missing_format && ev.force_format) {
         const other = ev.force_format === "mp3" ? "FLAC" : "MP3";
@@ -211,6 +230,7 @@ function onEvent(ev) {
           `Try to get ${ev.missing_format === 1 ? "it" : "them"} as ${other} instead?`;
         $("#followYes").textContent = `Get as ${other}`;
         $("#followupSheet").dataset.playlist = ev.playlist_id;
+        $("#followupSheet").dataset.format = ev.force_format;
         openSheet("#followupSheet");
       }
       if (!ev.stopped && UI.current !== ev.playlist_id && p) {
@@ -246,16 +266,50 @@ function canDownload() {
 }
 
 async function call(promise) {
-  const r = await promise;
+  let r;
+  try { r = await promise; } catch (e) { r = { error: { code: "UNEXPECTED", message: "Something went wrong. Details has more.", detail: String(e) } }; }
   if (isError(r)) showError(r.error);
   return r;
 }
 
+const finishedNothingLeft = (p, c) => !!p && !!p.finished && c.queued === 0;
+
 async function onGo() {
-  if (UI.run) { await call(UI.backend.stop()); return; }
+  if (UI.goBusy) return; // a double-click must not start and then immediately stop
+  if (UI.run) {
+    if (Date.now() - UI.runStartedAt < 700) return; // second click of a double-click
+    UI.goBusy = true;
+    try { await call(UI.backend.stop()); } finally { UI.goBusy = false; }
+    return;
+  }
   if (!canDownload().ok) return;
-  await saveSettings({}, true); // make sure the backend has the latest options
-  await call(UI.backend.start(UI.current));
+  UI.goBusy = true;
+  $("#goBtn").disabled = true;
+  try {
+    const id = UI.current;
+    await saveSettings({}, true); // make sure the backend has the latest options
+    if (finishedNothingLeft(currentPl(), counts(id))) { // "Download again"
+      const r = await call(UI.backend.resetPlaylist(id));
+      if (isError(r)) return;
+      Object.assign(byId(id), r);
+      await loadTracks(id);
+      UI.renderedFor = undefined;
+    }
+    const r = await call(UI.backend.start(id));
+    if (isError(r)) await refreshTracks(id);
+  } finally {
+    UI.goBusy = false;
+    render();
+  }
+}
+
+async function onRetry() {
+  if (UI.goBusy || UI.run) return;
+  UI.goBusy = true;
+  try {
+    const r = await call(UI.backend.retry(UI.current));
+    if (isError(r)) await refreshTracks(UI.current);
+  } finally { UI.goBusy = false; render(); }
 }
 
 /* ================= rendering ================= */
@@ -323,13 +377,18 @@ function render() {
 
   const running = !!UI.run, act = activePl(), can = canDownload();
   const go = $("#goBtn");
-  go.textContent = running ? "Stop" : "Download";
+  const again = !running && finishedNothingLeft(p, c);
+  go.textContent = running ? "Stop" : again ? "Download again" : "Download";
   go.classList.toggle("running", running);
-  go.disabled = !running && !can.ok;
-  go.title = running ? (UI.current === UI.run.playlist_id ? "" : `Stops downloading “${act ? act.name : ""}”`) : go.disabled ? can.why : "";
-  go.hidden = !running && !!p && !!p.finished && c.queued === 0 && c.failed > 0;
+  go.disabled = UI.goBusy || (!running && !can.ok);
+  go.title = running ? (UI.current === UI.run.playlist_id ? "" : `Stops downloading “${act ? act.name : ""}”`)
+    : go.disabled ? can.why : again ? "Try every song again (what's already in your music folder is skipped)" : "";
+  go.classList.toggle("go-alt", again && c.failed > 0);
+  go.classList.toggle("go", !(again && c.failed > 0));
   const retryBtn = $("#retryBtn");
   retryBtn.hidden = running || !p || !c.failed || !p.finished;
+  retryBtn.classList.toggle("go", !!p && c.failed > 0);
+  retryBtn.classList.toggle("go-alt", !(p && c.failed > 0));
   retryBtn.textContent = `Retry ${c.failed.toLocaleString()} missing`;
   const showTest = !running && ((p && p.finished && c.failed && !c.done) || (UI.notice && ["test_connection"].includes(UI.notice.action)));
   $("#testBtn").hidden = !showTest;
@@ -356,18 +415,29 @@ function renderLcd(c, can) {
     const where = UI.current === UI.run.playlist_id ? "" : `“${act ? act.name : ""}” · `;
     const what = cur.state === "searching" ? "Searching Soulseek…" : cur.state === "waiting" ? "Waiting for Soulseek's search limit…" : `From ${cur.user || "someone"} · ${(shownLib + shown.failed + 1).toLocaleString()} of ${shown.n.toLocaleString()}`;
     b = where + what;
-  } else if (UI.run) { a = `Starting “${act ? act.name : ""}”…`; b = "Logging in to Soulseek"; }
+  } else if (UI.run) {
+    a = `Starting “${act ? act.name : ""}”…`;
+    b = UI.status === "logged_in" ? "Connected · looking for songs" : "Connecting to Soulseek…";
+  }
   else if (!can.ok) { a = can.why; b = !p ? "Your playlists will show up on the left." : $("#user").value.trim() ? "" : "No account? Just make one up."; }
   else if (p.finished) {
     if (c.failed === c.n) { a = "Nothing was found"; b = "Try Test connection."; }
     else if (c.done === 0 && c.failed === 0) { a = "Nothing new to download"; b = `All ${c.n.toLocaleString()} songs are already in your library.`; }
     else if (c.failed) { a = `Finished: ${lib.toLocaleString()} of ${c.n.toLocaleString()} in your library`; b = `${c.failed.toLocaleString()} couldn't be found. Press Retry to search harder.`; }
     else { a = `Finished: all ${c.n.toLocaleString()} in your library`; b = "Everything was found."; }
+  } else if (lib + c.failed > 0 && c.queued && limitsOn()) {
+    a = `Done with the songs Advanced allows (${lib.toLocaleString()} of ${c.n.toLocaleString()})`;
+    b = "Clear “Only first” / “Skip first” in Advanced to get the rest.";
   } else if (lib + c.failed > 0 && c.queued) { a = `Stopped: ${lib.toLocaleString()} of ${c.n.toLocaleString()} done`; b = "Press Download to continue."; }
   else { a = "Ready"; b = "Press Download to start."; }
   t1.textContent = a; t1.title = a;
   t2.textContent = b || " ";
   lcd.classList.toggle("lcd-bad", kind === "bad");
+}
+
+function limitsOn() {
+  const a = UI.settings?.advanced;
+  return !!(a && (a.first_n || a.skip_n));
 }
 
 function noticeHint(action) {
@@ -449,6 +519,7 @@ async function testPort() {
 function showPortResult(r) {
   if (!r || r.port === undefined) return;
   if (r.error === "BAD_PORT") return setPortResult("Port must be a number between 1024 and 65535.", "bad");
+  if (r.error === "NO_NETWORK" && r.server === false) return setPortResult("Looks like you're offline. Check your internet connection.", "bad");
   if (r.server === false) return setPortResult("This network can't reach Soulseek at all (school, work and some public Wi-Fi block it). Try another network.", "bad");
   if (r.error === "NO_NETWORK") return setPortResult("Couldn't run the test. Check your internet connection.", "bad");
   if (r.open === true) return setPortResult(`Soulseek is reachable and port ${r.port} is open. The connection isn't the problem.`, "good");
@@ -503,13 +574,17 @@ function closeSheets() {
   const open = document.querySelector(".sheet-backdrop:not([hidden])");
   if (!open) return;
   open.hidden = true;
-  if (open.id === "advancedSheet") saveSettings({ advanced: readAdvanced() }, true);
+  if (open.id === "advancedSheet") {
+    const adv = readAdvanced();
+    if (adv.listen_port !== null && !(adv.listen_port >= 1024 && adv.listen_port <= 65535)) adv.listen_port = null;
+    saveSettings({ advanced: adv }, true);
+  }
   returnFocus?.focus?.();
 }
 
 function bindControls() {
   $("#goBtn").addEventListener("click", onGo);
-  $("#retryBtn").addEventListener("click", () => call(UI.backend.retry(UI.current)));
+  $("#retryBtn").addEventListener("click", onRetry);
   $("#testBtn").addEventListener("click", () => { openSheet("#advancedSheet"); testPort(); });
   $("#portTestBtn").addEventListener("click", testPort);
 
@@ -550,8 +625,16 @@ function bindControls() {
   });
   [["#optSkip", "skip_existing"], ["#optArt", "album_art"], ["#optHarder", "try_harder"]].forEach(([id, key]) =>
     $(id).addEventListener("change", () => saveSettings({ options: { [key]: $(id).checked } })));
-  ["#advFirst", "#advSkip", "#advBitrate", "#listenPort"].forEach((id) =>
+  ["#advFirst", "#advSkip", "#advBitrate"].forEach((id) =>
     $(id).addEventListener("change", () => saveSettings({ advanced: readAdvanced() })));
+  $("#listenPort").addEventListener("change", () => {
+    const v = $("#listenPort").value.trim();
+    if (v && !(Number.isInteger(Number(v)) && Number(v) >= 1024 && Number(v) <= 65535)) {
+      setPortResult("Port must be a number between 1024 and 65535.", "bad");
+      return;
+    }
+    saveSettings({ advanced: readAdvanced() });
+  });
   ["#advFast", "#advStrict"].forEach((id) => $(id).addEventListener("change", () => saveSettings({ advanced: readAdvanced() })));
 
   $("#toggleTerm").addEventListener("click", () => {
@@ -585,7 +668,11 @@ function bindControls() {
   $("#guideAddCsv").addEventListener("click", () => { closeSheets(); importCsv(); });
   $("#openSoundiiz").addEventListener("click", () => UI.backend.openUrl("soundiiz"));
   $("#openExportify").addEventListener("click", () => UI.backend.openUrl("exportify"));
-  $("#followYes").addEventListener("click", () => { const pid = $("#followupSheet").dataset.playlist; closeSheets(); call(UI.backend.forceFollowup(pid, true)); });
+  $("#followYes").addEventListener("click", () => {
+    const sheet = $("#followupSheet");
+    closeSheets();
+    call(UI.backend.forceFollowup(sheet.dataset.playlist, true, sheet.dataset.format));
+  });
   $("#followNo").addEventListener("click", () => { const pid = $("#followupSheet").dataset.playlist; closeSheets(); UI.backend.forceFollowup(pid, false); });
 
   $("#openAdvanced").addEventListener("click", () => openSheet("#advancedSheet"));
@@ -624,10 +711,17 @@ function bindControls() {
     if (!file) return;
     if (!/\.(csv|txt)$/i.test(file.name)) return showError({ code: "CSV_UNREADABLE", message: "That file doesn't look like a playlist CSV.", action: "playlist_guide" });
     if (file.size > 50 * 1024 * 1024) return showError({ code: "CSV_UNREADABLE", message: "That file is too big to be a playlist.", action: null });
-    const r = await UI.backend.importCsvText(file.name, await file.text());
+    const r = await UI.backend.importCsvData(file.name, await toBase64(file));
     if (isError(r)) return showError(r.error);
     if (r) addPlaylist(r);
   });
+}
+
+async function toBase64(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
 }
 
 /* ================= start ================= */
