@@ -31,7 +31,7 @@ class Options:
 class Advanced:
     first_n: int | None = None
     skip_n: int | None = None
-    fast: bool = True  # start downloading as soon as a good match shows up (much faster)
+    fast: bool = False  # sockseek 3.0.6 fast search gives up on songs when its first pick fails
     strict_title: bool = False
     min_bitrate: int | None = None
     listen_port: int | None = None
@@ -44,7 +44,7 @@ class Settings:
     library_path: str = field(default_factory=lambda: str(default_library()))
     look: str = "phosphor"
     playlist_sort: str = "added"
-    version: int = 2
+    version: int = 3
     options: Options = field(default_factory=Options)
     advanced: Advanced = field(default_factory=Advanced)
 
@@ -114,8 +114,8 @@ class SettingsStore:
             data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return s
-        if data.get("version", 1) < 2:  # v2: fast search became the default
-            data.setdefault("advanced", {})["fast"] = True
+        if data.get("version", 1) < 3:  # v3: fast search off again (it made most songs fail)
+            data.setdefault("advanced", {})["fast"] = False
         _merge(s, data)
         return s
 
