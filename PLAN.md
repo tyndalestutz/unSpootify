@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 1 done (2026-11-23). Phase 2 prepped: UI contract drafted, sockseek offline mode proven. Next: Phase 2 build.
+**Status:** Phase 2 done (2026-11-23): backend complete and tested offline end-to-end (43 tests). Next: Phase 3, wire the UI.
 
 ## Goal
 
@@ -74,19 +74,21 @@ Everything the backend does is shaped by `docs/ui-contract.md` (commands, events
 The backend never invents state the UI can't show, and the UI never shows state the backend can't produce.
 - [x] Draft UI contract (`docs/ui-contract.md`): every control and display mapped to a command/event
 - [x] De-risk: sockseek reads Exportify CSV columns automatically; `--progress-json` events observed; offline end-to-end works with `--mock-files-dir`
-- [ ] Offline test library: `scripts/make_mock_library.py` builds tagged audio files (ffmpeg) for a CSV, with deliberate gaps, MP3/FLAC mixes, and an "already have" set
-- [ ] Recorded sockseek output fixtures (scrubbed paths) for parser tests
-- [ ] Settings store (OS app-data dir; password stored locally, never logged)
-- [ ] Playlist store: import CSV (copy into app playlists folder), validate (`CSV_UNREADABLE`, `CSV_NO_TRACKS`), stable playlist ids
-- [ ] Track state store (SQLite) using the contract's states and reasons
-- [ ] Option → sockseek args mapping (table in the contract), unit-tested per option
-- [ ] Full albums (derived title-less CSV) and Whole artist (`-g`) verified with CSV input
-- [ ] sockseek runner: spawn, parse `--progress-json` into contract events, correlate `download_progress` (jobId) to tracks, detect rate-limit waiting, cancel cleanly, map failures to error codes (login, port, network, folder, crash)
-- [ ] Force-format follow-up run; skip-existing across runs (index + `--skip-music-dir`)
-- [ ] Naming: `Artist/Album [EXT]/NN. Title` from source tags (`{sartist}`, `{salbum}`, `{snum}`) with tag fallback
-- [ ] Port test design (Soulseek's port checker or equivalent), returns `{open, suggested_port}`
-- [ ] Headless CLI that emits contract events as JSON lines (same stream the window will consume)
-- [ ] Tests: CSV parsing, args, event mapping from fixtures, state transitions, end-to-end with the mock library
+- [x] Offline test library: `scripts/make_mock_library.py` builds tagged audio files (ffmpeg) for a CSV, with deliberate gaps, MP3/FLAC mixes, and an "already have" set
+- [x] Recorded sockseek output fixtures (scrubbed paths) for parser tests
+- [x] Settings store (OS app-data dir; password stored locally, never logged)
+- [x] Playlist store: import CSV (copy into app playlists folder), validate (`CSV_UNREADABLE`, `CSV_NO_TRACKS`), stable playlist ids
+- [x] Track state store (SQLite) using the contract's states and reasons
+- [x] Option → sockseek args mapping (table in the contract), unit-tested per option
+- [x] Full albums (derived title-less CSV) and Whole artist (`-g`) verified with CSV input
+- [x] sockseek runner: spawn, parse `--progress-json` into contract events, correlate `download_progress` (jobId) to tracks, detect rate-limit waiting, cancel cleanly, map failures to error codes (login, port, network, folder, crash)
+- [x] Force-format follow-up run; skip-existing across runs (index + `--skip-music-dir`)
+- [x] Naming: `Artist/Album [EXT]/NN. Title` from source tags (`{sartist}`, `{salbum}`, `{snum}`) with tag fallback
+- [x] Port test: listens on the port and asks Soulseek's checker (tools.slsknet.org/porttest.php), plus a direct reachability check of the Soulseek server; returns `{open, server, suggested_port}`
+- [x] Headless CLI that emits contract events as JSON lines (same stream the window will consume)
+- [x] Tests: CSV parsing, args, event mapping from fixtures, state transitions, end-to-end with the mock library
+
+- [ ] Unverified until a real account is used (Phase 3): sockseek's wording for login failure / blocked network, and how rate-limit waiting is reported
 
 ### Phase 3: Wire the UI (no control left unconnected)
 - [ ] Refactor `mock.js` into a FakeBackend that implements the contract; UI logic moves to `app.js`, shared by fake and real
@@ -99,7 +101,7 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [ ] Adversarial review of the wired app (fresh agent), fixes, owner test run with a real Soulseek account
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
-- [ ] PyInstaller build with sockseek bundled; wrap as AppImage
+- [ ] PyInstaller build with sockseek bundled; wrap as AppImage (the frozen app must handle the `finalize` subcommand sockseek calls back into)
 - [ ] Test on a clean machine/VM: download, open, export, import, download
 - [ ] Delete `legacy/`, rewrite README for end users, tag `v1.0.0`
 

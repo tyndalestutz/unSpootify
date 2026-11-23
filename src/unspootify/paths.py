@@ -30,3 +30,29 @@ def ui_dir() -> Path:
 
 def sockseek_path() -> Path:
     return _bundle_root() / "vendor" / "sockseek" / platform_key() / "sockseek"
+
+
+def app_data_dir() -> Path:
+    """Where settings, playlists, the database and run files live (UNSPOOTIFY_HOME overrides)."""
+    import os
+
+    override = os.environ.get("UNSPOOTIFY_HOME")
+    if override:
+        base = Path(override)
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support" / "unSpootify"
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "unSpootify"
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def default_library() -> Path:
+    return Path.home() / "Music" / "unSpootify"
+
+
+def self_command() -> list[str]:
+    """How to invoke this app's CLI from a child process (dev or packaged)."""
+    if getattr(sys, "frozen", False):
+        return [sys.executable]
+    return [sys.executable, "-m", "unspootify"]
