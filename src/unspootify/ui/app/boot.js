@@ -1,5 +1,6 @@
 // Pick the backend: the app window says "real" or "fake" (look check); a plain browser or the
 // screenshot tool gets the FakeBackend.
+setTimeout(() => (document.body.style.visibility = ""), 4000); // never stay hidden if startup fails
 (async () => {
   const params = new URLSearchParams(location.search);
   const hasApi = await new Promise((resolve) => {

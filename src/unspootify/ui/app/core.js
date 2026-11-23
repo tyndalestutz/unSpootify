@@ -898,6 +898,7 @@ async function startApp(backend) {
   UI.playlists = state.playlists || [];
   UI.run = state.run ? { playlist_id: state.run.playlist_id } : null;
   applySettings(state.settings);
+  document.body.style.visibility = "";
   log(state.offline_test ? "Offline test mode" : "Ready", state.offline_test ? " · downloads come from a local test folder, not Soulseek" : "");
   await selectPlaylist(UI.playlists[0]?.id || null);
   window.unspootifyReady = true;

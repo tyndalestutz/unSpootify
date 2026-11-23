@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 4 (2026-11-23): AppImage builds (221 MB) and passes the clean-machine test; CI added. Next: CI green, release candidate, owner checkpoint.
+**Status:** Phase 4 done: Linux v1.0.0 released (2026-11-23). Next: Phase 5, macOS Apple Silicon .dmg.
 
 ## Goal
 
@@ -119,13 +119,14 @@ Build
 Verify
 - [x] Built-binary tests: `<exe> finalize …` works headless; `--smoke-test` passes on the built app; offline end-to-end (`--offline-test`) through the built app
 - [x] Clean-machine test in a fresh Docker container (`packaging/test/clean_linux.sh`, Ubuntu 24.04 + Xvfb): opens, offline download lands in ~/Music/unSpootify (found + fixed: default music folder wasn't created on a fresh home)
-- [ ] GitHub Actions: run tests and build the AppImage on every PR; attach the AppImage to tagged releases. Then make the test job a required check on `main`.
+- [x] GitHub Actions: tests + AppImage on every PR, attached to tagged releases; `test` and `appimage` are required checks on `main`
 
 Release
 - [x] Delete `legacy/`; README rewritten for friends (download, make executable, open; first-run steps; Exportify guide)
 - [x] Version 1.0.0 in `pyproject.toml` / `__init__.py`
-- [ ] Pre-release `v1.0.0-rc.1` with the CI-built AppImage; promote to `v1.0.0` after the checkpoint
-- [ ] CHECKPOINT: owner downloads the release AppImage and does a real run
+- [x] Release candidates rc.1–rc.4 (fixed: bundled system libs broke GLX on real desktops; fast search made most songs fail; settings version crash on 2nd launch; AppImage app-menu entry + icon; look flash on start)
+- [x] `v1.0.0` released after the owner's checkpoint
+- [x] CHECKPOINT: owner downloaded the release AppImage and did real runs (2026-11-23)
 
 ### Phase 5: macOS Apple Silicon `.dmg` = v1.0.x for the friend test
 Goal: a `.dmg` the friend opens, drags to Applications, and uses with zero terminal.
@@ -161,6 +162,7 @@ Friend test
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
 - (moved into v1) Soundiiz covers other services' playlists. Verify Soundiiz's real CSV columns and whether its file export needs a paid plan.
+- Report sockseek 3.0.6 fast-search bug upstream ('Sequence contains no elements' when the first pick fails)
 - Kill sockseek if the app is force-quit or crashes (atexit + window close cover normal exits; PDEATHSIG can't be used because pywebview spawns from worker threads)
 - Remove playlists from the sidebar; handle re-exported playlists with the same name
 - Apple Developer signing + notarization (removes the first-launch warning)
