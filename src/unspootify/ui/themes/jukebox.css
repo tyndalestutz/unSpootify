@@ -96,6 +96,7 @@ body[data-theme="jukebox"] {
 [data-theme="jukebox"] .btn.default { animation: aqua-pulse 1.6s ease-in-out infinite; padding: 3px 22px; }
 @keyframes aqua-pulse { 50% { filter: brightness(1.15) saturate(.85); } }
 [data-theme="jukebox"] .btn.go { font-weight: bold; padding: 5px 26px; font-size: 13px; border-radius: 16px; }
+[data-theme="jukebox"] .btn.go-alt { font-weight: bold; padding: 5px 18px; font-size: 13px; border-radius: 16px; }
 [data-theme="jukebox"] .btn.go.running {
   border-color: #a5420f; background: linear-gradient(#ffd0a8, #ff9c4f 50%, #ef6c12 51%, #ff9a45);
 }
@@ -194,7 +195,7 @@ body[data-theme="jukebox"] {
 
 /* focus rings: the classic soft blue glow */
 [data-theme="jukebox"] :focus { outline: none; }
-[data-theme="jukebox"] .btn:focus-visible, [data-theme="jukebox"] .seg button:focus-visible,
+[data-theme="jukebox"] .btn:focus-visible,
 [data-theme="jukebox"] .tool-btn:focus-visible .tb-face, [data-theme="jukebox"] .look-card:focus-visible,
 [data-theme="jukebox"] .toggle input:focus-visible + .box, [data-theme="jukebox"] select:focus-visible {
   box-shadow: 0 0 0 3px rgba(80,150,255,.6);
@@ -206,3 +207,11 @@ body[data-theme="jukebox"] {
 @media (max-width: 980px) {
   [data-theme="jukebox"] .opt > .seg button { padding-left: 6px; padding-right: 6px; }
 }
+
+/* segment buttons sit inside a clipped pill, so their focus ring is drawn inside */
+[data-theme="jukebox"] .seg:has(button:focus-visible) { box-shadow: 0 0 0 3px rgba(80,150,255,.6); }
+[data-theme="jukebox"] .seg button:focus-visible { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px rgba(40,110,230,.9); }
+[data-theme="jukebox"] .tb-face svg { width: 18px; height: 18px; }
+[data-theme="jukebox"] .port-result.good { color: #2e7d32; }
+[data-theme="jukebox"] .port-result.bad { color: #c4281c; }
+[data-theme="jukebox"] .playlist-list li.busy .pl-count { font-weight: bold; }

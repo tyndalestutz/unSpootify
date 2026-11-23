@@ -65,7 +65,8 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] Owner signed off on round 2; Settings became a labeled toolbar button (Ctrl/Cmd+,)
 - [x] Adversarial review (fresh agent): fixed HTML injection from names, stacked timers, empty-state crashes, hard-coded counts, frozen rows after Stop, splitter overflow, header misalignment, RTL truncation, tooltips, all-fail messaging, focus/keyboard, contrast, Restore Defaults
 - [x] Fake-data scenario picker (10 scenarios, `TEST DATA` corner menu) for the final UI test
-- [ ] Owner runs the final UI test
+- [x] Owner's test round 1 fixes: centered gear (SVG), Retry/Test connection sized like Download, playlists list scrolls (not the sidebar), browse other playlists while downloading, built-in port test with suggested new port, Jukebox focus rings on segments, min window 940x760
+- [ ] Owner runs the final verification
 
 ### Phase 2: Pipeline core (no UI wiring)
 - [ ] Settings store (login, library folder, last options) in the OS app-data dir
@@ -84,6 +85,7 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [ ] Options panel, start/stop, per-track list, resizable verbose pane
 - [ ] Force-format follow-up dialog; end-of-run summary
 - [ ] Friendly errors for the predictable failures (bad login, port blocked, no results, folder missing)
+- [ ] Real port test (mockup simulates it): check the listen port is reachable from outside (e.g. Soulseek's own port checker), suggest and apply a new port if blocked
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage
@@ -111,6 +113,7 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - Auto-update / "new version available" notice
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
+- Other services' CSVs (Bandcamp, Apple Music, via converter sites like TuneMyMusic/Soundiiz): a later version with its own friendly import guide. v1 is Spotify + Exportify only.
 - Apple Developer signing + notarization (removes the first-launch warning)
 
 ## Risks

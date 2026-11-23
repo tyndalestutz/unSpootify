@@ -40,6 +40,7 @@ h2 { margin: 0; }
 .lcd-line1, .lcd-line2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lcd-bar { height: 6px; margin-top: 8px; overflow: hidden; }
 .lcd-bar span { display: block; height: 100%; width: 0; transition: width .3s linear; }
+.tb-face svg { display: block; }
 .tool-btn { flex: none; display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; }
 .tb-key { display: none; }
 
@@ -55,8 +56,10 @@ h2 { margin: 0; }
 .account, .options { flex: none; }
 .login-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-.playlists { flex: 1 1 auto; display: flex; flex-direction: column; } /* min size = its content, list keeps >= 96px */
-.playlist-list { list-style: none; margin: 0 0 8px; padding: 0; flex: 1; min-height: 96px; overflow-y: auto; }
+/* Fixed minimum (not content-based), so a long list scrolls inside instead of stretching the sidebar. */
+.playlists { flex: 1 1 0; min-height: 215px; display: flex; flex-direction: column; overflow: hidden; }
+.playlist-list { list-style: none; margin: 0 0 8px; padding: 0; flex: 1; min-height: 0; overflow-y: auto; }
+.playlist-list li.busy .pl-count::before { content: "\2193  "; }
 .pl-empty { cursor: default !important; opacity: .6; font-style: italic; }
 .playlist-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 7px 10px; cursor: pointer; }
 .pl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -113,13 +116,16 @@ h2 { margin: 0; }
 .sheet-body { display: flex; flex-direction: column; gap: 12px; }
 .group { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .sheet-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.port-test { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.port-result .btn { margin-left: 4px; }
 .look-picker { display: flex; gap: 10px; }
 .look-card { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
 .swatch { display: grid; place-items: center; width: 100%; height: 54px; }
 
 /* short windows: drop the helper text so the fixed sidebar still fits */
 @media (max-height: 760px) {
-  .account .hint { display: none; }
+  .account .hint, #fmtHint { display: none; }
+  .playlists { min-height: 190px; }
 }
 
 /* mockup-only test-data picker */

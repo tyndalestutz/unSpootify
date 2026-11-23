@@ -76,7 +76,7 @@ const SCENARIOS = {
     others: Array.from({ length: 60 }, (_, i) => ({ name: `playlist ${i + 1}`, total: 10000 + i, done: 9999 })),
     fail: () => Math.random() < 0.05, have: () => Math.random() < 0.1, speed: 6,
   },
-  allfail: { label: "5 · Everything fails", main: { name: "obscure b-sides", rows: BASE }, others: OTHER_PLAYLISTS, fail: () => true, alwaysFail: true },
+  allfail: { label: "5 · Everything fails (blocked port)", main: { name: "obscure b-sides", rows: BASE }, others: OTHER_PLAYLISTS, fail: () => true, portBlocked: true },
   allhave: { label: "6 · Already have everything", main: { name: "sunday morning", rows: BASE }, others: OTHER_PLAYLISTS, have: () => true },
   emptyPlaylist: { label: "7 · Empty playlist", main: { name: "new playlist", rows: [] }, others: OTHER_PLAYLISTS },
   noPlaylists: { label: "8 · First launch (no playlists)", main: null, others: [] },
@@ -86,7 +86,11 @@ const SCENARIOS = {
 
 /* ================= state ================= */
 
-let scn, playlists, current = null, running = false, timer = null, finished = false, lastUserScroll = 0;
+// current = playlist on screen; activePl = playlist being downloaded (can differ while browsing)
+let scn, playlists, current = null, activePl = null, running = false, timer = null, lastUserScroll = 0;
+const BLOCKED_PORT = 49998;
+const currentPort = () => +($("#listenPort").value || $("#listenPort").placeholder);
+const portOk = () => !scn.portBlocked || currentPort() !== BLOCKED_PORT;
 const LABEL = { queued: "Waiting", searching: "Searching…", done: "Done", skipped: "Already have", failed: "Not found" };
 
 function mkTracks(rows, s) {
@@ -105,9 +109,11 @@ function loadScenario(name) {
   $("#user").value = scn.loggedOut ? "" : "ipod_dreamer";
   $("#pass").value = scn.loggedOut ? "" : "hunter22";
   setPath(scn.path || DEFAULT_PATH);
+  $("#listenPort").value = "";
+  setPortResult("If nothing downloads, test the port. Some networks block it.");
   logEl.textContent = "";
   log("sockseek 3.0.6", " · ready");
-  current = null;
+  current = null; activePl = null;
   selectPlaylist(playlists.length ? 0 : -1);
   if (scn.warm && current) { for (let k = 0; k < Math.min(scn.warm, current.tracks.length); k++) finish(current.tracks[k], true); }
   renderAll();
@@ -122,10 +128,9 @@ function tracksFor(p) {
 }
 
 function selectPlaylist(idx) {
-  if (running) { flashLcd("Stop the current download first", "Then pick another playlist."); return; }
+  // Browsing is always allowed; a running download keeps going in the background.
   current = idx >= 0 ? playlists[idx] : null;
-  if (current) { tracksFor(current); log(`Loaded playlist "${current.name}"`, ` (${current.tracks.length} songs)`); }
-  finished = false;
+  if (current && !current.tracks) { tracksFor(current); log(`Loaded playlist "${current.name}"`, ` (${current.tracks.length} songs)`); }
   renderAll();
 }
 
@@ -139,7 +144,7 @@ function finish(t, quiet) {
 }
 
 function tick() {
-  const tracks = current.tracks;
+  const tracks = activePl.tracks;
   const active = tracks.filter((t) => t.state === "searching" || t.state === "downloading");
   for (let guard = 0; active.length < 2 && guard < 500; guard++) {
     const next = tracks.find((t) => t.state === "queued");
@@ -171,28 +176,29 @@ function start() {
   if (!canDownload().ok || running) return;
   if (!current.tracks.some((t) => t.state === "queued")) { flashLcd("Nothing left to download", "Everything in this playlist has been tried."); return; }
   stopTimer();
-  running = true; finished = false;
-  log("Starting download", ` · ${current.tracks.filter((t) => t.state === "queued").length} songs to try`);
+  activePl = current; activePl.finished = false; running = true;
+  log(`Starting "${activePl.name}"`, ` · ${activePl.tracks.filter((t) => t.state === "queued").length} songs to try`);
   timer = setInterval(tick, 220);
   renderAll();
 }
 
 function stop() {
   stopTimer();
-  for (const t of current.tracks) if (t.state === "searching" || t.state === "downloading") { t.state = "queued"; t.pct = 0; t.fmt = ""; }
+  for (const t of activePl.tracks) if (t.state === "searching" || t.state === "downloading") { t.state = "queued"; t.pct = 0; t.fmt = ""; }
   log("Stopped", " by you. Press Download to continue where you left off.");
   renderAll();
 }
 
 function endRun() {
   stopTimer();
-  finished = true;
-  log("Finished", "");
+  activePl.finished = true;
+  log("Finished", ` "${activePl.name}"`);
+  if (current !== activePl) { const k = counts(activePl); flash = { a: `Finished “${activePl.name}”`, b: `${(k.done + k.skipped).toLocaleString()} of ${k.n.toLocaleString()} in your library`, until: Date.now() + 6000 }; setTimeout(renderAll, 6100); }
 }
 
 function retry() {
   const failed = current.tracks.filter((t) => t.state === "failed");
-  for (const t of failed) { t.state = "queued"; t.willFail = scn.alwaysFail ? true : Math.random() < 0.5; }
+  for (const t of failed) { t.state = "queued"; t.willFail = !portOk() ? true : Math.random() < (scn.portBlocked ? 0.15 : 0.5); }
   log(`Retrying ${failed.length} songs`, " with Try harder");
   start();
 }
@@ -203,8 +209,8 @@ const rowsEl = $("#trackRows");
 const logEl = $("#log");
 let renderedFor = undefined;
 
-function counts() {
-  const t = current ? current.tracks : [];
+function counts(p = current) {
+  const t = p ? p.tracks : [];
   const c = (s) => t.filter((x) => x.state === s).length;
   return { n: t.length, done: c("done"), skipped: c("skipped"), failed: c("failed"), queued: c("queued") };
 }
@@ -213,6 +219,7 @@ function canDownload() {
   if (!$("#user").value.trim() || !$("#pass").value) return { ok: false, why: "Enter a Soulseek username and password first." };
   if (!current) return { ok: false, why: "Add a playlist first." };
   if (!current.tracks.length) return { ok: false, why: "This playlist has no songs." };
+  if (running && current !== activePl) return { ok: false, why: `Downloading “${activePl.name}” right now. Queueing more playlists is coming later.` };
   return { ok: true, why: "" };
 }
 
@@ -258,7 +265,7 @@ function renderAll() {
   if (renderedFor !== current) renderTable();
   const c = counts();
   if (current) current.tracks.forEach(updateRow);
-  if (current) current.done = c.done + c.skipped;
+  for (const p of [current, activePl]) if (p) { const k = counts(p); p.done = k.done + k.skipped; }
 
   // header + empty states
   const title = $("#playlistTitle");
@@ -274,14 +281,17 @@ function renderAll() {
     : `<strong>This playlist has no songs.</strong><br>Pick another one, or export it again from Spotify.`;
 
   // buttons
-  const go = $("#goBtn"), can = canDownload();
-  go.textContent = running ? "Stop" : "Download";
-  go.classList.toggle("running", running);
-  go.disabled = !running && !can.ok;
+  const go = $("#goBtn"), can = canDownload(), mine = running && current === activePl;
+  go.textContent = mine ? "Stop" : "Download";
+  go.classList.toggle("running", mine);
+  go.disabled = !mine && !can.ok;
   go.title = go.disabled ? can.why : "";
+  // after a finished run with misses, Retry/Test connection take Download's place
+  go.hidden = !mine && !!current && !!current.finished && c.queued === 0 && c.failed > 0;
   const retryBtn = $("#retryBtn");
   retryBtn.hidden = running || !c.failed;
   retryBtn.textContent = `Retry ${c.failed.toLocaleString()} missing`;
+  $("#testBtn").hidden = running || !(current && current.finished && c.failed && !c.done);
 
   renderLcd(c, can);
   renderPlaylists();
@@ -293,17 +303,19 @@ function flashLcd(a, b) { flash = { a, b, until: Date.now() + 2500 }; renderAll(
 
 function renderLcd(c, can) {
   const t1 = $("#lcdTitle"), t2 = $("#lcdSub");
-  const lib = c.done + c.skipped;
-  $("#lcdFill").style.width = c.n ? `${(lib / c.n) * 100}%` : "0%";
+  const shown = running ? counts(activePl) : c;
+  const lib = c.done + c.skipped, shownLib = shown.done + shown.skipped;
+  $("#lcdFill").style.width = shown.n ? `${(shownLib / shown.n) * 100}%` : "0%";
   let a, b;
-  const cur = current && (current.tracks.find((t) => t.state === "downloading") || current.tracks.find((t) => t.state === "searching"));
+  const cur = running && (activePl.tracks.find((t) => t.state === "downloading") || activePl.tracks.find((t) => t.state === "searching"));
   if (flash && Date.now() < flash.until) { a = flash.a; b = flash.b; }
-  else if (running && cur) {
+  else if (cur) {
     a = `${cur.title || "(no title)"} — ${cur.artist || "(unknown artist)"}`;
-    b = cur.state === "searching" ? "Searching Soulseek…" : `Downloading from ${cur.user} · ${(lib + c.failed + 1).toLocaleString()} of ${c.n.toLocaleString()}`;
+    const where = current === activePl ? "" : `“${activePl.name}” · `;
+    b = where + (cur.state === "searching" ? "Searching Soulseek…" : `From ${cur.user} · ${(shownLib + shown.failed + 1).toLocaleString()} of ${shown.n.toLocaleString()}`);
   } else if (!can.ok) { a = can.why; b = !current ? "Your playlists will show up on the left." : $("#user").value.trim() ? "" : "No account? Just make one up."; }
-  else if (finished) {
-    if (c.failed === c.n) { a = "Nothing was found"; b = "Check your Soulseek login and internet connection. Details shows what happened."; }
+  else if (current.finished) {
+    if (c.failed === c.n) { a = "Nothing was found"; b = "Often the network blocks Soulseek's port. Press Test connection."; }
     else if (c.done === 0 && c.failed === 0) { a = "Nothing new to download"; b = `All ${c.n.toLocaleString()} songs are already in your library.`; }
     else if (c.failed) { a = `Finished: ${lib.toLocaleString()} of ${c.n.toLocaleString()} in your library`; b = `${c.failed.toLocaleString()} couldn't be found. Press Retry to search harder.`; }
     else { a = `Finished: all ${c.n.toLocaleString()} in your library`; b = "Everything was found."; }
@@ -315,12 +327,13 @@ function renderLcd(c, can) {
 
 function renderPlaylists() {
   const list = $("#playlistList");
-  const key = playlists.map((p) => `${p.name}|${p.done}|${p.total}|${p === current}`).join("\n");
+  const key = playlists.map((p) => `${p.name}|${p.done}|${p.total}|${p === current}|${running && p === activePl}`).join("\n");
   if (list.dataset.key === key) return;
   list.dataset.key = key;
   list.innerHTML = playlists.map((p, i) => {
     const pct = p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0;
-    return `<li class="${p === current ? "sel" : ""}" role="option" tabindex="0" aria-selected="${p === current}" data-idx="${i}" title="${esc(p.name)}">
+    const cls = [p === current ? "sel" : "", running && p === activePl ? "busy" : ""].join(" ").trim();
+    return `<li class="${cls}" role="option" tabindex="0" aria-selected="${p === current}" data-idx="${i}" title="${esc(p.name)}">
       <span class="pl-name" dir="auto">${esc(p.name)}</span>
       <span class="pl-count">${p.done.toLocaleString()}/${p.total.toLocaleString()}</span>
       <span class="pl-meter"><span style="width:${pct}%"></span></span>
@@ -329,7 +342,7 @@ function renderPlaylists() {
 }
 
 function followCurrent() {
-  if (!running || Date.now() - lastUserScroll < 3000) return;
+  if (!running || current !== activePl || Date.now() - lastUserScroll < 3000) return;
   const cur = current.tracks.find((t) => t.state === "downloading" || t.state === "searching");
   if (cur && cur.el) cur.el.scrollIntoView({ block: "nearest" });
 }
@@ -356,6 +369,50 @@ function setPath(full) {
 
 $("#goBtn").addEventListener("click", () => (running ? stop() : start()));
 $("#retryBtn").addEventListener("click", retry);
+$("#testBtn").addEventListener("click", () => { openSheet("#advancedSheet"); testPort(); });
+$("#portTestBtn").addEventListener("click", testPort);
+
+/* ---- port test (simulated; the real one asks a Soulseek port checker) ---- */
+let portTesting = false;
+function setPortResult(text, kind = "", action = null) {
+  const el = $("#portResult");
+  el.className = `hint port-result ${kind}`;
+  el.textContent = text;
+  if (action) {
+    const b = document.createElement("button");
+    b.className = "btn small";
+    b.textContent = action.label;
+    b.addEventListener("click", action.run);
+    el.append(" ", b);
+  }
+}
+async function testPort() {
+  if (portTesting) return;
+  const port = currentPort();
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) { setPortResult("Port must be a number between 1024 and 65535.", "bad"); return; }
+  portTesting = true;
+  $("#portTestBtn").disabled = true;
+  setPortResult(`Testing port ${port}…`, "testing");
+  log("Port test", ` · asking whether port ${port} is reachable from the internet`);
+  await new Promise((r) => setTimeout(r, 1400));
+  portTesting = false;
+  $("#portTestBtn").disabled = false;
+  if (portOk()) {
+    setPortResult(`Port ${port} is open. The network isn't the problem.`, "good");
+    log("Port test", ` · port ${port} is open`);
+  } else {
+    const suggest = 50000 + Math.floor(Math.random() * 9000);
+    setPortResult(`Port ${port} looks blocked by this network.`, "bad", {
+      label: `Use port ${suggest}`,
+      run: () => {
+        $("#listenPort").value = suggest;
+        setPortResult(`Now using port ${suggest}. Press OK, then Retry.`, "good");
+        log("Port changed", ` · now listening on ${suggest}`);
+      },
+    });
+    log("Port test", ` · port ${port} is blocked`);
+  }
+}
 ["#user", "#pass"].forEach((id) => $(id).addEventListener("input", renderAll));
 $(".track-table").addEventListener("wheel", () => (lastUserScroll = Date.now()), { passive: true });
 $(".track-table").addEventListener("mousedown", () => (lastUserScroll = Date.now()));
@@ -446,6 +503,7 @@ document.querySelectorAll(".sheet-backdrop").forEach((bd) => bd.addEventListener
 $("#restoreDefaults").addEventListener("click", () => {
   $("#advancedSheet").querySelectorAll("input[type=text]").forEach((i) => (i.value = ""));
   $("#advancedSheet").querySelectorAll("input[type=checkbox]").forEach((i) => (i.checked = false));
+  setPortResult("If nothing downloads, test the port. Some networks block it.");
 });
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeSheets();
@@ -485,4 +543,4 @@ const firstScn = params.get("scn") || saved.scn || "normal";
 pick.value = SCENARIOS[firstScn] ? firstScn : "normal";
 loadScenario(pick.value);
 if (params.get("sheet")) openSheet(`#${params.get("sheet")}Sheet`);
-if (params.has("still")) { start(); for (let k = 0; k < 14 && running; k++) tick(); if (running) { clearInterval(timer); timer = null; } renderAll(); }
+if (params.has("still")) { start(); for (let k = 0, n = +params.get("ticks") || 14; k < n && running; k++) tick(); if (running) { clearInterval(timer); timer = null; } renderAll(); }

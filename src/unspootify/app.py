@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         js_api=api,
         width=1120,
         height=820,
-        min_size=(940, 640),
+        min_size=(940, 760),
         background_color="#000000",
     )
     api._window = window

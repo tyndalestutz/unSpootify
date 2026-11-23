@@ -29,7 +29,7 @@
     </div>
 
     <button class="tool-btn" id="openSettings" title="Settings (Ctrl+,)">
-      <span class="tb-face" aria-hidden="true">&#9881;</span>
+      <span class="tb-face" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" fill-rule="evenodd" d="M9.88,4.08 L10.28,1.14 L13.72,1.14 L14.12,4.08 L16.10,4.90 L18.47,3.10 L20.90,5.53 L19.10,7.90 L19.92,9.88 L22.86,10.28 L22.86,13.72 L19.920,14.12 L19.10,16.10 L20.90,18.47 L18.47,20.90 L16.10,19.10 L14.12,19.92 L13.72,22.86 L10.28,22.86 L9.88,19.92 L7.90,19.10 L5.53,20.90 L3.10,18.47 L4.90,16.10 L4.08,14.12 L1.14,13.72 L1.14,10.28 L4.08,9.88 L4.90,7.90 L3.10,5.53 L5.53,3.10 L7.90,4.90 Z M12,8.6 A3.4,3.4 0 1,0 12.01,8.6 Z"/></svg></span>
       <span class="tb-label">Settings</span>
       <span class="tb-key">ctrl+,</span>
     </button>
@@ -114,7 +114,8 @@
         <div class="counts" id="counts"></div>
       </div>
       <div class="head-actions">
-        <button class="btn" id="retryBtn" hidden>Retry missing</button>
+        <button class="btn go-alt" id="testBtn" hidden>Test connection</button>
+        <button class="btn go-alt" id="retryBtn" hidden>Retry missing</button>
         <button class="btn go" id="goBtn">Download</button>
       </div>
     </div>
@@ -162,8 +163,11 @@
       </fieldset>
       <fieldset class="group">
         <legend>Connection</legend>
-        <label class="field inline"><span>Listen port</span><input type="text" placeholder="49998" size="6"></label>
-        <p class="hint">Only change this if Details says the port is blocked.</p>
+        <div class="port-test">
+          <label class="field inline"><span>Listen port</span><input type="text" id="listenPort" placeholder="49998" size="6" inputmode="numeric"></label>
+          <button class="btn small" id="portTestBtn">Test port</button>
+        </div>
+        <p class="hint port-result" id="portResult" aria-live="polite">If nothing downloads, test the port. Some networks block it.</p>
       </fieldset>
     </div>
     <div class="sheet-actions">
