@@ -1,33 +1,24 @@
-const { spawn } = require('child_process');
-const path = require('path');
+// server/sldlRunner.js
+import { spawn } from 'child_process';
+import path from 'path';
 
-const sldlPath = path.join(__dirname, '../bin/sldl');
+// Run sldl with CSV input and options
+export function runSldl(csvPath, options = {}, cwd, onData, onClose) {
+    const args = [
+        csvPath,
+        '--input-type', 'csv',
+        ...(options.concurrent ? ['--concurrent-downloads', options.concurrent] : []),
+        ...(options.fastSearch ? ['--fast-search'] : [])
+    ];
 
-function runSldl({ username, password, folder, playlist, options = {} }, onData, onClose) {
-    const args = [];
+    const sldlPath = path.join(cwd, 'bin', 'sldl');
 
-    if (username) args.push('--user', username);
-    if (password) args.push('--pass', password);
-    if (folder) args.push('-p', folder);
-    if (playlist) args.push(playlist);
+    const proc = spawn(sldlPath, args, { cwd });
 
-    // Add all other options
-    for (const [key, value] of Object.entries(options)) {
-        args.push(key);
-        if (value !== true) args.push(value);
-    }
+    proc.stdout.on('data', data => onData(data.toString()));
+    proc.stderr.on('data', data => onData(data.toString()));
 
-    // Always use non-interactive fast mode
-    args.push('--fast-search', '--no-incomplete-ext');
+    proc.on('close', code => onClose(code));
 
-    const sldl = spawn(sldlPath, args);
-
-    sldl.stdout.on('data', (data) => onData(data.toString()));
-    sldl.stderr.on('data', (data) => onData(data.toString()));
-
-    sldl.on('close', (code) => onClose(code));
-
-    return sldl;
+    return proc;
 }
-
-module.exports = runSldl;
