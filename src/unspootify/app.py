@@ -239,6 +239,16 @@ def _linux_icon(icon: str) -> None:
         pass  # menu entry is a nicety
 
 
+def _window_background(mode: str) -> str:
+    """Paint the empty window in the saved look's color so there's no flash before the page loads."""
+    if mode == "real":
+        from unspootify.settings import SettingsStore
+
+        if SettingsStore().settings.look == "jukebox":
+            return "#c9ccd2"
+    return "#020a04"
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     offline = None
@@ -248,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     api = Api(mode, offline)
     window = webview.create_window(
         "unSpootify", url=str(ui_dir() / "index.html"), js_api=api,
-        width=1120, height=820, min_size=(940, 760), background_color="#000000",
+        width=1120, height=820, min_size=(940, 760), background_color=_window_background(mode),
     )
     api._attach(window)
     window.events.closed += api._close

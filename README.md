@@ -5,12 +5,11 @@
 Pick a playlist, press Download, and the songs land in your music folder, neatly sorted as
 `Artist / Album [MP3] / Song.mp3`. It finds them on Soulseek, a long-running music-sharing network.
 
-> **Beta.** unSpootify is in its first test round (v1.0.0 release candidates). It works, but expect
-> rough edges, and please tell us what's confusing or broken (see [Feedback](#feedback)).
+> **v1.0.0 for Linux is out.** The Mac version is in beta testing. Tell us what's confusing or broken (see [Feedback](#feedback)).
 
 ## Install
 
-Download the newest file from **[Releases](../../releases)** (beta builds are marked *Pre-release*).
+Download the newest file from **[Releases](../../releases)** (test builds are marked *Pre-release*).
 
 | Computer | File |
 |---|---|
@@ -67,9 +66,8 @@ Quit the app and delete that folder to start as a brand-new user.
 ## Roadmap
 
 - [x] Downloading works (MP3/FLAC, full albums, whole artist, skip what you have)
-- [x] Linux app (beta)
+- [x] Linux app (v1.0.0)
 - [ ] Mac app (Apple Silicon)
-- [ ] v1.0.0 after the beta round
 - [ ] Later: download several playlists in a row, automatic tagging and tidy file names
 
 ---
