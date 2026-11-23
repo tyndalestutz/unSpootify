@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>unSpootify</title>
+<style>
+  :root { --bg: #000; --fg: #00ff00; --dim: #00aa00; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+    font-family: "Courier New", monospace; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+  pre.logo { margin: 0; font-size: clamp(5px, 0.95vw, 12px); line-height: 1.1; text-shadow: 0 0 6px rgba(0,255,0,.5); }
+  #status { color: var(--dim); }
+  .cursor { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<pre class="logo"> ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___
+|\  \|\  \|\   ___  \|\   ____\|\   __  \|\   __  \|\   __  \|\___   ___\\  \|\  _____\\  \  /  /|
+\ \  \\\  \ \  \\ \  \ \  \___|\ \  \|\  \ \  \|\  \ \  \|\  \|___ \  \_\ \  \ \  \__/\ \  \/  / /
+ \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / / 
+  \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /  
+   \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
+    \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
+                        \|_________|                                                 \|___|/</pre>
+<div id="status">connecting<span class="cursor">_</span></div>
+<script>
+  window.addEventListener('pywebviewready', async () => {
+    const el = document.getElementById('status');
+    const info = await window.pywebview.api.get_info();
+    if (info.sockseek_version) {
+      el.textContent = `v${info.app_version} · sockseek ${info.sockseek_version} ready`;
+      el.dataset.state = 'ok';
+    } else {
+      el.textContent = `v${info.app_version} · sockseek not found (run scripts/fetch_sockseek.sh)`;
+      el.dataset.state = 'missing';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,5 +1,22 @@
-# Node modules
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+build/
+dist/
+*.spec.bak
+
+# Bundled third-party binaries (fetched by scripts/fetch_sockseek.sh)
+vendor/
+
+# Downloads / user data
+downloads/
+*.sldl
+
+# Legacy web app deps
 node_modules/
+package-lock.json
 
 # OS and editor files
 .DS_Store
@@ -7,17 +24,3 @@ node_modules/
 *.tmp
 *.swp
 *.swo
-
-# Binaries / local builds
-bin/
-slsk-batchdl/
-downloads/
-
-# Temp / runtime files
-tempascii.txt
-
-# Lock files (optional to track or not)
-package-lock.json
-
-# Ignore JSON config files (if you want)
-# *.json
