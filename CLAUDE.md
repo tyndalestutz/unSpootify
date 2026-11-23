@@ -31,6 +31,8 @@ Four people; three are non-technical and can't debug. Every error the app shows 
 
 ## Dev
 - Python 3.13, managed with `uv`. Run tests before every PR.
+- Tests: `uv run pytest` (end-to-end tests need ffmpeg and the fetched sockseek; they run sockseek offline against a generated mock share).
+- Headless run: `uv run python -m unspootify run <csv> --mock-dir <share> --home <tmp> --library <tmp> -v` prints contract events as JSON lines. Build a share with `scripts/make_mock_library.py`.
 - Downloader is **sockseek** (formerly sldl). Fetch it with `scripts/fetch_sockseek.sh`; CLI reference: `vendor/sockseek/<platform>/sockseek --help` (and `--help <topic>`).
 - Run the app: `uv run python -m unspootify` (add `--mockups` for the look check).
 - Before handing any UI change to the owner, run `uv run python -m unspootify --smoke-test` (and with `--mockups`): it opens the real window, fails if any CSS/JS didn't load, and quits.

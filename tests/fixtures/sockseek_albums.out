@@ -1,0 +1,151 @@
+[cli] Starting CLI session in local mode
+[soulseek] Using local files Soulseek client.
+[soulseek] Reading tags from mock files dir, this may take a while. Use --mock-files-no-read-tags if tags are not needed.
+[001] ExtractJob: CSV: Input: albums.csv
+[001] ExtractJob: CSV: Using columns: artist:"Artist", album:"Album".
+[002] Job List: running: albums
+[003] AlbumJob: searching: The Killers - Hot Fuss
+[003] AlbumJob: processing results: The Killers - Hot Fuss
+[004] AlbumJob: searching: Modest Mouse - Good News for People Who Love Bad News
+[005] AlbumJob: searching: Franz Ferdinand - Franz Ferdinand
+[005] AlbumJob: processing results: Franz Ferdinand - Franz Ferdinand
+[004] AlbumJob: processing results: Modest Mouse - Good News for People Who Love Bad News
+[006] AlbumJob: searching: Yeah Yeah Yeahs - Fever to Tell
+[007] AlbumJob: searching: The White Stripes - Elephant
+[007] AlbumJob: processing results: The White Stripes - Elephant
+[009] AlbumJob: searching: The Postal Service - Give Up
+[006] AlbumJob: processing results: Yeah Yeah Yeahs - Fever to Tell
+[008] AlbumJob: searching: OutKast - Speakerboxxx/The Love Below
+[008] AlbumJob: processing results: OutKast - Speakerboxxx/The Love Below
+[010] AlbumJob: searching: The Strokes - Is This It
+[010] AlbumJob: processing results: The Strokes - Is This It
+[009] AlbumJob: processing results: The Postal Service - Give Up
+[010] AlbumJob: failed [No search results]: The Strokes - Is This It
+    Error: No Soulseek file results found.
+[008] AlbumJob: downloading tracks: OutKast - Speakerboxxx/The Love Below - OutKast - Speakerboxxx_The Love Below
+[003] AlbumJob: downloading tracks: The Killers - Hot Fuss - The Killers - Hot Fuss
+[006] AlbumJob: downloading tracks: Yeah Yeah Yeahs - Fever to Tell - Yeah Yeah Yeahs - Fever to Tell
+[009] AlbumJob: downloading tracks: The Postal Service - Give Up - The Postal Service - Give Up
+[004] AlbumJob: downloading tracks: Modest Mouse - Good News for People Who Love Bad News - Modest Mouse - Good News for People Who Love Bad News
+[007] AlbumJob: downloading tracks: The White Stripes - Elephant - The White Stripes - Elephant
+[005] AlbumJob: downloading tracks: Franz Ferdinand - Franz Ferdinand - Franz Ferdinand - Franz Ferdinand
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9016528Z","data":{"artist":"Modest Mouse","title":"Float On","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\01 - Float On.mp3","size":1668459,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9015929Z","data":{"artist":"The Postal Service","title":"Such Great Heights","username":"local","filename":"The Postal Service - Give Up\\01 - Such Great Heights.mp3","size":2132802,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9017391Z","data":{"artist":"OutKast","title":"Album Track 1","username":"local","filename":"OutKast - Speakerboxxx_The Love Below\\02 - Album Track 1.mp3","size":1440655,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9016990Z","data":{"artist":"Yeah Yeah Yeahs","title":"Maps","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\01 - Maps.mp3","size":1760387,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9018283Z","data":{"artist":"The Killers","title":"Mr. Brightside","username":"local","filename":"The Killers - Hot Fuss\\01 - Mr. Brightside.mp3","size":1784416,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9016376Z","data":{"artist":"Franz Ferdinand","title":"Take Me Out","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\01 - Take Me Out.mp3","size":1896859,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9018719Z","data":{"artist":"The White Stripes","title":"Seven Nation Army","username":"local","filename":"The White Stripes - Elephant\\01 - Seven Nation Army.mp3","size":1854648,"extension":"mp3"}}
+[004] Album File: downloading: Modest Mouse - Good News for People Who Love Bad News: local\Modest Mouse - Good News for People Who Love Bad News\01 - Float On.mp3
+[009] Album File: downloading: The Postal Service - Give Up: local\The Postal Service - Give Up\01 - Such Great Heights.mp3
+[008] Album File: downloading: OutKast - Speakerboxxx/The Love Below: local\OutKast - Speakerboxxx_The Love Below\02 - Album Track 1.mp3
+[006] Album File: downloading: Yeah Yeah Yeahs - Fever to Tell: local\Yeah Yeah Yeahs - Fever to Tell\01 - Maps.mp3
+[003] Album File: downloading: The Killers - Hot Fuss: local\The Killers - Hot Fuss\01 - Mr. Brightside.mp3
+[005] Album File: downloading: Franz Ferdinand - Franz Ferdinand: local\Franz Ferdinand - Franz Ferdinand\01 - Take Me Out.mp3
+[007] Album File: downloading: The White Stripes - Elephant: local\The White Stripes - Elephant\01 - Seven Nation Army.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9858170Z","data":{"artist":"The Killers","title":"Album Track 1","username":"local","filename":"The Killers - Hot Fuss\\02 - Album Track 1.mp3","size":1440644,"extension":"mp3"}}
+[003] {"type":"download_start","timestamp":"2026-11-23T07:22:21.9859734Z","data":{"artist":"Modest Mouse","title":"Album Track 1","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\02 - Album Track 1.mp3","size":1440676,"extension":"mp3"}}
+Album File: downloading: The Killers - Hot Fuss: local\The Killers - Hot Fuss\02 - Album Track 1.mp3
+[004] Album File: downloading: Modest Mouse - Good News for People Who Love Bad News: local\Modest Mouse - Good News for People Who Love Bad News\02 - Album Track 1.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9861386Z","data":{"artist":"OutKast","title":"Album Track 2","username":"local","filename":"OutKast - Speakerboxxx_The Love Below\\03 - Album Track 2.mp3","size":1440655,"extension":"mp3"}}
+[008] Album File: downloading: OutKast - Speakerboxxx/The Love Below: local\OutKast - Speakerboxxx_The Love Below\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9863647Z","data":{"artist":"Franz Ferdinand","title":"Album Track 1","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\02 - Album Track 1.mp3","size":1440659,"extension":"mp3"}}
+[005] Album File: downloading: Franz Ferdinand - Franz Ferdinand: local\Franz Ferdinand - Franz Ferdinand\02 - Album Track 1.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9867840Z","data":{"artist":"The Postal Service","title":"Album Track 1","username":"local","filename":"The Postal Service - Give Up\\02 - Album Track 1.mp3","size":1440657,"extension":"mp3"}}
+[009] Album File: downloading: The Postal Service - Give Up: local\The Postal Service - Give Up\02 - Album Track 1.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9869527Z","data":{"artist":"The Killers","title":"Album Track 2","username":"local","filename":"The Killers - Hot Fuss\\03 - Album Track 2.mp3","size":1440644,"extension":"mp3"}}
+[003] Album File: downloading: The Killers - Hot Fuss: local\The Killers - Hot Fuss\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9872761Z","data":{"artist":"The White Stripes","title":"Album Track 1","username":"local","filename":"The White Stripes - Elephant\\02 - Album Track 1.mp3","size":1440656,"extension":"mp3"}}
+[007] Album File: downloading: The White Stripes - Elephant: local\The White Stripes - Elephant\02 - Album Track 1.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9873861Z","data":{"artist":"Yeah Yeah Yeahs","title":"Album Track 1","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\02 - Album Track 1.mp3","size":1440657,"extension":"mp3"}}
+[006] Album File: downloading: Yeah Yeah Yeahs - Fever to Tell: local\Yeah Yeah Yeahs - Fever to Tell\02 - Album Track 1.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9882494Z","data":{"artist":"The White Stripes","title":"Album Track 2","username":"local","filename":"The White Stripes - Elephant\\03 - Album Track 2.mp3","size":1440656,"extension":"mp3"}}
+[007] Album File: downloading: The White Stripes - Elephant: local\The White Stripes - Elephant\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9889801Z","data":{"artist":"Yeah Yeah Yeahs","title":"Album Track 2","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\03 - Album Track 2.mp3","size":1440657,"extension":"mp3"}}
+[006] Album File: downloading: Yeah Yeah Yeahs - Fever to Tell: local\Yeah Yeah Yeahs - Fever to Tell\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9891627Z","data":{"artist":"Modest Mouse","title":"Album Track 2","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\03 - Album Track 2.mp3","size":1440676,"extension":"mp3"}}
+[004] Album File: downloading: Modest Mouse - Good News for People Who Love Bad News: local\Modest Mouse - Good News for People Who Love Bad News\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9892965Z","data":{"artist":"Franz Ferdinand","title":"Album Track 2","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\03 - Album Track 2.mp3","size":1440659,"extension":"mp3"}}
+[005] Album File: downloading: Franz Ferdinand - Franz Ferdinand: local\Franz Ferdinand - Franz Ferdinand\03 - Album Track 2.mp3
+{"type":"download_start","timestamp":"2026-11-23T07:22:21.9895039Z","data":{"artist":"The Postal Service","title":"Album Track 2","username":"local","filename":"The Postal Service - Give Up\\03 - Album Track 2.mp3","size":1440657,"extension":"mp3"}}
+[009] Album File: downloading: The Postal Service - Give Up: local\The Postal Service - Give Up\03 - Album Track 2.mp3
+{"type":"download_progress","timestamp":"2026-11-23T07:22:21.9922203Z","data":{"jobId":"c6d50dd0-ce6d-4919-adcf-3990ea82712f","bytesTransferred":0,"totalBytes":1896859,"percent":0}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0653617Z","data":{"artist":"Franz Ferdinand","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Franz Ferdinand/Franz Ferdinand/Franz Ferdinand - Franz Ferdinand/02 - Album Track 1.mp3","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\02 - Album Track 1.mp3","size":1440659,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0460656Z","data":{"artist":"The Killers","title":"Mr. Brightside","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Killers/Hot Fuss/The Killers - Hot Fuss/01 - Mr. Brightside.mp3","username":"local","filename":"The Killers - Hot Fuss\\01 - Mr. Brightside.mp3","size":1784416,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0461465Z","data":{"artist":"The White Stripes","title":"Seven Nation Army","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The White Stripes/Elephant/The White Stripes - Elephant/01 - Seven Nation Army.mp3","username":"local","filename":"The White Stripes - Elephant\\01 - Seven Nation Army.mp3","size":1854648,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0548418Z","data":{"artist":"Modest Mouse","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Modest Mouse/Good News for People Who Love Bad News/Modest Mouse - Good News for People Who Love Bad News/02 - Album Track 1.mp3","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\02 - Album Track 1.mp3","size":1440676,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0706227Z","data":{"artist":"The Killers","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Killers/Hot Fuss/The Killers - Hot Fuss/03 - Album Track 2.mp3","username":"local","filename":"The Killers - Hot Fuss\\03 - Album Track 2.mp3","size":1440644,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0489290Z","data":{"artist":"OutKast","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/OutKast/Speakerboxxx The Love Below/OutKast - Speakerboxxx_The Love Below/03 - Album Track 2.mp3","username":"local","filename":"OutKast - Speakerboxxx_The Love Below\\03 - Album Track 2.mp3","size":1440655,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0459964Z","data":{"artist":"Franz Ferdinand","title":"Take Me Out","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Franz Ferdinand/Franz Ferdinand/Franz Ferdinand - Franz Ferdinand/01 - Take Me Out.mp3","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\01 - Take Me Out.mp3","size":1896859,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0460443Z","data":{"artist":"Yeah Yeah Yeahs","title":"Maps","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Yeah Yeah Yeahs/Fever to Tell/Yeah Yeah Yeahs - Fever to Tell/01 - Maps.mp3","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\01 - Maps.mp3","size":1760387,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0958764Z","data":{"artist":"The Postal Service","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Postal Service/Give Up/The Postal Service - Give Up/02 - Album Track 1.mp3","username":"local","filename":"The Postal Service - Give Up\\02 - Album Track 1.mp3","size":1440657,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0604816Z","data":{"artist":"The Killers","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Killers/Hot Fuss/The Killers - Hot Fuss/02 - Album Track 1.mp3","username":"local","filename":"The Killers - Hot Fuss\\02 - Album Track 1.mp3","size":1440644,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0461814Z","data":{"artist":"Modest Mouse","title":"Float On","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Modest Mouse/Good News for People Who Love Bad News/Modest Mouse - Good News for People Who Love Bad News/01 - Float On.mp3","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\01 - Float On.mp3","size":1668459,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0997650Z","data":{"artist":"The White Stripes","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The White Stripes/Elephant/The White Stripes - Elephant/03 - Album Track 2.mp3","username":"local","filename":"The White Stripes - Elephant\\03 - Album Track 2.mp3","size":1440656,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0804735Z","data":{"artist":"Yeah Yeah Yeahs","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Yeah Yeah Yeahs/Fever to Tell/Yeah Yeah Yeahs - Fever to Tell/02 - Album Track 1.mp3","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\02 - Album Track 1.mp3","size":1440657,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0459478Z","data":{"artist":"OutKast","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/OutKast/Speakerboxxx The Love Below/OutKast - Speakerboxxx_The Love Below/02 - Album Track 1.mp3","username":"local","filename":"OutKast - Speakerboxxx_The Love Below\\02 - Album Track 1.mp3","size":1440655,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0461098Z","data":{"artist":"The Postal Service","title":"Such Great Heights","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Postal Service/Give Up/The Postal Service - Give Up/01 - Such Great Heights.mp3","username":"local","filename":"The Postal Service - Give Up\\01 - Such Great Heights.mp3","size":2132802,"bitRate":64,"extension":"mp3"}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.0756987Z","data":{"artist":"The White Stripes","title":"Album Track 1","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The White Stripes/Elephant/The White Stripes - Elephant/02 - Album Track 1.mp3","username":"local","filename":"The White Stripes - Elephant\\02 - Album Track 1.mp3","size":1440656,"bitRate":64,"extension":"mp3"}}
+[005] Album File: succeeded: Franz Ferdinand - Franz Ferdinand: 02 - Album Track 1.mp3
+[003] Album File: succeeded: The Killers - Hot Fuss: 01 - Mr. Brightside.mp3
+[007] Album File: succeeded: The White Stripes - Elephant: 01 - Seven Nation Army.mp3
+[004] Album File: succeeded: Modest Mouse - Good News for People Who Love Bad News: 02 - Album Track 1.mp3
+[003] Album File: succeeded: The Killers - Hot Fuss: 03 - Album Track 2.mp3
+[008] Album File: succeeded: OutKast - Speakerboxxx/The Love Below: 03 - Album Track 2.mp3
+[005] Album File: succeeded: Franz Ferdinand - Franz Ferdinand: 01 - Take Me Out.mp3
+[006] Album File: succeeded: Yeah Yeah Yeahs - Fever to Tell: 01 - Maps.mp3
+[009] Album File: succeeded: The Postal Service - Give Up: 02 - Album Track 1.mp3
+[003] Album File: succeeded: The Killers - Hot Fuss: 02 - Album Track 1.mp3
+[004] Album File: succeeded: Modest Mouse - Good News for People Who Love Bad News: 01 - Float On.mp3
+[007] Album File: succeeded: The White Stripes - Elephant: 03 - Album Track 2.mp3
+[006] Album File: succeeded: Yeah Yeah Yeahs - Fever to Tell: 02 - Album Track 1.mp3
+[008] Album File: succeeded: OutKast - Speakerboxxx/The Love Below: 02 - Album Track 1.mp3
+[009] Album File: succeeded: The Postal Service - Give Up: 01 - Such Great Heights.mp3
+[007] Album File: succeeded: The White Stripes - Elephant: 02 - Album Track 1.mp3
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.1599555Z","data":{"artist":"Yeah Yeah Yeahs","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Yeah Yeah Yeahs/Fever to Tell/Yeah Yeah Yeahs - Fever to Tell/03 - Album Track 2.mp3","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\03 - Album Track 2.mp3","size":1440657,"bitRate":64,"extension":"mp3"}}
+[006] Album File: succeeded: Yeah Yeah Yeahs - Fever to Tell: 03 - Album Track 2.mp3
+[003] AlbumJob: retrieving folder: The Killers - Hot Fuss
+[006] AlbumJob: retrieving folder: Yeah Yeah Yeahs - Fever to Tell
+[031] Retrieve Folder: retrieving folder: local\The Killers - Hot Fuss
+[008] AlbumJob: retrieving folder: OutKast - Speakerboxxx/The Love Below
+[007] AlbumJob: retrieving folder: The White Stripes - Elephant
+[033] Retrieve Folder: retrieving folder: local\Yeah Yeah Yeahs - Fever to Tell
+[032] Retrieve Folder: retrieving folder: local\The White Stripes - Elephant
+[034] Retrieve Folder: retrieving folder: local\OutKast - Speakerboxxx_The Love Below
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.1673860Z","data":{"artist":"Modest Mouse","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Modest Mouse/Good News for People Who Love Bad News/Modest Mouse - Good News for People Who Love Bad News/03 - Album Track 2.mp3","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\03 - Album Track 2.mp3","size":1440676,"bitRate":64,"extension":"mp3"}}
+[004] Album File: succeeded: Modest Mouse - Good News for People Who Love Bad News: 03 - Album Track 2.mp3
+[004] AlbumJob: retrieving folder: Modest Mouse - Good News for People Who Love Bad News
+[035] Retrieve Folder: retrieving folder: local\Modest Mouse - Good News for People Who Love Bad News
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.1718168Z","data":{"artist":"Franz Ferdinand","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/Franz Ferdinand/Franz Ferdinand/Franz Ferdinand - Franz Ferdinand/03 - Album Track 2.mp3","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\03 - Album Track 2.mp3","size":1440659,"bitRate":64,"extension":"mp3"}}
+[005] Album File: succeeded: Franz Ferdinand - Franz Ferdinand: 03 - Album Track 2.mp3
+[005] AlbumJob: retrieving folder: Franz Ferdinand - Franz Ferdinand
+[036] Retrieve Folder: retrieving folder: local\Franz Ferdinand - Franz Ferdinand
+{"type":"track_state","timestamp":"2026-11-23T07:22:22.1776485Z","data":{"artist":"The Postal Service","title":"Album Track 2","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out2/The Postal Service/Give Up/The Postal Service - Give Up/03 - Album Track 2.mp3","username":"local","filename":"The Postal Service - Give Up\\03 - Album Track 2.mp3","size":1440657,"bitRate":64,"extension":"mp3"}}
+[009] Album File: succeeded: The Postal Service - Give Up: 03 - Album Track 2.mp3
+[009] AlbumJob: retrieving folder: The Postal Service - Give Up
+[037] Retrieve Folder: retrieving folder: local\The Postal Service - Give Up
+[035] Retrieve Folder: succeeded: local\Modest Mouse - Good News for People Who Love Bad News
+[031] Retrieve Folder: succeeded: local\The Killers - Hot Fuss
+[033] Retrieve Folder: succeeded: local\Yeah Yeah Yeahs - Fever to Tell
+[034] Retrieve Folder: succeeded: local\OutKast - Speakerboxxx_The Love Below
+[037] Retrieve Folder: succeeded: local\The Postal Service - Give Up
+[032] Retrieve Folder: succeeded: local\The White Stripes - Elephant
+[036] Retrieve Folder: succeeded: local\Franz Ferdinand - Franz Ferdinand
+[007] AlbumJob: organizing: The White Stripes - Elephant
+[003] AlbumJob: organizing: The Killers - Hot Fuss
+[008] AlbumJob: organizing: OutKast - Speakerboxxx/The Love Below
+[009] AlbumJob: organizing: The Postal Service - Give Up
+[006] AlbumJob: organizing: Yeah Yeah Yeahs - Fever to Tell
+[005] AlbumJob: organizing: Franz Ferdinand - Franz Ferdinand
+[004] AlbumJob: organizing: Modest Mouse - Good News for People Who Love Bad News
+[008] AlbumJob: succeeded: OutKast - Speakerboxxx/The Love Below: completed at /RUN/out2/OutKast/Speakerboxxx The Love Below/OutKast - Speakerboxxx_The Love Below
+[005] AlbumJob: succeeded: Franz Ferdinand - Franz Ferdinand: completed at /RUN/out2/Franz Ferdinand/Franz Ferdinand/Franz Ferdinand - Franz Ferdinand
+[006] AlbumJob: succeeded: Yeah Yeah Yeahs - Fever to Tell: completed at /RUN/out2/Yeah Yeah Yeahs/Fever to Tell/Yeah Yeah Yeahs - Fever to Tell
+[004] AlbumJob: succeeded: Modest Mouse - Good News for People Who Love Bad News: completed at /RUN/out2/Modest Mouse/Good News for People Who Love Bad News/Modest Mouse - Good News for People Who Love Bad News
+[003] AlbumJob: succeeded: The Killers - Hot Fuss: completed at /RUN/out2/The Killers/Hot Fuss/The Killers - Hot Fuss
+[007] AlbumJob: succeeded: The White Stripes - Elephant: completed at /RUN/out2/The White Stripes/Elephant/The White Stripes - Elephant
+[009] AlbumJob: succeeded: The Postal Service - Give Up: completed at /RUN/out2/The Postal Service/Give Up/The Postal Service - Give Up
+[002] Job List: partial: albums
+    Error: Some child jobs completed and some failed or were cancelled.
+
+[cli] Completed: 7 succeeded, 1 failed.

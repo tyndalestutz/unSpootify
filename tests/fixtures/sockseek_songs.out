@@ -1,0 +1,69 @@
+[cli] Starting CLI session in local mode
+[soulseek] Using local files Soulseek client.
+[soulseek] Reading tags from mock files dir, this may take a while. Use --mock-files-no-read-tags if tags are not needed.
+[001] ExtractJob: CSV: Input: songs.csv
+[001] ExtractJob: CSV: Using columns: artist:"Artist", album:"Album", title:"Title", length:"Length".
+[002] Job List: running: songs
+{"type":"track_list","timestamp":"2026-11-23T07:22:20.6859715Z","data":{"total":8,"pending":8,"existing":0,"notFound":0,"tracks":[{"index":0,"artist":"The Killers","title":"Mr. Brightside","album":"Hot Fuss","length":223,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":1,"artist":"Modest Mouse","title":"Float On","album":"Good News for People Who Love Bad News","length":208,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":2,"artist":"Franz Ferdinand","title":"Take Me Out","album":"Franz Ferdinand","length":237,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":3,"artist":"Yeah Yeah Yeahs","title":"Maps","album":"Fever to Tell","length":220,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":4,"artist":"The White Stripes","title":"Seven Nation Army","album":"Elephant","length":232,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":5,"artist":"OutKast","title":"Hey Ya!","album":"Speakerboxxx/The Love Below","length":235,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":6,"artist":"The Postal Service","title":"Such Great Heights","album":"Give Up","length":267,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"},{"index":7,"artist":"The Strokes","title":"Last Nite","album":"Is This It","length":193,"lifecycleState":"Pending","activityPhase":"None","terminalOutcome":"None","skipReason":"None"}]}}
+[cli] Downloading 8 tracks:
+  The Killers - Mr. Brightside (223s)
+  Modest Mouse - Float On (208s)
+  Franz Ferdinand - Take Me Out (237s)
+  Yeah Yeah Yeahs - Maps (220s)
+  The White Stripes - Seven Nation Army (232s)
+  OutKast - Hey Ya! (235s)
+  The Postal Service - Such Great Heights (267s)
+  The Strokes - Last Nite (193s)
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.8647854Z","data":{"artist":"The Killers","title":"Mr. Brightside","album":"Hot Fuss"}}
+[003] SongJob: searching: The Killers - Mr. Brightside
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9013570Z","data":{"artist":"Modest Mouse","title":"Float On","album":"Good News for People Who Love Bad News"}}
+[004] SongJob: searching: Modest Mouse - Float On
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9024487Z","data":{"artist":"Franz Ferdinand","title":"Take Me Out","album":"Franz Ferdinand"}}
+[005] SongJob: searching: Franz Ferdinand - Take Me Out
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9043053Z","data":{"artist":"Yeah Yeah Yeahs","title":"Maps","album":"Fever to Tell"}}
+[006] SongJob: searching: Yeah Yeah Yeahs - Maps
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9051781Z","data":{"artist":"The White Stripes","title":"Seven Nation Army","album":"Elephant"}}
+[007] SongJob: searching: The White Stripes - Seven Nation Army
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9069886Z","data":{"artist":"OutKast","title":"Hey Ya!","album":"Speakerboxxx/The Love Below"}}
+[008] SongJob: searching: OutKast - Hey Ya!
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9082316Z","data":{"artist":"The Postal Service","title":"Such Great Heights","album":"Give Up"}}
+[009] SongJob: searching: The Postal Service - Such Great Heights
+{"type":"search_start","timestamp":"2026-11-23T07:22:20.9091806Z","data":{"artist":"The Strokes","title":"Last Nite","album":"Is This It"}}
+[010] SongJob: searching: The Strokes - Last Nite
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9387194Z","data":{"artist":"The White Stripes","title":"Seven Nation Army","username":"local","filename":"The White Stripes - Elephant\\01 - Seven Nation Army.mp3","size":1854648,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9386581Z","data":{"artist":"Franz Ferdinand","title":"Take Me Out","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\01 - Take Me Out.mp3","size":1896859,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9385912Z","data":{"artist":"The Postal Service","title":"Such Great Heights","username":"local","filename":"The Postal Service - Give Up\\01 - Such Great Heights.mp3","size":2132802,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9386193Z","data":{"artist":"Yeah Yeah Yeahs","title":"Maps","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\01 - Maps.mp3","size":1760387,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9386302Z","data":{"artist":"OutKast","title":"Hey Ya!","username":"local","filename":"OutKast - Speakerboxxx_The Love Below [FLAC]\\01 - Hey Ya!.flac","size":2830682,"extension":"flac"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9386043Z","data":{"artist":"Modest Mouse","title":"Float On","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\01 - Float On.mp3","size":1668459,"extension":"mp3"}}
+{"type":"download_start","timestamp":"2026-11-23T07:22:20.9386696Z","data":{"artist":"The Killers","title":"Mr. Brightside","username":"local","filename":"The Killers - Hot Fuss\\01 - Mr. Brightside.mp3","size":1784416,"extension":"mp3"}}
+[007] SongJob: downloading: The White Stripes - Seven Nation Army: local\The White Stripes - Elephant\01 - Seven Nation Army.mp3
+[005] SongJob: downloading: Franz Ferdinand - Take Me Out: local\Franz Ferdinand - Franz Ferdinand\01 - Take Me Out.mp3
+[009] SongJob: downloading: The Postal Service - Such Great Heights: local\The Postal Service - Give Up\01 - Such Great Heights.mp3
+[006] SongJob: downloading: Yeah Yeah Yeahs - Maps: local\Yeah Yeah Yeahs - Fever to Tell\01 - Maps.mp3
+[008] SongJob: downloading: OutKast - Hey Ya!: local\OutKast - Speakerboxxx_The Love Below [FLAC]\01 - Hey Ya!.flac
+[004] SongJob: downloading: Modest Mouse - Float On: local\Modest Mouse - Good News for People Who Love Bad News\01 - Float On.mp3
+[003] SongJob: downloading: The Killers - Mr. Brightside: local\The Killers - Hot Fuss\01 - Mr. Brightside.mp3
+{"type":"track_state","timestamp":"2026-11-23T07:22:20.9401498Z","data":{"artist":"The Strokes","title":"Last Nite","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Failed","skipReason":"None","failureReason":"NoSearchResults","rawResultCount":0,"lockedCount":0}}
+[010] SongJob: failed [No search results]: The Strokes - Last Nite
+    Error: No Soulseek file results found.
+{"type":"download_progress","timestamp":"2026-11-23T07:22:20.9736270Z","data":{"jobId":"5974f4a7-e0e0-4f90-b105-083c66c4b2f4","bytesTransferred":0,"totalBytes":1784416,"percent":0}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0130320Z","data":{"artist":"The Killers","title":"Mr. Brightside","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/1.mp3","username":"local","filename":"The Killers - Hot Fuss\\01 - Mr. Brightside.mp3","size":1784416,"bitRate":64,"extension":"mp3","rawResultCount":1,"lockedCount":0}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0133436Z","data":{"artist":"The Postal Service","title":"Such Great Heights","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/7.mp3","username":"local","filename":"The Postal Service - Give Up\\01 - Such Great Heights.mp3","size":2132802,"bitRate":64,"extension":"mp3","rawResultCount":1,"lockedCount":0}}
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0140103Z","data":{"artist":"Franz Ferdinand","title":"Take Me Out","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/3.mp3","username":"local","filename":"Franz Ferdinand - Franz Ferdinand\\01 - Take Me Out.mp3","size":1896859,"bitRate":64,"extension":"mp3","rawResultCount":1,"lockedCount":0}}
+[003] SongJob: succeeded: The Killers - Mr. Brightside: local\The Killers - Hot Fuss\01 - Mr. Brightside.mp3
+[009] SongJob: succeeded: The Postal Service - Such Great Heights: local\The Postal Service - Give Up\01 - Such Great Heights.mp3
+[005] SongJob: succeeded: Franz Ferdinand - Take Me Out: local\Franz Ferdinand - Franz Ferdinand\01 - Take Me Out.mp3
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0146784Z","data":{"artist":"OutKast","title":"Hey Ya!","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/6.flac","username":"local","filename":"OutKast - Speakerboxxx_The Love Below [FLAC]\\01 - Hey Ya!.flac","size":2830682,"bitRate":95,"extension":"flac","rawResultCount":1,"lockedCount":0}}
+[008] SongJob: succeeded: OutKast - Hey Ya!: local\OutKast - Speakerboxxx_The Love Below [FLAC]\01 - Hey Ya!.flac
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0208225Z","data":{"artist":"The White Stripes","title":"Seven Nation Army","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/5.mp3","username":"local","filename":"The White Stripes - Elephant\\01 - Seven Nation Army.mp3","size":1854648,"bitRate":64,"extension":"mp3","rawResultCount":1,"lockedCount":0}}
+[007] SongJob: succeeded: The White Stripes - Seven Nation Army: local\The White Stripes - Elephant\01 - Seven Nation Army.mp3
+[core] Downloaded 4, Failed 1 of Total 8 (62.500%)
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0275936Z","data":{"artist":"Yeah Yeah Yeahs","title":"Maps","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/4.mp3","username":"local","filename":"Yeah Yeah Yeahs - Fever to Tell\\01 - Maps.mp3","size":1760387,"bitRate":64,"extension":"mp3","rawResultCount":2,"lockedCount":0}}
+[006] SongJob: succeeded: Yeah Yeah Yeahs - Maps: local\Yeah Yeah Yeahs - Fever to Tell\01 - Maps.mp3
+{"type":"track_state","timestamp":"2026-11-23T07:22:21.0337911Z","data":{"artist":"Modest Mouse","title":"Float On","lifecycleState":"Terminal","activityPhase":"None","terminalOutcome":"Succeeded","skipReason":"None","downloadPath":"/RUN/out1/2.mp3","username":"local","filename":"Modest Mouse - Good News for People Who Love Bad News\\01 - Float On.mp3","size":1668459,"bitRate":64,"extension":"mp3","rawResultCount":1,"lockedCount":0}}
+[004] SongJob: succeeded: Modest Mouse - Float On: local\Modest Mouse - Good News for People Who Love Bad News\01 - Float On.mp3
+[002] Job List: partial: songs
+    Error: Some child jobs completed and some failed or were cancelled.
+
+[cli] Completed: 7 succeeded, 1 failed.

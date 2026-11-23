@@ -39,7 +39,7 @@ Run        { playlist_id, running: bool, current_track: index|null,
 
 | Command | Returns | Used by |
 |---|---|---|
-| `get_state()` | `{settings, playlists, run, sockseek_version}` | page load |
+| `get_state()` | `{settings, playlists, run, app_version, offline_test}` | page load |
 | `save_settings(partial)` | `settings` | login fields, options, Advanced OK, look picker |
 | `choose_folder()` | `path \| null` | Save to › Choose… |
 | `import_csv()` | `playlist \| error` | Add CSV file… (native file dialog) |
@@ -50,7 +50,7 @@ Run        { playlist_id, running: bool, current_track: index|null,
 | `stop()` | `ok` | Stop (works from any playlist; stops the active run) |
 | `retry(playlist_id)` | `ok \| error` | Retry N missing (re-queues failed, with Try harder) |
 | `force_followup(playlist_id, accept)` | `ok` | Force mode: "get the missing ones as the other format?" |
-| `test_port(port)` | `{open, port, suggested_port?}` | Advanced › Test port, Test connection |
+| `test_port(port)` | `{open, port, server, suggested_port?, error?}` | Advanced › Test port, Test connection |
 
 ## Events (backend → UI)
 
@@ -60,11 +60,11 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 |---|---|---|
 | `run_started` | `{playlist_id, total}` | Download → Stop, sidebar ↓ marker |
 | `track` | `{playlist_id, ...Track}` | one song row + counts + sidebar meter |
-| `run_finished` | `{playlist_id, counts, missing_format?}` | summary in top display, Retry/Test connection, Force follow-up |
+| `run_finished` | `{playlist_id, stopped, counts: Playlist, missing_format, force_format, nothing_to_do?}` | summary in top display, Retry/Test connection, Force follow-up offer when `missing_format` |
 | `log` | `{bold, text}` | Details pane line |
 | `status` | `{phase: "connecting"\|"logged_in"\|"login_failed"\|"rate_limited"\|"idle"}` | top display |
 | `error` | `{code, message, action?}` | top display message + optional action button |
-| `port_result` | `{open, port, suggested_port?}` | Advanced port result |
+| `port_result` | `{open: bool\|null, port, server: bool, suggested_port?, error?}` | Advanced port result (`server` false = network blocks Soulseek entirely) |
 
 ## Error codes (all user-facing text is plain words + what to do)
 
@@ -79,6 +79,11 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `CSV_NO_TRACKS` | That CSV has no songs in it. | — |
 | `SOCKSEEK_MISSING` | Part of the app is missing. Reinstall unSpootify. | — |
 | `SOCKSEEK_CRASHED` | The downloader stopped unexpectedly. Details has more. | Retry |
+| `NO_LOGIN` | Enter a Soulseek username and password first. | focus login fields |
+| `ALREADY_RUNNING` | A download is already running. | — |
+
+`LOGIN_FAILED`, `PORT_BLOCKED` and `NO_NETWORK` are detected from sockseek's text output and only
+when a run dies before its summary line; the exact wording must be confirmed with a real account (Phase 3).
 
 ## UI element → contract map
 
@@ -100,26 +105,29 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | Top display (LCD) | `run`, `status`, `error`, `run_finished` | — |
 | Details pane | `log` events | — |
 
-## Option → sockseek mapping (to verify in Phase 2)
+## Option → sockseek mapping (verified offline with sockseek 3.0.6)
 
-| Option | sockseek |
+The app always writes its own input file (normalized lengths in seconds, only the rows still to do),
+so `snum` in sockseek maps back to playlist rows through the run manifest.
+
+| Option | How |
 |---|---|
-| login | `--user`, `--pass` |
-| Save to | `-p <library>` (+ `--name-format`) |
-| Just these songs | CSV as-is |
-| Full albums | derived CSV with Artist+Album and no Title (sockseek treats title-less rows as album jobs) |
-| Whole artist | `-g` aggregate per artist (verify with CSV input) |
+| login | `--user`, `--pass` (password scrubbed from every log line) |
+| Save to | files staged by sockseek, then moved by `unspootify finalize` (sockseek `--on-complete ... update-index`) to `Artist/Album [EXT]/NN. Title.ext` |
+| Just these songs | CSV `Artist,Title,Album,Length` |
+| Full albums | CSV `Artist,Album` (title-less rows are album jobs); every song of that album follows the album's state |
+| Whole artist | list file of `"artist=NAME"` lines + `-g`; every song by that artist follows the artist's state |
 | MP3/FLAC + Automatic | `--pref-format mp3\|flac` |
-| MP3/FLAC + Force | `--format mp3\|flac`, then follow-up run with the other format for misses |
-| Skip what I already have | sockseek index (default) + `--skip-music-dir <library>` |
-| Get album art | `--album-art largest` (album mode) |
-| Try harder | `-d` |
-| Only first / Skip first | `-n` / `-o` |
+| MP3/FLAC + Force | `--format mp3\|flac`; misses offered via `run_finished.missing_format`, `force_followup` reruns them with the other format |
+| Skip what I already have | sockseek index (per playlist + mode) + `--skip-music-dir <library>`; off = `--no-skip-existing` |
+| Get album art | `--album-art largest` (Full albums / Whole artist only) |
+| Try harder | `-d` (Retry always adds it) |
+| Only first / Skip first | applied by the app when choosing rows (not sockseek `-n/-o`) |
 | Fast mode | `--fast-search` |
 | Strict title | `--strict-title` |
 | Min bitrate | `--min-bitrate` |
 | Listen port | `--listen-port` |
-| (always) | `--progress-json`, `--no-progress` |
+| (always) | `--progress-json`, `--no-progress`, `--index-path` |
 
 ## sockseek `--progress-json` → events (observed with 3.0.6)
 
@@ -128,7 +136,13 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `track_list {total, tracks[index,artist,title,album,length]}` | initial `Track[]` (state queued / skipped) |
 | `search_start {artist,title,album}` | `track` searching |
 | `download_start {artist,title,username,filename,size,extension}` | `track` downloading, user, format |
-| `download_progress {jobId,bytesTransferred,totalBytes,percent}` | `track` pct (needs jobId → track correlation; see Phase 2) |
+| `download_progress {jobId,bytesTransferred,totalBytes,percent}` | `track` pct (jobId matched to the `download_start` with the same size) |
 | `track_state {…, terminalOutcome: Succeeded, downloadPath}` | `track` done + path |
 | `track_state {…, terminalOutcome: Failed, failureReason}` | `track` failed + reason |
 | `track_state {…, skipReason}` | `track` skipped |
+
+Notes: sockseek writes from several threads, so JSON and text can share a line; the parser extracts
+every JSON object from anywhere in a line. `track_list` order is not playlist order; songs are
+matched by artist + title. Album and artist modes also use text lines (`[NNN] AlbumJob: searching:`,
+`Album File: downloading:`, `AlbumJob: succeeded/failed`) because their JSON events are per file.
+sockseek exits non-zero when some songs fail; that is a normal finish (it prints `[cli] Completed:`).
