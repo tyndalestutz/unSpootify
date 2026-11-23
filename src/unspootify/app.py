@@ -152,8 +152,9 @@ class Api:
         return self._backend.test_port(int(port) if port else None)
 
     def _close(self) -> None:
-        if self._backend:
-            self._backend.close()
+        backend, self._backend = self._backend, None  # idempotent: closed event + after start()
+        if backend:
+            backend.close()
 
 
 # Runs inside the page: did every stylesheet and script load, and did the app start?
@@ -239,6 +240,16 @@ def _linux_icon(icon: str) -> None:
         pass  # menu entry is a nicety
 
 
+def _menu(window: webview.Window) -> list:
+    """App menu: Settings… (also Cmd/Ctrl+, in the page). macOS keeps its standard Edit menu."""
+    from webview.menu import Menu, MenuAction
+
+    def settings() -> None:
+        window.evaluate_js("document.getElementById('openSettings').click()")
+
+    return [Menu("unSpootify", [MenuAction("Settings…", settings)])]
+
+
 def _window_background(mode: str) -> str:
     """Paint the empty window in the saved look's color so there's no flash before the page loads."""
     if mode == "real":
@@ -275,7 +286,8 @@ def main(argv: list[str] | None = None) -> int:
         webview.start(_smoke_test, window, gui=gui, icon=icon)
         api._close()
         return 1 if _smoke_failed else 0
-    webview.start(gui=gui, icon=icon)
+    webview.start(gui=gui, icon=icon, menu=_menu(window) if sys.platform == "darwin" else [])
+    api._close()  # also on paths where the window's closed event didn't fire (e.g. Cmd+Q on macOS)
     return 0
 
 

@@ -4,11 +4,13 @@
 # onedir, not onefile: sockseek calls the app back once per finished song (`unspootify finalize`),
 # and a onefile build would unpack itself every time.
 import platform
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(SPECPATH).parent
 SRC = ROOT / "src"
+VERSION = re.search(r'__version__ = "([^"]+)"', (SRC / "unspootify" / "__init__.py").read_text()).group(1)
 machine = platform.machine().lower()
 if sys.platform == "darwin":
     KEY = "osx-arm64" if machine == "arm64" else "osx-x64"
@@ -39,10 +41,12 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="unspootify", console=False,
-          icon=str(ROOT / "assets" / "icon" / "png" / "unspootify-256.png"))
+          icon=None if sys.platform == "darwin" else str(ROOT / "assets" / "icon" / "png" / "unspootify-256.png"))
 coll = COLLECT(exe, a.binaries, a.datas, name="unspootify")
 
 if sys.platform == "darwin":
     app = BUNDLE(coll, name="unSpootify.app", icon=str(ROOT / "assets" / "icon" / "unspootify.icns"),
-                 bundle_identifier="app.unspootify", version="1.0.0",
-                 info_plist={"NSHighResolutionCapable": True, "LSMinimumSystemVersion": "12.0"})
+                 bundle_identifier="app.unspootify", version=VERSION,
+                 info_plist={"NSHighResolutionCapable": True, "LSMinimumSystemVersion": "12.0",
+                             "CFBundleShortVersionString": VERSION, "CFBundleVersion": VERSION,
+                             "LSApplicationCategoryType": "public.app-category.music"})
