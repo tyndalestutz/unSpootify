@@ -1,3 +1,4 @@
+// script.js
 const usernameField = document.getElementById('username');
 const passwordField = document.getElementById('password');
 const folderPathField = document.getElementById('folderPath');
@@ -10,6 +11,7 @@ const downloadButton = document.getElementById('downloadButton');
 let options = {};
 let isRunning = false;
 
+// WebSocket connection
 const socket = new WebSocket('ws://localhost:3000');
 
 socket.addEventListener('message', (event) => {
@@ -17,10 +19,7 @@ socket.addEventListener('message', (event) => {
     scrollToBottom();
 });
 
-function scrollToBottom() {
-    mockTerminal.scrollTop = mockTerminal.scrollHeight;
-}
-
+// Blinking cursor
 function addBlinkingCursor() {
     const cursor = document.createElement('span');
     cursor.id = 'blinkingCursor';
@@ -31,9 +30,9 @@ function addBlinkingCursor() {
     }, 500);
 }
 
+// Option row creator (unchanged)
 function createOptionRow(optionData, container) {
     const row = document.createElement('tr');
-
     const optionName = document.createElement('td');
     optionName.textContent = optionData.name;
     row.appendChild(optionName);
@@ -45,8 +44,9 @@ function createOptionRow(optionData, container) {
         input.type = 'text';
         input.className = 'option-input';
         input.addEventListener('blur', () => {
-            if (input.value) options[optionData.name] = input.value || true;
+            if (input.value) options[optionData.name] = `${optionData.name} ${input.value}`;
             else delete options[optionData.name];
+            updateCommand();
         });
         inputField.appendChild(input);
     }
@@ -63,8 +63,11 @@ function createOptionRow(optionData, container) {
     button.addEventListener('click', () => {
         button.classList.toggle('on');
         button.textContent = button.classList.contains('on') ? 'On' : 'Off';
-        if (button.classList.contains('on')) options[optionData.name] = input ? input.value || true : true;
-        else delete options[optionData.name];
+        if (!optionData.requiresInput || input.value) {
+            if (button.classList.contains('on')) options[optionData.name] = input ? `${optionData.name} ${input.value}` : optionData.name;
+            else delete options[optionData.name];
+            updateCommand();
+        }
     });
     toggleButton.appendChild(button);
     row.appendChild(toggleButton);
@@ -72,38 +75,59 @@ function createOptionRow(optionData, container) {
     container.appendChild(row);
 }
 
+// Fill options (same as before)
 const basicOptionsData = [
     { name: "-a", description: "Download a folder", requiresInput: false },
-    { name: "--concurrent-downloads", description: "Max concurrent downloads", requiresInput: true },
-    { name: "--fast-search", description: "Download as soon as preferred file is found", requiresInput: false },
-    { name: "-d", description: "Desperate: try harder to find tracks", requiresInput: false }
+    { name: "--fast-search", description: "Download preferred files immediately", requiresInput: false },
+    { name: "-d", description: "Try harder to find tracks", requiresInput: false },
 ];
+
+basicOptionsData.forEach(option => createOptionRow(option, basicOptionsTable));
 
 const advancedOptionsData = [
-    { name: "--input-type", description: "[csv|youtube|spotify|bandcamp|string|list]", requiresInput: true },
-    { name: "--name-format", description: "Name format for tracks", requiresInput: true },
-    { name: "-n", description: "Download the first n tracks of a playlist", requiresInput: true },
-    { name: "-o", description: "Skip a specified number of tracks", requiresInput: true },
-    { name: "-r", description: "Download tracks in reverse order", requiresInput: false },
-    { name: "--profile", description: "Configuration profile(s) to use", requiresInput: true }
+    { name: "-n", description: "Download first n tracks", requiresInput: true },
+    { name: "-o", description: "Skip first n tracks", requiresInput: true },
+    { name: "--no-progress", description: "Disable progress bars", requiresInput: false },
 ];
 
-basicOptionsData.forEach(o => createOptionRow(o, basicOptionsTable));
-advancedOptionsData.forEach(o => createOptionRow(o, advancedOptionsTable));
+advancedOptionsData.forEach(option => createOptionRow(option, advancedOptionsTable));
 
+function updateCommand() {
+    const username = usernameField.value ? `--user ${usernameField.value}` : '';
+    const password = passwordField.value ? `--pass ${passwordField.value}` : '';
+    const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
+    const playlistURL = playlistURLField.value ? playlistURLField.value : '';
+
+    const commandOptions = `${username} ${password} ${folderPath} ${Object.values(options).join(' ')}`;
+
+    mockTerminal.textContent = `audiophile@unSpootify:~/sldl$ ./sldl ${commandOptions} ${playlistURL}`;
+    scrollToBottom();
+    addBlinkingCursor();
+}
+
+function scrollToBottom() {
+    mockTerminal.scrollTop = mockTerminal.scrollHeight;
+}
+
+// Download button event
 downloadButton.addEventListener('click', () => {
     if (!isRunning) {
-        const payload = {
-            username: usernameField.value,
-            password: passwordField.value,
-            folder: folderPathField.value,
-            playlist: playlistURLField.value,
-            options
-        };
-        socket.send(JSON.stringify({ action: 'start', payload }));
+        const username = usernameField.value ? `--user ${usernameField.value}` : '';
+        const password = passwordField.value ? `--pass ${passwordField.value}` : '';
+        const folderPath = folderPathField.value ? `-p ${folderPathField.value}` : '';
+        const playlistURL = playlistURLField.value ? playlistURLField.value : '';
+
+        const commandOptions = `${username} ${password} ${folderPath} ${Object.values(options).join(' ')}`;
+
+        // Send WebSocket with spotifyUrl
+        socket.send(JSON.stringify({
+            action: 'start',
+            command: commandOptions,
+            spotifyUrl: playlistURL
+        }));
+
         isRunning = true;
         downloadButton.textContent = "Reset";
-        mockTerminal.textContent = '';
     } else {
         socket.send(JSON.stringify({ action: 'reset' }));
         isRunning = false;
@@ -118,5 +142,10 @@ document.getElementById('toggleAdvancedOptions').addEventListener('click', () =>
     const button = document.getElementById('toggleAdvancedOptions');
     button.textContent = advancedOptions.classList.contains('hidden') ? "Show Advanced Options" : "Hide Advanced Options";
 });
+
+usernameField.addEventListener('blur', updateCommand);
+passwordField.addEventListener('blur', updateCommand);
+playlistURLField.addEventListener('blur', updateCommand);
+folderPathField.addEventListener('blur', updateCommand);
 
 addBlinkingCursor();
