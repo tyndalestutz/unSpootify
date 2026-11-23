@@ -18,7 +18,7 @@ Four people; three are non-technical and can't debug. Every error the app shows 
 
 ## Git
 - Claude owns commits, pushes, PRs, and merges.
-- One branch per phase or feature (`phase-0-skeleton`, `feat/force-format`, ...), PR into `main`, merge when the phase item is done and tests pass.
+- `main` is protected: no direct pushes, no force pushes; every change goes through a PR. One branch per phase or feature (`phase-0-skeleton`, `feat/force-format`, ...), merge when the phase item is done and tests pass.
 - Don't merge a CHECKPOINT phase until the owner approves.
 - Never commit Soulseek credentials, `vendor/` binaries, or downloaded music. Commit `uv.lock`.
 
