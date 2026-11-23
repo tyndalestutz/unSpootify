@@ -20,7 +20,7 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 
 | Topic | Decision |
 |---|---|
-| Platforms | Linux first (build and test here), macOS Apple Silicon second. Intel Mac only if cheap (Backlog). No Windows, ever. |
+| Platforms | Linux first (build and test here), macOS Apple Silicon second. Intel Mac only on request (one CI matrix line, untestable on real hardware). No Windows, ever. |
 | Stack | Python 3.13 backend, HTML/CSS/JS UI shown in a native window by **pywebview** (no browser, no server, no port). Qt backend on Linux (self-contained in AppImage), native WebKit on macOS. |
 | Downloader | **sockseek** (formerly sldl / slsk-batchdl), pinned to v3.0.6, binary bundled per platform, run as a subprocess. Parse `--progress-json` for per-track progress. Soulseek needs no separate client: sockseek connects directly. |
 | Input | **Exportify CSV** is the recommended path (owner found it easiest); **Soundiiz** stays in the guide for other apps (Apple Music, YouTube, Tidal…). The "Get my playlist" guide covers both. Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium. |
@@ -128,31 +128,44 @@ Release
 - [x] `v1.0.0` released after the owner's checkpoint
 - [x] CHECKPOINT: owner downloaded the release AppImage and did real runs (2026-11-23)
 
-### Phase 5: macOS `.dmg` for Apple Silicon and Intel = v1.0.x (CHECKPOINT: friend test)
+### Phase 5: macOS `.dmg` (Apple Silicon; Intel on request) = v1.0.1 (CHECKPOINT: friend test)
 Goal: the friend downloads one `.dmg`, drags the app to Applications, approves it once, and uses it with zero terminal.
-Version: Linux shipped as v1.0.0; Mac support needs code changes, so the first release with Macs is **v1.0.1** (all three
-builds attached). Claude can't run macOS locally: every Mac check runs on GitHub's Mac runners or with the owner/friend.
+Version: Linux shipped as v1.0.0; Mac needs code changes, so the first release with Mac is **v1.0.1** (all builds attached).
+Claude can't run macOS locally: every Mac check runs on GitHub's Mac runners or with the owner/friend.
+Plan reviewed by a fresh agent (2026-11-23); its fixes are folded in below.
 
 Build (CI)
-- [ ] Two jobs: Apple Silicon (`macos-14`/`macos-15`, arm64) and Intel (an x86_64 macOS runner); sockseek `osx-arm64` / `osx-x64`
-- [ ] Same PyInstaller spec, `BUNDLE` → `unSpootify.app` (Cocoa/WebKit via pyobjc, no Qt); `.icns` from the icon PNGs (`iconutil`)
-- [ ] Ad-hoc sign everything inside out (sockseek, dylibs, app) as the last step so the signature stays valid
-- [ ] `.dmg` (`hdiutil`): the app, an Applications shortcut, and `Open me first.txt`; named `unSpootify-<v>-arm64.dmg` / `-x86_64.dmg`
-- [ ] Attach both `.dmg` files to tagged releases next to the AppImage; mac jobs become required checks
+- [ ] Apple Silicon job on `macos-15` (pinned; `macos-14` was retired 2026-11-02), sockseek `osx-arm64`
+- [ ] Intel: one extra matrix line (`macos-15-intel`, sockseek `osx-x64`; Intel runners end Fall 2027), **off unless someone
+      in the group has an Intel Mac** (friends are on recent Apple Silicon; an Intel build couldn't be tested on real hardware)
+- [ ] Same PyInstaller spec, `BUNDLE` → `unSpootify.app` (Cocoa/WebKit via pyobjc, no Qt); version read from `__version__`;
+      generate `assets/icon/unspootify.icns` (`iconutil`)
+- [ ] Ad-hoc sign inside out (sockseek, dylibs, app) as the last step; the app never writes inside its own bundle
+- [ ] `.dmg` (`hdiutil`): the app, an Applications shortcut, and `Open me first.txt`; `unSpootify-<v>-arm64.dmg`
+- [ ] Attach the `.dmg` to tagged releases next to the AppImage; the mac job becomes a required check
 
-Verify on the Mac runners (no human needed)
-- [ ] `finalize` callback answered headless (no Dock icon / window); offline end-to-end run through the built `.app`
-- [ ] `--smoke-test` opens the real Cocoa window; `screencapture` of both looks uploaded as artifacts for review
-- [ ] Mac UI essentials: Cmd+C/V/X/A work in the login/port fields (Edit menu), Cmd+, opens Settings, Cmd+Q quits and stops sockseek,
-      folder picker, CSV picker, drag-and-drop a CSV onto the window
-- [ ] App data in `~/Library/Application Support/unSpootify`, music in `~/Music/unSpootify`
+Verify on the Mac runner, using the app copied *out of the mounted dmg* with a quarantine flag set (as a download would have)
+- [ ] `codesign --verify --deep --strict` passes
+- [ ] `finalize` answered headless (no window/Dock icon), timed (expect ~0.5–1.5 s cold start per song)
+- [ ] Offline end-to-end run through the built app (sockseek launches despite quarantine)
+- [ ] `--smoke-test` opens the real Cocoa window; screenshots of both looks are best-effort (runner screen capture can be blank)
+- [ ] Quitting (Cmd+Q, red close button, app quit) stops sockseek on every path; CI asserts the process is gone
+
+App changes for macOS
+- [ ] On start, remove the quarantine flag from the app's own bundled sockseek (belt and braces)
+- [ ] Kill sockseek from the window-closed / app-quit handlers, not only `atexit` (Cocoa can exit without it)
+- [ ] App menu: Settings… (Cmd+,) and standard Edit menu so Cmd+C/V/X/A work in text fields
+- [ ] App data in `~/Library/Application Support/unSpootify`, music in `~/Music/unSpootify` (already the defaults; confirm)
 
 First launch (unsigned app)
-- [ ] macOS 15+: double-click → blocked → System Settings › Privacy & Security › **Open Anyway** (once). Short illustrated guide in
-      `Open me first.txt`, the README, and the release notes; note the firewall "accept incoming connections" prompt (Allow)
+- [ ] Guide in `Open me first.txt`, README and release notes: **drag to Applications first** (running from the dmg/Downloads
+      breaks when the dmg is ejected); double-click → blocked → System Settings › Privacy & Security › **Open Anyway** (asks for
+      the Mac password); if that button never appears, a one-line Terminal fallback the owner can read out
+      (`xattr -dr com.apple.quarantine /Applications/unSpootify.app`); firewall prompt (only if the firewall is on) names
+      "sockseek": click Allow
 
 Friend test (CHECKPOINT)
-- [ ] Owner or friend installs from the release on a real Mac and does a real run; collect feedback as GitHub issues; fix blockers in v1.0.x
+- [ ] Owner or friend installs from the release on a real Mac and does a real run; feedback as GitHub issues; fixes in v1.0.x
 - [ ] Decide on an Apple Developer ID ($99/yr) only if the first-launch steps prove too confusing
 
 ### Phase 6 (bonus): Tagging and canonical naming
@@ -163,7 +176,7 @@ Friend test (CHECKPOINT)
 
 ## Backlog (not now)
 - Queue: add more playlists while a download runs (owner asked again 2026-11-23; next after v1)
-- Intel Mac `.dmg` (second Actions runner, `osx-x64` sockseek)
+- Intel Mac `.dmg`: switch on the `macos-15-intel` matrix line if anyone needs it (runner available until Fall 2027)
 - Paste a direct Spotify/YouTube/Bandcamp/SoundCloud link (sockseek supports these; Spotify is unreliable)
 - Upgrade sockseek to 3.1.x (`--desperate` becomes `--fallback-level`; length matching no longer required by default)
 - Auto-detect new Exportify CSVs in `~/Downloads`
