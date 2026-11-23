@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 4 done: Linux v1.0.0 released (2026-11-23). Next: Phase 5, macOS Apple Silicon .dmg.
+**Status:** Phase 4 done (Linux v1.0.0, 2026-11-23). Phase 5 planned: Mac Apple Silicon + Intel → v1.0.1.
 
 ## Goal
 
@@ -128,22 +128,32 @@ Release
 - [x] `v1.0.0` released after the owner's checkpoint
 - [x] CHECKPOINT: owner downloaded the release AppImage and did real runs (2026-11-23)
 
-### Phase 5: macOS Apple Silicon `.dmg` = v1.0.x for the friend test
-Goal: a `.dmg` the friend opens, drags to Applications, and uses with zero terminal.
+### Phase 5: macOS `.dmg` for Apple Silicon and Intel = v1.0.x (CHECKPOINT: friend test)
+Goal: the friend downloads one `.dmg`, drags the app to Applications, approves it once, and uses it with zero terminal.
+Version: Linux shipped as v1.0.0; Mac support needs code changes, so the first release with Macs is **v1.0.1** (all three
+builds attached). Claude can't run macOS locally: every Mac check runs on GitHub's Mac runners or with the owner/friend.
 
-Build (GitHub Actions `macos-14`, Apple Silicon; Claude can't run macOS locally)
-- [ ] Same spec with a `BUNDLE` step → `unSpootify.app` (Cocoa/WebKit window via pyobjc, no Qt: much smaller)
-- [ ] sockseek `osx-arm64` bundled as a binary; ad-hoc codesign sockseek and the whole `.app` (`codesign --force --deep -s -`)
-- [ ] `.dmg` with the app and an Applications shortcut (`hdiutil`), named `unSpootify-<version>-arm64.dmg`, attached to the release
-- [ ] CI smoke test on the macOS runner: launch `--smoke-test`, and a headless `finalize` + offline run
+Build (CI)
+- [ ] Two jobs: Apple Silicon (`macos-14`/`macos-15`, arm64) and Intel (an x86_64 macOS runner); sockseek `osx-arm64` / `osx-x64`
+- [ ] Same PyInstaller spec, `BUNDLE` → `unSpootify.app` (Cocoa/WebKit via pyobjc, no Qt); `.icns` from the icon PNGs (`iconutil`)
+- [ ] Ad-hoc sign everything inside out (sockseek, dylibs, app) as the last step so the signature stays valid
+- [ ] `.dmg` (`hdiutil`): the app, an Applications shortcut, and `Open me first.txt`; named `unSpootify-<v>-arm64.dmg` / `-x86_64.dmg`
+- [ ] Attach both `.dmg` files to tagged releases next to the AppImage; mac jobs become required checks
+
+Verify on the Mac runners (no human needed)
+- [ ] `finalize` callback answered headless (no Dock icon / window); offline end-to-end run through the built `.app`
+- [ ] `--smoke-test` opens the real Cocoa window; `screencapture` of both looks uploaded as artifacts for review
+- [ ] Mac UI essentials: Cmd+C/V/X/A work in the login/port fields (Edit menu), Cmd+, opens Settings, Cmd+Q quits and stops sockseek,
+      folder picker, CSV picker, drag-and-drop a CSV onto the window
+- [ ] App data in `~/Library/Application Support/unSpootify`, music in `~/Music/unSpootify`
 
 First launch (unsigned app)
-- [ ] macOS 15+ blocks unsigned apps until "Open Anyway" in System Settings › Privacy & Security; write a short illustrated guide (README + a text file inside the dmg)
-- [ ] Mac-specific checks for the owner/friend: Finder folder picker, Cmd+, , app data in ~/Library/Application Support, default library ~/Music/unSpootify, both looks in WebKit
+- [ ] macOS 15+: double-click → blocked → System Settings › Privacy & Security › **Open Anyway** (once). Short illustrated guide in
+      `Open me first.txt`, the README, and the release notes; note the firewall "accept incoming connections" prompt (Allow)
 
-Friend test
-- [ ] Friend installs from the release link and does a real run; collect feedback as GitHub issues (or a shared list); fix blockers; v1.0.1+
-- [ ] Decide on Apple Developer ID ($99/yr) only if the first-launch warning proves too confusing
+Friend test (CHECKPOINT)
+- [ ] Owner or friend installs from the release on a real Mac and does a real run; collect feedback as GitHub issues; fix blockers in v1.0.x
+- [ ] Decide on an Apple Developer ID ($99/yr) only if the first-launch steps prove too confusing
 
 ### Phase 6 (bonus): Tagging and canonical naming
 - [ ] Bundle beets + `fpcalc`; run after each album/track completes (sockseek `--on-complete` or post-run batch)
@@ -158,7 +168,7 @@ Friend test
 - Upgrade sockseek to 3.1.x (`--desperate` becomes `--fallback-level`; length matching no longer required by default)
 - Auto-detect new Exportify CSVs in `~/Downloads`
 - Exportify inside the app window instead of the browser
-- Auto-update / "new version available" notice
+- v1.1: built-in update check + install (owner wants it before tagging ships). Sketch: check GitHub's latest release on start (daily) and in Settings; verify a SHA256SUMS asset; Linux swaps the AppImage file in place and relaunches; Mac downloads the dmg, replaces the app via a small helper after quit (no quarantine flag, so no second Open Anyway)
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
 - (moved into v1) Soundiiz covers other services' playlists. Verify Soundiiz's real CSV columns and whether its file export needs a paid plan.
