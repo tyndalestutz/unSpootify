@@ -102,7 +102,7 @@ def test_search_cleanup():
 
 def test_flac_prefers_cd_quality():
     joined = " ".join(args_for(format="flac"))
-    assert "--pref-max-bitdepth 16" in joined and "--fast-search" in joined
+    assert "--pref-max-bitdepth 16" in joined and "--fast-search" not in joined
 
 
 def test_same_album_songs_are_searched_together():
