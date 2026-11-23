@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 4 done (Linux v1.0.0, 2026-11-23). Phase 5 planned: Mac Apple Silicon + Intel → v1.0.1.
+**Status:** Phase 4 done (Linux v1.0.0, 2026-11-23). Phase 5 planned and reviewed: Mac Apple Silicon (Intel on request) → v1.0.1.
 
 ## Goal
 
