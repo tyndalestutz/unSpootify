@@ -134,6 +134,14 @@ class Api:
         return self._backend.force_followup(playlist_id, bool(accept), forced_format)
 
     @_guard
+    def archive_playlist(self, playlist_id: str, archived: bool) -> dict:
+        return self._backend.archive_playlist(playlist_id, bool(archived))
+
+    @_guard
+    def remove_playlist(self, playlist_id: str) -> dict:
+        return self._backend.remove_playlist(playlist_id)
+
+    @_guard
     def reset_playlist(self, playlist_id: str) -> dict:
         return self._backend.reset_playlist(playlist_id)
 

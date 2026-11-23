@@ -27,6 +27,8 @@ class RealBackend {
   retry(id) { return this.call("retry", id); }
   forceFollowup(id, accept, forcedFormat) { return this.call("force_followup", id, accept, forcedFormat || null); }
   resetPlaylist(id) { return this.call("reset_playlist", id); }
+  archivePlaylist(id, archived) { return this.call("archive_playlist", id, archived); }
+  removePlaylist(id) { return this.call("remove_playlist", id); }
   testPort(port) { return this.call("test_port", port); }
 }
 window.RealBackend = RealBackend;

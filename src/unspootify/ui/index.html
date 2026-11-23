@@ -53,7 +53,10 @@
     </section>
 
     <section class="panel playlists">
-      <h2>Playlists</h2>
+      <div class="pl-head">
+        <h2>Playlists</h2>
+        <button class="sort-btn" id="plSortBtn" aria-haspopup="menu" title="Sort playlists">Date added</button>
+      </div>
       <ul class="playlist-list" id="playlistList" role="listbox" aria-label="Playlists"></ul>
       <div class="playlist-actions">
         <button class="btn primary-soft" id="getPlaylist">Get my playlist</button>
@@ -120,13 +123,13 @@
       </div>
     </div>
     <div class="track-table">
-      <div class="track-row header">
-        <span class="c-num">#</span>
-        <span class="c-title">Title</span>
-        <span class="c-artist">Artist</span>
-        <span class="c-album">Album</span>
-        <span class="c-fmt">Format</span>
-        <span class="c-status">Status</span>
+      <div class="track-row header" id="trackHeader">
+        <button class="c-num col" data-sort="index" title="Playlist order">#</button>
+        <button class="c-title col" data-sort="title">Title</button>
+        <button class="c-artist col" data-sort="artist">Artist</button>
+        <button class="c-album col" data-sort="album">Album</button>
+        <button class="c-fmt col" data-sort="format">Format</button>
+        <button class="c-status col" data-sort="state">Status</button>
       </div>
       <div class="track-rows" id="trackRows"></div>
       <div class="empty-state" id="emptyState" hidden></div>
@@ -203,18 +206,18 @@
     <h2 class="sheet-title" id="guideTitle">Get your playlist</h2>
     <div class="sheet-body">
       <fieldset class="group">
-        <legend>With Soundiiz (Spotify, Apple Music, YouTube, Tidal…)</legend>
+        <legend>From Spotify: Exportify (recommended)</legend>
         <ol class="steps">
-          <li>Open Soundiiz and log in with your music service.</li>
-          <li>Find your playlist and choose <b>Export as file</b>, then <b>CSV</b>.</li>
+          <li>Open Exportify and log in with Spotify.</li>
+          <li>Click <b>Export</b> next to a playlist. A CSV file downloads.</li>
           <li>Come back here and click <b>Add CSV file…</b> (or drop the file on this window).</li>
         </ol>
-        <button class="btn primary-soft" id="openSoundiiz">Open Soundiiz</button>
+        <button class="btn primary-soft" id="openExportify">Open Exportify</button>
       </fieldset>
       <fieldset class="group">
-        <legend>Spotify only: Exportify</legend>
-        <p class="hint">Log in with Spotify, click <b>Export</b> next to a playlist, then add the CSV here.</p>
-        <button class="btn small" id="openExportify">Open Exportify</button>
+        <legend>Other apps (Apple Music, YouTube, Tidal…): Soundiiz</legend>
+        <p class="hint">Log in, open your playlist, choose <b>Export as file</b> → <b>CSV</b>, then add it here.</p>
+        <button class="btn small" id="openSoundiiz">Open Soundiiz</button>
       </fieldset>
     </div>
     <div class="sheet-actions">
@@ -237,6 +240,21 @@
     </div>
   </div>
 </div>
+
+<!-- Confirm (remove playlist) -->
+<div class="sheet-backdrop" id="confirmSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="confirmTitle">
+    <h2 class="sheet-title" id="confirmTitle"></h2>
+    <div class="sheet-body"><p id="confirmText"></p></div>
+    <div class="sheet-actions">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn default" id="confirmYes">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pop-up menu (playlist actions, sort) -->
+<div class="menu" id="popMenu" role="menu" hidden></div>
 
 <div class="drop-hint" id="dropHint" hidden>Drop the CSV to add it</div>
 

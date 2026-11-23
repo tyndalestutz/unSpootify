@@ -87,3 +87,19 @@ def test_login_goes_in_private_config_not_args(tmp_path):
     assert plan.args[plan.args.index("--config") + 1] == str(conf)
     assert conf.read_text() == "username = me\npassword = s3cret-pass\n"
     assert conf.stat().st_mode & 0o777 == 0o600
+
+
+def test_search_cleanup():
+    from unspootify.plan import primary_artist, search_title
+    assert primary_artist("Matthew Herbert;Herbert;Momoko Gill") == "Matthew Herbert"
+    assert search_title("In The Wee Small Hours Of The Morning - Remastered 1998") == "In The Wee Small Hours Of The Morning"
+    assert search_title("My Rifle, My Pony And Me - Remastered") == "My Rifle, My Pony And Me"
+    assert search_title("Song (2011 Remaster)") == "Song"
+    assert search_title("Hold Me (feat. Someone)") == "Hold Me"
+    assert search_title("Remastered") == "Remastered"
+    assert search_title("Dear Mexico (Thank You for Joyce)") == "Dear Mexico (Thank You for Joyce)"
+
+
+def test_flac_prefers_cd_quality():
+    joined = " ".join(args_for(format="flac"))
+    assert "--pref-max-bitdepth 16" in joined and "--fast-search" in joined

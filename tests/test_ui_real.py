@@ -35,4 +35,4 @@ def test_real_window_end_to_end(tmp_path, mock_share):
     assert "CHECK DONE" in lines, out.stdout[-3000:] + out.stderr[-3000:]
     failures = [l for l in lines if l.startswith("CHECK FAIL")]
     assert not failures, "\n".join(failures)
-    assert (tmp_path / "lib" / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3").exists()
+    assert (tmp_path / "lib" / "The Killers" / "Hot Fuss [MP3]" / "Mr. Brightside.mp3").exists()

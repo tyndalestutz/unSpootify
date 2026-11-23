@@ -11,7 +11,7 @@ SONGS = [("The Killers", "Mr. Brightside", "Hot Fuss"), ("Modest Mouse", "Float 
 
 
 def song_jobs():
-    return [Job(i + 1, a, al, t, [i], number=i + 1) for i, (a, t, al) in enumerate(SONGS)]
+    return [Job(i + 1, a, al, t, [i]) for i, (a, t, al) in enumerate(SONGS)]
 
 
 def run(mapper, path):
@@ -29,7 +29,7 @@ def test_songs_fixture_reaches_expected_states(tmp_path):
     assert states == ["done"] * 7 + ["failed"]
     assert m.states[7].reason == "not_found"
     assert m.states[5].format == "FLAC" and m.states[0].format == "MP3"
-    assert m.states[0].path == str(tmp_path / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3")
+    assert m.states[0].path == str(tmp_path / "The Killers" / "Hot Fuss [MP3]" / "Mr. Brightside.mp3")
     assert m.completed and m.fatal is None
 
 

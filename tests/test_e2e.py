@@ -54,7 +54,7 @@ def test_songs_run_skip_and_rerun(setup):
     fin = rec.wait(backend)
     assert states(backend, pid) == ["done"] * 7 + ["failed"]
     assert fin["counts"]["downloaded"] == 7 and fin["counts"]["failed"] == 1 and fin["counts"]["finished"]
-    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3").exists()
+    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "Mr. Brightside.mp3").exists()
     track = backend.get_tracks(pid)[0]
     assert Path(track["path"]).exists() and track["format"] == "MP3"
     # every song row the UI shows got live updates
@@ -79,7 +79,7 @@ def test_force_mp3_then_followup_flac(setup):
     backend.force_followup(pid, True)
     fin = rec.wait(backend)
     assert states(backend, pid)[5] == "done" and fin["missing_format"] is None
-    assert (lib / "OutKast" / "Speakerboxxx-The Love Below [FLAC]" / "06. Hey Ya!.flac").exists()
+    assert (lib / "OutKast" / "Speakerboxxx-The Love Below [FLAC]" / "Hey Ya!.flac").exists()
 
 
 def test_retry_tries_only_the_misses(setup):
@@ -178,7 +178,7 @@ def test_download_again_after_files_deleted(setup):
     lib.mkdir()
     backend.start(pid)  # done rows whose files vanished are retried
     rec.wait(backend)
-    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3").exists()
+    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "Mr. Brightside.mp3").exists()
 
 
 def test_only_first_n_does_not_claim_finished(setup):

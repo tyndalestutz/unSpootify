@@ -8,11 +8,11 @@ T.run([
     T.check("typing username saves it", true);
   }],
   ["playlist click loads it", async () => {
-    T.click("#playlistList li[data-idx='2']");
+    T.click("#playlistList li[data-id='pl-3']");
     await T.waitFor(() => T.text("#playlistTitle") === "sunday morning", 3000, "title");
     await T.waitFor(() => document.querySelectorAll("#trackRows .track-row").length === 24, 3000, "24 rows");
     T.check("clicking a playlist shows its songs", true);
-    T.click("#playlistList li[data-idx='0']");
+    T.click("#playlistList li[data-id='pl-1']");
     await T.waitFor(() => document.querySelectorAll("#trackRows .track-row").length === 18, 3000, "back to 18");
   }],
   ["guide sheet", async () => {
@@ -42,7 +42,7 @@ T.run([
     window.dispatchEvent(new DragEvent("drop", { dataTransfer: dt2, bubbles: true }));
     await T.waitFor(() => T.$(".lcd").classList.contains("lcd-bad"), 2000, "error shown");
     T.check("dropping a non-CSV shows an error", true);
-    T.click("#playlistList li[data-idx='0']");
+    T.click("#playlistList li[data-id='pl-1']");
   }],
   ["choose folder", async () => {
     T.click("#chooseFolder");
@@ -102,13 +102,13 @@ T.run([
     await T.waitFor(() => T.text("#goBtn") === "Stop", 3000, "Stop button");
     await T.waitFor(() => window.UI.tracks[window.UI.current].some((t) => t.state === "downloading"), 8000, "a download");
     T.check("Download starts a run (button turns to Stop, sidebar marker)", T.$("#playlistList li.busy") !== null);
-    T.click("#playlistList li[data-idx='1']");
+    T.click("#playlistList li[data-id='pl-2']");
     await T.waitFor(() => T.text("#playlistTitle") === "liked songs", 3000, "browse");
     T.check("browsing during a run keeps Stop available", T.text("#goBtn") === "Stop" && !T.$("#goBtn").disabled);
     T.check("top display names the downloading playlist", T.text("#lcdSub").includes("road trip"), T.text("#lcdSub"));
     T.click("#goBtn");
     await T.waitFor(() => T.text("#goBtn") === "Download" && !window.UI.run, 3000, "stopped");
-    T.click("#playlistList li[data-idx='0']");
+    T.click("#playlistList li[data-id='pl-1']");
     await T.waitFor(() => T.text("#lcdTitle").startsWith("Stopped"), 3000, "Stopped message");
     T.check("Stop returns in-flight songs to Waiting", !window.UI.tracks[window.UI.current].some((t) => ["searching", "downloading"].includes(t.state)));
   }],
@@ -129,6 +129,35 @@ T.run([
     await T.sleep(1700);
     T.click("#goBtn");
     await T.waitFor(() => !window.UI.run, 5000, "stopped");
+  }],
+  ["playlist sort and song sort", async () => {
+    T.click("#plSortBtn");
+    T.check("sort pop-up opens", !T.$("#popMenu").hidden);
+    [...document.querySelectorAll("#popMenu .menu-item")].find((b) => b.textContent === "Name").click();
+    await T.waitFor(() => B().settings.playlist_sort === "name", 3000, "sort saved");
+    const names = [...document.querySelectorAll("#playlistList li[data-id] .pl-name")].map((e) => e.textContent);
+    T.check("playlists sorted by name", JSON.stringify(names) === JSON.stringify([...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base", numeric: true }))), names.join(" | "));
+    T.check("sort button shows the choice", T.text("#plSortBtn") === "Name");
+    T.click("#trackHeader [data-sort='artist']");
+    const artists = [...document.querySelectorAll("#trackRows .c-artist")].map((e) => e.textContent.toLowerCase());
+    T.check("clicking Artist sorts songs", JSON.stringify(artists) === JSON.stringify([...artists].sort()), artists.slice(0, 4).join(","));
+    T.click("#trackHeader [data-sort='artist']");
+    T.check("clicking again reverses", T.$("#trackHeader [data-sort='artist']").dataset.dir === "desc");
+    T.click("#trackHeader [data-sort='index']");
+  }],
+  ["archive and remove", async () => {
+    const li = () => T.$("#playlistList li[data-id='pl-4']");
+    li().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: 100, clientY: 200 }));
+    T.check("right-click opens the playlist menu", !T.$("#popMenu").hidden);
+    [...document.querySelectorAll("#popMenu .menu-item")].find((b) => b.textContent === "Archive").click();
+    await T.waitFor(() => T.$(".pl-group"), 3000, "archived group");
+    T.check("archived playlist moves into the Archived group", window.UI.playlists.find((p) => p.id === "pl-4").archived);
+    T.click("#playlistList li[data-id='pl-4'] .pl-more");
+    [...document.querySelectorAll("#popMenu .menu-item")].find((b) => b.textContent.startsWith("Remove")).click();
+    T.check("remove asks first", T.visible("#confirmSheet .sheet") && T.text("#confirmText").includes("stay in your music folder"));
+    T.click("#confirmYes");
+    await T.waitFor(() => !window.UI.playlists.some((p) => p.id === "pl-4"), 3000, "removed");
+    T.check("remove takes it out of the list", !T.$("#playlistList li[data-id='pl-4']") && !T.$(".pl-group"));
   }],
   ["details pane", async () => {
     T.check("Details shows the downloader log", T.text("#log").includes("Searching"));

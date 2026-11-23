@@ -150,6 +150,21 @@ class Backend:
         self.store.reset_all(playlist_id)
         return self.store.playlist(playlist_id)
 
+    def archive_playlist(self, playlist_id: str, archived: bool) -> dict[str, Any]:
+        self.store.set_archived(playlist_id, bool(archived))
+        return self.store.playlist(playlist_id)
+
+    def remove_playlist(self, playlist_id: str) -> dict[str, Any]:
+        """Remove from the app only; downloaded music stays in the library."""
+        if self.runner and self.runner.running and self.runner.playlist_id == playlist_id:
+            raise AppError("ALREADY_RUNNING")
+        self.store.playlist(playlist_id)  # KeyError if unknown
+        self.store.remove(playlist_id)
+        shutil.rmtree(self.root / "runs" / playlist_id, ignore_errors=True)
+        for index in (self.root / "runs").glob(f"index-{playlist_id}-*.csv"):
+            index.unlink(missing_ok=True)
+        return {"ok": True}
+
     def _forget_missing_files(self, playlist_id: str) -> None:
         """Songs marked downloaded whose file is gone (folder changed, deleted, drive unplugged) get retried."""
         gone = [t.index for t in self.store.tracks(playlist_id)

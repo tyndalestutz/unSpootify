@@ -53,6 +53,7 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .toggles { gap: 2px; margin-bottom: 6px; }
 [data-theme="phosphor"] .playlist-list li { padding: 4px 8px; }
 [data-theme="phosphor"] .panel > h2,
+[data-theme="phosphor"] .pl-head > h2,
 [data-theme="phosphor"] .tracks-head h2,
 [data-theme="phosphor"] .terminal-head h2,
 [data-theme="phosphor"] .sheet-title {
@@ -175,3 +176,22 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .drop-hint { background: rgba(0,10,4,.85); color: var(--fg); border: 3px dashed var(--fg); text-transform: uppercase; letter-spacing: .1em; }
 [data-theme="phosphor"] .steps { color: var(--mid); font-size: 12px; }
 [data-theme="phosphor"] .steps b { color: var(--fg); font-weight: normal; }
+
+/* pop-up button, sortable headers, menus */
+[data-theme="phosphor"] .sort-btn {
+  background: none; border: 1px solid var(--line); color: var(--mid); font-size: 10px; padding: 1px 6px;
+  text-transform: uppercase; letter-spacing: .05em; text-shadow: inherit;
+}
+[data-theme="phosphor"] .sort-btn:hover { color: var(--fg); border-color: var(--fg); }
+[data-theme="phosphor"] .pl-more { color: var(--mid); text-shadow: inherit; }
+[data-theme="phosphor"] .pl-group { color: var(--mid); font-size: 11px; text-transform: uppercase; padding: 6px 8px 2px; }
+[data-theme="phosphor"] .playlist-list li.archived:not(.sel) .pl-name { color: var(--dim); }
+[data-theme="phosphor"] .track-row.header .col { text-transform: uppercase; }
+[data-theme="phosphor"] .track-row.header .col.sorted { color: var(--fg); }
+[data-theme="phosphor"] .track-row.header .col:hover { color: var(--fg); }
+[data-theme="phosphor"] .menu { background: var(--bg); border: 1px solid var(--fg); box-shadow: 0 0 18px rgba(61,255,122,.2); }
+[data-theme="phosphor"] .menu-item { color: var(--fg); font-size: 12px; text-shadow: inherit; text-transform: uppercase; }
+[data-theme="phosphor"] .menu-item:not(:disabled):hover, [data-theme="phosphor"] .menu-item:not(:disabled):focus {
+  background: var(--fg); color: #000; text-shadow: none; outline: none;
+}
+[data-theme="phosphor"] .menu-sep { background: none; border-top: 1px dashed var(--line); }

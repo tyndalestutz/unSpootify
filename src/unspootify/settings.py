@@ -14,6 +14,7 @@ GRABS = ("songs", "albums", "artist")
 FORMATS = ("mp3", "flac")
 MODES = ("auto", "force")
 LOOKS = ("phosphor", "jukebox")
+SORTS = ("added", "name", "size")
 
 
 @dataclass
@@ -30,7 +31,7 @@ class Options:
 class Advanced:
     first_n: int | None = None
     skip_n: int | None = None
-    fast: bool = False
+    fast: bool = True  # start downloading as soon as a good match shows up (much faster)
     strict_title: bool = False
     min_bitrate: int | None = None
     listen_port: int | None = None
@@ -42,6 +43,8 @@ class Settings:
     password: str = ""
     library_path: str = field(default_factory=lambda: str(default_library()))
     look: str = "phosphor"
+    playlist_sort: str = "added"
+    version: int = 2
     options: Options = field(default_factory=Options)
     advanced: Advanced = field(default_factory=Advanced)
 
@@ -94,6 +97,8 @@ def _validate(dc: Any) -> None:
             dc.mode = "auto"
     if isinstance(dc, Settings) and dc.look not in LOOKS:
         dc.look = "phosphor"
+    if isinstance(dc, Settings) and dc.playlist_sort not in SORTS:
+        dc.playlist_sort = "added"
     if isinstance(dc, Advanced) and dc.listen_port is not None and not 1024 <= dc.listen_port <= 65535:
         dc.listen_port = None
 
@@ -106,9 +111,12 @@ class SettingsStore:
     def _load(self) -> Settings:
         s = Settings()
         try:
-            _merge(s, json.loads(self.path.read_text(encoding="utf-8")))
+            data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            pass
+            return s
+        if data.get("version", 1) < 2:  # v2: fast search became the default
+            data.setdefault("advanced", {})["fast"] = True
+        _merge(s, data)
         return s
 
     def update(self, partial: dict[str, Any]) -> Settings:

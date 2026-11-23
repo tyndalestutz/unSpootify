@@ -16,13 +16,13 @@ FakeBackend, and an end-to-end test against the real backend running sockseek in
 ## Data shapes
 
 ```text
-Settings   { username, password, library_path, look,
+Settings   { username, password, library_path, look, playlist_sort: "added"|"name"|"size",
              options: { grab: "songs"|"albums"|"artist", format: "mp3"|"flac",
                         mode: "auto"|"force", skip_existing: bool, album_art: bool, try_harder: bool },
              advanced: { first_n: int|null, skip_n: int|null, fast: bool, strict_title: bool,
                          min_bitrate: int|null, listen_port: int|null } }
 
-Playlist   { id, name, source_file, total, done, failed, skipped, finished: bool, added_at }
+Playlist   { id, name, source_file, total, done, downloaded, failed, skipped, finished: bool, archived: bool, added_at }
 
 Track      { index, title, artist, album, length_ms,
              state: "queued"|"searching"|"waiting"|"downloading"|"done"|"skipped"|"failed",
@@ -50,6 +50,8 @@ Run        { playlist_id, running: bool, current_track: index|null,
 | `stop()` | `ok` | Stop (works from any playlist; stops the active run) |
 | `retry(playlist_id)` | `ok \| error` | Retry N missing (re-queues failed, with Try harder) |
 | `force_followup(playlist_id, accept, forced_format)` | `ok` | Force mode: "get the missing ones as the other format?" (`forced_format` from `run_finished.force_format`) |
+| `archive_playlist(playlist_id, archived)` | `Playlist` | playlist menu › Archive / Move out of Archived |
+| `remove_playlist(playlist_id)` | `ok` | playlist menu › Remove from unSpootify… (confirm sheet; music files untouched) |
 | `reset_playlist(playlist_id)` | `Playlist` | Download again (a finished playlist: try every song; library files are skipped) |
 | `test_port(port)` | `{open, port, server, suggested_port?, error?}` | Advanced › Test port, Test connection |
 
@@ -98,7 +100,10 @@ no search has started 120 s after launch; the exact wording must be confirmed wi
 | Element | Reads | Writes / calls |
 |---|---|---|
 | Username / Password | `settings.username/password` | `save_settings` (on change, debounced) |
-| Playlists list (+ ↓ marker, meters) | `playlists`, `run.playlist_id`, `track` events | `get_tracks` |
+| Playlists list (+ ↓ marker, meters, Archived group) | `playlists`, `run.playlist_id`, `track` events | `get_tracks` |
+| Playlists sort pop-up (Date added / Name / Size) | `settings.playlist_sort` | `save_settings` |
+| Playlist menu (right-click, ⋯, Shift+F10; Delete key = remove) | playlist | `start` / `archive_playlist` / `remove_playlist` |
+| Song column headers (click to sort, again to reverse) | `Track[]` | — (sorting is in the page) |
 | Get my playlist (guide sheet: Open Soundiiz / Open Exportify / Add CSV) | — | `open_url`, `import_csv` |
 | Add CSV file… / drop | — | `import_csv` / `import_csv_data` |
 | Force follow-up sheet (Leave them / Get as …) | `run_finished.missing_format` | `force_followup` |

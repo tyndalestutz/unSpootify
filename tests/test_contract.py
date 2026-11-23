@@ -29,14 +29,14 @@ def test_states_match():
 def test_window_commands_exist():
     from unspootify.app import Api
 
-    for name in WINDOW_ONLY | {"get_state", "save_settings", "get_tracks", "start", "stop", "retry", "force_followup", "reset_playlist", "test_port"}:
+    for name in WINDOW_ONLY | {"get_state", "save_settings", "get_tracks", "start", "stop", "retry", "force_followup", "reset_playlist", "archive_playlist", "remove_playlist", "test_port"}:
         assert callable(getattr(Api, name, None)), f"Api.{name} missing"
 
 
 def test_js_backends_implement_every_command():
     ui = ROOT / "src" / "unspootify" / "ui" / "app"
     js = {"getState", "saveSettings", "chooseFolder", "importCsv", "importCsvData", "openUrl", "getTracks", "start",
-          "stop", "retry", "forceFollowup", "resetPlaylist", "testPort"}
+          "stop", "retry", "forceFollowup", "resetPlaylist", "archivePlaylist", "removePlaylist", "testPort"}
     for f in ("real-backend.js", "fake-backend.js"):
         src = (ui / f).read_text()
         missing = [m for m in js if not re.search(rf"\b(async )?{m}\(", src)]

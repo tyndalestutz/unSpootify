@@ -64,6 +64,9 @@ class Store:
         self._db.row_factory = sqlite3.Row
         with self._lock:
             self._db.executescript("PRAGMA foreign_keys = ON;" + SCHEMA)
+            cols = {r["name"] for r in self._db.execute("PRAGMA table_info(playlists)")}
+            if "archived" not in cols:  # added after the first test builds
+                self._db.execute("ALTER TABLE playlists ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
 
     # ---- playlists ----
     def import_csv(self, src: Path) -> dict[str, Any]:
@@ -106,10 +109,24 @@ class Store:
         total = sum(counts.values())
         return {
             "id": row["id"], "name": row["name"], "source_file": row["source_file"],
-            "added_at": row["added_at"], "finished": bool(row["finished"]), "total": total,
+            "added_at": row["added_at"], "finished": bool(row["finished"]), "archived": bool(row["archived"]),
+            "total": total,
             "done": counts.get(DONE, 0) + counts.get(SKIPPED, 0), "downloaded": counts.get(DONE, 0),
             "skipped": counts.get(SKIPPED, 0), "failed": counts.get(FAILED, 0),
         }
+
+    def set_archived(self, pid: str, archived: bool) -> None:
+        with self._lock, self._db:
+            self._db.execute("UPDATE playlists SET archived=? WHERE id=?", (int(archived), pid))
+
+    def remove(self, pid: str) -> None:
+        """Forget a playlist (its songs' state and our copy of the CSV). Music files are untouched."""
+        with self._lock, self._db:
+            row = self._db.execute("SELECT source_file FROM playlists WHERE id=?", (pid,)).fetchone()
+            self._db.execute("DELETE FROM tracks WHERE playlist_id=?", (pid,))
+            self._db.execute("DELETE FROM playlists WHERE id=?", (pid,))
+        if row:
+            Path(row["source_file"]).unlink(missing_ok=True)
 
     def set_finished(self, pid: str, finished: bool) -> None:
         with self._lock, self._db:

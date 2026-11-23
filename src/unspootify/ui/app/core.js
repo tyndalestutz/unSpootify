@@ -17,6 +17,7 @@ const UI = {
   playlists: [], current: null, tracks: {}, run: null, // run = {playlist_id}
   flash: null, notice: null, lastUserScroll: 0, renderedFor: undefined, renderedLen: -1,
   goBusy: false, runStartedAt: 0, status: "idle",
+  sort: { key: "index", dir: 1 }, showArchived: false, menuFor: null,
 };
 
 /* ================= helpers ================= */
@@ -320,13 +321,37 @@ function cell(cls, value, placeholder) {
     : `<span class="${cls} missing">${placeholder}</span>`;
 }
 
+const STATE_ORDER = { downloading: 0, searching: 1, waiting: 2, queued: 3, failed: 4, done: 5, skipped: 6 };
+function viewRows(list) {
+  const { key, dir } = UI.sort;
+  if (key === "index") return dir === 1 ? list : [...list].reverse();
+  const val = (t) => key === "state" ? STATE_ORDER[t.state] ?? 9 : (t[key] || "").toString().toLowerCase();
+  return [...list].sort((a, b) => {
+    const x = val(a), y = val(b);
+    return (x < y ? -1 : x > y ? 1 : a.index - b.index) * dir;
+  });
+}
+
+function setSort(key) {
+  UI.sort = UI.sort.key === key ? { key, dir: -UI.sort.dir } : { key, dir: 1 };
+  document.querySelectorAll("#trackHeader .col").forEach((b) => {
+    const on = b.dataset.sort === UI.sort.key;
+    b.classList.toggle("sorted", on);
+    b.dataset.dir = on ? (UI.sort.dir === 1 ? "asc" : "desc") : "";
+    b.setAttribute("aria-sort", on ? (UI.sort.dir === 1 ? "ascending" : "descending") : "none");
+  });
+  UI.renderedFor = undefined;
+  render();
+}
+
 function renderTable() {
   const rows = $("#trackRows");
   const list = tracksOf(UI.current);
   UI.renderedFor = UI.current;
   UI.renderedLen = list ? list.length : -1;
   if (!list || !list.length) { rows.innerHTML = ""; return; }
-  rows.innerHTML = list.map((t) => `<div class="track-row">
+  const view = viewRows(list);
+  rows.innerHTML = view.map((t) => `<div class="track-row">
       <span class="c-num">${t.index + 1}</span>
       ${cell("c-title", t.title, "(no title)")}
       ${cell("c-artist", t.artist, "(unknown artist)")}
@@ -334,7 +359,7 @@ function renderTable() {
       <span class="c-fmt"></span>
       <span class="c-status"></span>
     </div>`).join("");
-  [...rows.children].forEach((el, k) => { list[k]._el = el; list[k]._key = ""; });
+  [...rows.children].forEach((el, k) => { view[k]._el = el; view[k]._key = ""; });
 }
 
 function asciiBar(p) { const n = Math.round((p / 100) * 12); return "[" + "#".repeat(n) + ".".repeat(12 - n) + "]"; }
@@ -446,34 +471,138 @@ function noticeHint(action) {
            playlist_guide: "Click Get my playlist for help." }[action] || "";
 }
 
+const SORT_LABEL = { added: "Date added", name: "Name", size: "Size" };
+
+function orderedPlaylists() {
+  const how = UI.settings?.playlist_sort || "added";
+  const cmp = {
+    added: (a, b) => (b.added_at || 0) - (a.added_at || 0),
+    name: (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true }),
+    size: (a, b) => b.total - a.total,
+  }[how];
+  const active = UI.playlists.filter((p) => !p.archived).sort(cmp);
+  const archived = UI.playlists.filter((p) => p.archived).sort(cmp);
+  return { active, archived };
+}
+
+function plItem(p) {
+  const cls = [p.id === UI.current ? "sel" : "", UI.run && p.id === UI.run.playlist_id ? "busy" : "", p.archived ? "archived" : ""].join(" ").trim();
+  const meter = `${p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0}%`;
+  return `<li class="${cls}" role="option" tabindex="0" aria-selected="${p.id === UI.current}" data-id="${esc(p.id)}" title="${esc(p.name)}">
+      <span class="pl-name" dir="auto">${esc(p.name)}</span>
+      <span class="pl-count">${p.done.toLocaleString()}/${p.total.toLocaleString()}</span>
+      <button class="pl-more" tabindex="-1" title="Playlist options" aria-label="Playlist options">&#8943;</button>
+      <span class="pl-meter"><span style="width:${meter}"></span></span>
+    </li>`;
+}
+
 function renderPlaylists() {
   const list = $("#playlistList");
-  const structure = UI.playlists.map((p) => `${p.id}|${p.name}`).join("\n");
-  const meter = (p) => `${p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0}%`;
+  $("#plSortBtn").textContent = SORT_LABEL[UI.settings?.playlist_sort || "added"];
+  const { active, archived } = orderedPlaylists();
+  const structure = [...active, ...archived].map((p) => `${p.id}|${p.name}|${p.archived}`).join("\n") + `|${UI.showArchived}`;
   if (list.dataset.structure === structure && UI.playlists.length) {
-    [...list.children].forEach((li, i) => {
-      const p = UI.playlists[i];
+    list.querySelectorAll("li[data-id]").forEach((li) => {
+      const p = byId(li.dataset.id);
+      if (!p) return;
       li.classList.toggle("sel", p.id === UI.current);
       li.classList.toggle("busy", !!UI.run && p.id === UI.run.playlist_id);
       li.setAttribute("aria-selected", p.id === UI.current);
       const count = `${p.done.toLocaleString()}/${p.total.toLocaleString()}`;
       const cEl = li.querySelector(".pl-count");
       if (cEl.textContent !== count) cEl.textContent = count;
-      li.querySelector(".pl-meter span").style.width = meter(p);
+      li.querySelector(".pl-meter span").style.width = `${p.total ? (Math.min(p.done, p.total) / p.total) * 100 : 0}%`;
     });
     return;
   }
-  const focusedIdx = document.activeElement?.closest?.("#playlistList li")?.dataset.idx;
+  const focusedId = document.activeElement?.closest?.("#playlistList li")?.dataset.id;
   list.dataset.structure = structure;
-  list.innerHTML = UI.playlists.map((p, i) => {
-    const cls = [p.id === UI.current ? "sel" : "", UI.run && p.id === UI.run.playlist_id ? "busy" : ""].join(" ").trim();
-    return `<li class="${cls}" role="option" tabindex="0" aria-selected="${p.id === UI.current}" data-idx="${i}" title="${esc(p.name)}">
-      <span class="pl-name" dir="auto">${esc(p.name)}</span>
-      <span class="pl-count">${p.done.toLocaleString()}/${p.total.toLocaleString()}</span>
-      <span class="pl-meter"><span style="width:${meter(p)}"></span></span>
-    </li>`;
-  }).join("") || `<li class="pl-empty">Nothing here yet</li>`;
-  if (focusedIdx !== undefined) list.querySelector(`li[data-idx="${focusedIdx}"]`)?.focus();
+  let html = active.map(plItem).join("");
+  if (archived.length) {
+    html += `<li class="pl-group" tabindex="0" role="button" aria-expanded="${UI.showArchived}" data-toggle="archived">
+      <span class="pl-disclosure">${UI.showArchived ? "&#9662;" : "&#9656;"}</span> Archived (${archived.length})</li>`;
+    if (UI.showArchived) html += archived.map(plItem).join("");
+  }
+  list.innerHTML = html || `<li class="pl-empty">Nothing here yet</li>`;
+  if (focusedId) list.querySelector(`li[data-id="${CSS.escape(focusedId)}"]`)?.focus();
+}
+
+/* ================= pop-up menu (playlist actions, sort) ================= */
+
+function openMenu(items, anchor, x, y) {
+  const menu = $("#popMenu");
+  menu.innerHTML = items.map((it, i) => it === "-" ? `<div class="menu-sep" role="separator"></div>`
+    : `<button class="menu-item${it.checked ? " checked" : ""}" role="menuitem" data-i="${i}"${it.disabled ? " disabled" : ""}>${esc(it.label)}</button>`).join("");
+  menu.hidden = false;
+  const r = anchor ? anchor.getBoundingClientRect() : { left: x, bottom: y };
+  const w = menu.offsetWidth, h = menu.offsetHeight;
+  menu.style.left = `${Math.min(r.left, window.innerWidth - w - 8)}px`;
+  menu.style.top = `${Math.min(r.bottom + 2, window.innerHeight - h - 8)}px`;
+  menu.onclick = (e) => {
+    const b = e.target.closest(".menu-item");
+    if (!b || b.disabled) return;
+    closeMenu();
+    items[+b.dataset.i].run();
+  };
+  UI.menuReturn = document.activeElement;
+  menu.querySelector(".menu-item:not([disabled])")?.focus();
+}
+function closeMenu() {
+  const menu = $("#popMenu");
+  if (menu.hidden) return;
+  menu.hidden = true;
+  UI.menuReturn?.focus?.();
+}
+
+function playlistMenu(id, anchor, x, y) {
+  const p = byId(id);
+  if (!p) return;
+  const running = UI.run && UI.run.playlist_id === id;
+  const c = counts(id);
+  openMenu([
+    { label: running ? "Stop" : finishedNothingLeft(p, c) ? "Download again" : "Download", disabled: !!UI.run && !running,
+      run: async () => { await selectPlaylist(id); onGo(); } },
+    "-",
+    { label: p.archived ? "Move out of Archived" : "Archive", run: () => archivePlaylist(id, !p.archived) },
+    { label: "Remove from unSpootify…", disabled: running, run: () => confirmRemove(id) },
+  ], anchor, x, y);
+}
+
+function sortMenu() {
+  const cur = UI.settings?.playlist_sort || "added";
+  openMenu(Object.entries(SORT_LABEL).map(([k, label]) => ({
+    label, checked: k === cur, run: () => { UI.settings.playlist_sort = k; saveSettings({ playlist_sort: k }); render(); },
+  })), $("#plSortBtn"));
+}
+
+async function archivePlaylist(id, archived) {
+  const r = await call(UI.backend.archivePlaylist(id, archived));
+  if (isError(r)) return;
+  Object.assign(byId(id), r);
+  if (archived && UI.current === id) UI.showArchived = true;
+  log(archived ? "Archived " : "Unarchived ", `"${r.name}"`);
+  render();
+}
+
+function confirmRemove(id) {
+  const p = byId(id);
+  $("#confirmTitle").textContent = `Remove “${p.name}”?`;
+  $("#confirmText").textContent = "It disappears from unSpootify. Songs you already downloaded stay in your music folder.";
+  $("#confirmSheet").dataset.id = id;
+  openSheet("#confirmSheet");
+}
+
+async function removePlaylist(id) {
+  const p = byId(id);
+  const r = await call(UI.backend.removePlaylist(id));
+  if (isError(r)) return;
+  UI.playlists = UI.playlists.filter((x) => x.id !== id);
+  delete UI.tracks[id];
+  log("Removed ", `"${p ? p.name : id}" (your music files are untouched)`);
+  if (UI.current === id) {
+    const { active } = orderedPlaylists();
+    await selectPlaylist(active[0]?.id || UI.playlists[0]?.id || null);
+  } else render();
 }
 
 function followCurrent() {
@@ -596,15 +725,40 @@ function bindControls() {
   $(".track-table").addEventListener("wheel", () => (UI.lastUserScroll = Date.now()), { passive: true });
   $(".track-table").addEventListener("mousedown", () => (UI.lastUserScroll = Date.now()));
 
+  const toggleArchived = () => { UI.showArchived = !UI.showArchived; render(); };
   $("#playlistList").addEventListener("click", (e) => {
-    const li = e.target.closest("li[data-idx]");
-    if (li) selectPlaylist(UI.playlists[+li.dataset.idx].id);
+    if (e.target.closest("[data-toggle]")) return toggleArchived();
+    const li = e.target.closest("li[data-id]");
+    if (!li) return;
+    if (e.target.closest(".pl-more")) { e.stopPropagation(); return playlistMenu(li.dataset.id, e.target.closest(".pl-more")); }
+    selectPlaylist(li.dataset.id);
+  });
+  $("#playlistList").addEventListener("contextmenu", (e) => {
+    const li = e.target.closest("li[data-id]");
+    if (!li) return;
+    e.preventDefault();
+    selectPlaylist(li.dataset.id);
+    playlistMenu(li.dataset.id, null, e.clientX, e.clientY);
   });
   $("#playlistList").addEventListener("keydown", (e) => {
-    const li = e.target.closest("li[data-idx]");
+    const li = e.target.closest("li");
     if (!li) return;
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectPlaylist(UI.playlists[+li.dataset.idx].id); }
+    if (li.dataset.toggle && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return toggleArchived(); }
+    if (li.dataset.id && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); selectPlaylist(li.dataset.id); }
+    if (li.dataset.id && (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10"))) { e.preventDefault(); playlistMenu(li.dataset.id, li); }
+    if (li.dataset.id && (e.key === "Delete" || e.key === "Backspace")) { e.preventDefault(); confirmRemove(li.dataset.id); }
     if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); (e.key === "ArrowDown" ? li.nextElementSibling : li.previousElementSibling)?.focus(); }
+  });
+  $("#plSortBtn").addEventListener("click", (e) => { e.stopPropagation(); sortMenu(); });
+  $("#trackHeader").addEventListener("click", (e) => { const b = e.target.closest(".col"); if (b) setSort(b.dataset.sort); });
+  $("#confirmYes").addEventListener("click", () => { const id = $("#confirmSheet").dataset.id; closeSheets(); removePlaylist(id); });
+  document.addEventListener("mousedown", (e) => { if (!e.target.closest("#popMenu")) closeMenu(); });
+  $("#popMenu").addEventListener("keydown", (e) => {
+    const items = [...$("#popMenu").querySelectorAll(".menu-item:not([disabled])")];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); items[(i + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length]?.focus(); }
+    if (e.key === "Escape") { e.stopPropagation(); closeMenu(); }
+    if (e.key === "Tab") { e.preventDefault(); closeMenu(); }
   });
 
   document.querySelectorAll(".seg").forEach((seg) => {
@@ -687,7 +841,7 @@ function bindControls() {
   });
   document.querySelectorAll(".look-card").forEach((c) => c.addEventListener("click", () => setLook(c.dataset.look)));
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeSheets();
+    if (e.key === "Escape") { if (!$("#popMenu").hidden) return closeMenu(); closeSheets(); }
     if (e.key === "," && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSheet("#settingsSheet"); }
     const open = document.querySelector(".sheet-backdrop:not([hidden])");
     if (open && e.key === "Tab") {

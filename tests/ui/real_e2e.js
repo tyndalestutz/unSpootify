@@ -29,7 +29,7 @@ T.run([
     const st = rows().map((t) => t.state);
     T.check("7 downloaded, 1 not found", st.filter((s) => s === "done").length === 7 && st[7] === "failed", st.join(","));
     T.check("song rows say Done / Not found", T.text("#trackRows .track-row:nth-child(1) .c-status") === "Done" && T.text("#trackRows .track-row:nth-child(8) .c-status") === "Not found");
-    T.check("row tooltip shows where it was saved", T.$("#trackRows .track-row").title.includes("/The Killers/Hot Fuss [MP3]/01. Mr. Brightside.mp3"), T.$("#trackRows .track-row").title);
+    T.check("row tooltip shows where it was saved", T.$("#trackRows .track-row").title.includes("/The Killers/Hot Fuss [MP3]/Mr. Brightside.mp3"), T.$("#trackRows .track-row").title);
     T.check("top display summarises", T.text("#lcdTitle") === "Finished: 7 of 8 in your library", T.text("#lcdTitle"));
     T.check("sidebar count updated", T.text("#playlistList li.sel .pl-count") === "7/8", T.text("#playlistList li.sel .pl-count"));
   }],

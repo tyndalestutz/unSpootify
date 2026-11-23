@@ -101,6 +101,7 @@
         this.summarize(this.playlists[0].id);
       }
       this.timer = null; this.active = null; this.followup = false;
+      this.ready = true;
       this.mountPicker();
     }
 
@@ -116,14 +117,18 @@
         index: i, title, artist, album, length_ms: 200000, state: "queued", pct: 0, format: null, user: null, path: null, reason: null,
         _fail: !!(rules.fail && rules.fail(i)), _have: !!(rules.have && rules.have(i)), _flacOnly: !!(rules.flacOnly && rules.flacOnly(i)),
       }));
-      this.playlists.push({ id, name, total: rows.length, done: 0, downloaded: 0, skipped: 0, failed: 0, finished: false });
+      this.playlists.push({ id, name, total: rows.length, done: 0, downloaded: 0, skipped: 0, failed: 0, finished: false,
+        archived: false, added_at: this.clock() });
       if (this.listener) this.log("Added playlist ", `"${name}" (${rows.length} songs)`);
       return this.playlists[this.playlists.length - 1];
     }
     addSummary(o) {
       const id = `pl-${this.playlists.length + 1}`;
-      this.playlists.push({ id, name: o.name, total: o.total, done: o.done, downloaded: o.done, skipped: 0, failed: 0, finished: false, _lazy: true });
+      this.playlists.push({ id, name: o.name, total: o.total, done: o.done, downloaded: o.done, skipped: 0, failed: 0, finished: false,
+        archived: false, added_at: this.clock(), _lazy: true });
     }
+    // scenario playlists sort newest-first in the order listed; later imports are newer still
+    clock() { this._t = this._t === undefined ? 1000 : this._t - 1; return this.ready ? 2000 + this.playlists.length : this._t; }
     tracks(id) {
       const p = this.playlists.find((x) => x.id === id);
       if (p && p._lazy && !this.data[id]) {
@@ -271,6 +276,17 @@
       for (const t of failed) { t.state = "queued"; t.reason = null; t._fail = Math.random() < (this.scn.portBlocked ? 0.15 : 0.5); }
       this.log("Retrying ", `${failed.length} songs with Try harder`);
       return this.start(id, { only: failed.map((t) => t.index) });
+    }
+    async archivePlaylist(id, archived) {
+      const p = this.playlists.find((x) => x.id === id);
+      p.archived = !!archived;
+      return this.public(p);
+    }
+    async removePlaylist(id) {
+      if (this.active === id) return this.error("ALREADY_RUNNING", "A download is already running.", null);
+      this.playlists = this.playlists.filter((x) => x.id !== id);
+      delete this.data[id];
+      return { ok: true };
     }
     async resetPlaylist(id) {
       if (this.active === id) return this.error("ALREADY_RUNNING", "A download is already running.", null);

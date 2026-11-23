@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -47,25 +48,49 @@ def pick_tracks(tracks: list[Track], settings: Settings, only: list[int] | None 
     return [t for t in rows if t.state not in ("done", "skipped", "failed")]
 
 
+_REMASTER = re.compile(
+    r"\s*(?:-\s*(?:\d{4}\s+)?(?:digital(?:ly)?\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?"
+    r"|[(\[]\s*(?:\d{4}\s+)?(?:digital(?:ly)?\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*[)\]])\s*$",
+    re.I,
+)
+_FEAT = re.compile(r"\s*(?:[(\[]\s*(?:feat|ft|featuring|with)\.?\s[^)\]]*[)\]]|\s-\s(?:feat|ft)\.?\s.*$)", re.I)
+
+
+def primary_artist(artist: str) -> str:
+    """Spotify exports join artists with ';'. Soulseek folders almost always name just the first."""
+    return artist.split(";")[0].strip() or artist.strip()
+
+
+def search_title(title: str) -> str:
+    """'In The Wee Small Hours - Remastered 1998' -> 'In The Wee Small Hours'; drop '(feat. X)'."""
+    cleaned = _FEAT.sub("", _REMASTER.sub("", title)).strip()
+    return cleaned or title
+
+
 def make_jobs(mode: str, tracks: list[Track]) -> list[Job]:
+    """Jobs carry the *search* artist/title (first artist, no 'Remastered'/'feat.'); sockseek echoes
+    these back in its events and they become the file and folder names."""
     jobs: list[Job] = []
     if mode == "songs":
         for t in tracks:
-            jobs.append(Job(len(jobs) + 1, t.artist, t.album, t.title, [t.index], number=t.index + 1))
+            # no track number: a playlist position isn't the album's track number
+            jobs.append(Job(len(jobs) + 1, primary_artist(t.artist), t.album, search_title(t.title), [t.index]))
     elif mode == "albums":
         by_album: dict[tuple[str, str], Job] = {}
         for t in tracks:
-            key = (t.artist.lower(), (t.album or t.title).lower())
+            artist = primary_artist(t.artist)
+            key = (artist.lower(), (t.album or t.title).lower())
             if key not in by_album:
-                by_album[key] = Job(len(by_album) + 1, t.artist, t.album or t.title)
+                by_album[key] = Job(len(by_album) + 1, artist, t.album or t.title)
             by_album[key].indexes.append(t.index)
         jobs = list(by_album.values())
     elif mode == "artist":
         by_artist: dict[str, Job] = {}
         for t in tracks:
-            key = t.artist.lower()
+            artist = primary_artist(t.artist)
+            key = artist.lower()
             if key and key not in by_artist:
-                by_artist[key] = Job(len(by_artist) + 1, t.artist)
+                by_artist[key] = Job(len(by_artist) + 1, artist)
             if key:
                 by_artist[key].indexes.append(t.index)
         jobs = list(by_artist.values())
@@ -90,7 +115,7 @@ def write_input(mode: str, jobs: list[Job], tracks_by_index: dict[int, Track], p
             w.writerow(["Artist", "Title", "Album", "Length"])
             for j in jobs:
                 t = tracks_by_index[j.indexes[0]]
-                w.writerow([t.artist, t.title, t.album, round(t.length_ms / 1000) if t.length_ms else ""])
+                w.writerow([j.artist, j.title, t.album, round(t.length_ms / 1000) if t.length_ms else ""])
 
 
 def build_args(
@@ -113,6 +138,9 @@ def build_args(
     if mode in ("albums", "artist") and o.album_art:
         args += ["--album-art", "largest"]
     args += ["--format", fmt] if force else ["--pref-format", fmt]
+    if fmt == "flac":  # prefer CD-quality lossless: hi-res 24-bit files are huge and slow to fetch
+        args += ["--pref-max-bitdepth", "16", "--pref-max-samplerate", "48000"]
+    args += ["--concurrent-searches", "4"]  # still inside sockseek's Soulseek rate limit
     if o.skip_existing:
         # Songs: also skip anything already in the library. Albums/artists: rely on sockseek's index only,
         # otherwise owning one song of an album counts as owning the album.

@@ -23,12 +23,12 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 | Platforms | Linux first (build and test here), macOS Apple Silicon second. Intel Mac only if cheap (Backlog). No Windows, ever. |
 | Stack | Python 3.13 backend, HTML/CSS/JS UI shown in a native window by **pywebview** (no browser, no server, no port). Qt backend on Linux (self-contained in AppImage), native WebKit on macOS. |
 | Downloader | **sockseek** (formerly sldl / slsk-batchdl), pinned to v3.0.6, binary bundled per platform, run as a subprocess. Parse `--progress-json` for per-track progress. Soulseek needs no separate client: sockseek connects directly. |
-| Input | **Soundiiz CSV** is the primary path (connects Spotify, Apple Music, YouTube, Tidal…; export a playlist as CSV), **Exportify** as the Spotify-only alternative. The "Get my playlist" guide covers both. Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium. |
+| Input | **Exportify CSV** is the recommended path (owner found it easiest); **Soundiiz** stays in the guide for other apps (Apple Music, YouTube, Tidal…). The "Get my playlist" guide covers both. Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium. |
 | Playlist home | Imported CSVs are copied into an app-managed playlists folder. The app tracks, per playlist and per track, what was tried, downloaded, failed, or skipped. |
 | Soulseek login | Username and password fields always visible in the main window. Required on first run, editable any time, remembered between launches. Each friend uses their own account. |
 | Folder choice | Native OS folder picker (Finder on Mac, GTK/Qt dialog on Linux). Never make the user type a path. |
 | Format | User picks **FLAC or MP3** plus **Automatic** (prefer it, accept what exists: `--pref-format`) or **Force** (only that format: `--format`). In Force mode, report what wasn't found and offer to grab those in the other format. Default: MP3 + Automatic. |
-| Naming (pre-tagging) | `Artist/Album [EXT]/NN. Title.ext` via sockseek `--name-format`. The `[EXT]` in the folder keeps encodings of the same album apart. |
+| Naming (pre-tagging) | `Artist/Album [EXT]/Title.ext` (first artist only; no track number in songs mode because a playlist position isn't the album track number; album/artist modes keep the file's number). The `[EXT]` in the folder keeps encodings of the same album apart. |
 | Naming (post-tagging, bonus) | Port the owner's Picard script **ULTIMATE-03** (`Artist/[Year] Album (EP) [FLAC]/NN. Title`, standardized album artist). Source: `~/.config/MusicBrainz/Picard.ini`. |
 | Tagging | **Last, bonus phase.** beets as a library (MusicBrainz + AcoustID fingerprinting), headless. Picard itself is not automatable enough to embed. |
 | UI layout | Per-track progress list is the main view; collapsible/resizable verbose terminal pane shows raw sockseek output. The window never scrolls: sidebar is fixed (login, playlists, options), only the playlist list, song list, and log scroll. Advanced options open in a sheet (dialog). |
@@ -99,7 +99,9 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [x] "Get your playlist" guide: opens Exportify in the default browser, short illustrated steps
 - [x] Real port test wired to Advanced and Test connection
 - [x] Adversarial review of the wired app (fresh agent) and fixes: double-click start/stop, failed Retry stranding rows, Full albums after songs, Download again, unlaunchable sockseek, crash-after-success, Only/Skip-first claiming done, password off the command line (private config), log scrubbing, login timeout + status, encodings, follow-up format
-- [ ] Owner test run with a real Soulseek account and a Soundiiz CSV (confirms login-failure wording and Soundiiz columns)
+- [x] Owner real-account test round 1 (2026-11-23): downloads work. Fixes from it: search with the first artist and without 'Remastered'/'feat.' (multi-artist songs were missed), fast search on by default + 4 concurrent searches (speed), FLAC prefers CD quality (16-bit/48 kHz max) instead of huge hi-res files, no fake track numbers, Exportify first in the guide
+- [x] Playlist management (owner request): sort playlists by Date added / Name / Size, Archive (collapsible Archived group), Remove from unSpootify (confirm; music untouched) via right-click / ⋯ / keyboard; click song column headers to sort
+- [ ] Owner real-account test round 2
 
 ### Phase 4: Linux AppImage = v1 (CHECKPOINT)
 - [ ] PyInstaller build with sockseek bundled; wrap as AppImage (the frozen app must handle the `finalize` subcommand sockseek calls back into)
@@ -118,7 +120,7 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - [ ] Dedup: never two encodings of one album in the same folder
 
 ## Backlog (not now)
-- Queue: add more playlists while a download runs
+- Queue: add more playlists while a download runs (owner asked again 2026-11-23; next after v1)
 - Intel Mac `.dmg` (second Actions runner, `osx-x64` sockseek)
 - Paste a direct Spotify/YouTube/Bandcamp/SoundCloud link (sockseek supports these; Spotify is unreliable)
 - Upgrade sockseek to 3.1.x (`--desperate` becomes `--fallback-level`; length matching no longer required by default)
