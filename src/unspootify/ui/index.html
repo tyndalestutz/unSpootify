@@ -3,39 +3,264 @@
 <head>
 <meta charset="UTF-8">
 <title>unSpootify</title>
-<style>
-  :root { --bg: #000; --fg: #00ff00; --dim: #00aa00; }
-  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
-    font-family: "Courier New", monospace; }
-  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
-  pre.logo { margin: 0; font-size: clamp(5px, 0.95vw, 12px); line-height: 1.1; text-shadow: 0 0 6px rgba(0,255,0,.5); }
-  #status { color: var(--dim); }
-  .cursor { animation: blink 1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-</style>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="themes/phosphor.css">
+<link rel="stylesheet" href="themes/jukebox.css">
 </head>
-<body>
-<pre class="logo"> ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___
+<body data-theme="phosphor">
+
+<div class="app">
+
+  <header class="masthead">
+    <pre class="logo" aria-label="unSpootify"> ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___
 |\  \|\  \|\   ___  \|\   ____\|\   __  \|\   __  \|\   __  \|\___   ___\\  \|\  _____\\  \  /  /|
 \ \  \\\  \ \  \\ \  \ \  \___|\ \  \|\  \ \  \|\  \ \  \|\  \|___ \  \_\ \  \ \  \__/\ \  \/  / /
- \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / / 
-  \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /  
-   \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /    
-    \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /     
+ \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / /
+  \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /
+   \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /
+    \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /
                         \|_________|                                                 \|___|/</pre>
-<div id="status">connecting<span class="cursor">_</span></div>
-<script>
-  window.addEventListener('pywebviewready', async () => {
-    const el = document.getElementById('status');
-    const info = await window.pywebview.api.get_info();
-    if (info.sockseek_version) {
-      el.textContent = `v${info.app_version} · sockseek ${info.sockseek_version} ready`;
-      el.dataset.state = 'ok';
-    } else {
-      el.textContent = `v${info.app_version} · sockseek not found (run scripts/fetch_sockseek.sh)`;
-      el.dataset.state = 'missing';
-    }
-  });
-</script>
+    <div class="wordmark">unSpootify</div>
+
+    <div class="lcd" aria-live="polite">
+      <div class="lcd-line1" id="lcdTitle" dir="auto">Ready</div>
+      <div class="lcd-line2" id="lcdSub">Pick a playlist and hit Download</div>
+      <div class="lcd-bar"><span id="lcdFill"></span></div>
+    </div>
+
+    <button class="tool-btn" id="openSettings" title="Settings (Ctrl+,)">
+      <span class="tb-face" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" fill-rule="evenodd" d="M9.88,4.08 L10.28,1.14 L13.72,1.14 L14.12,4.08 L16.10,4.90 L18.47,3.10 L20.90,5.53 L19.10,7.90 L19.92,9.88 L22.86,10.28 L22.86,13.72 L19.920,14.12 L19.10,16.10 L20.90,18.47 L18.47,20.90 L16.10,19.10 L14.12,19.92 L13.72,22.86 L10.28,22.86 L9.88,19.92 L7.90,19.10 L5.53,20.90 L3.10,18.47 L4.90,16.10 L4.08,14.12 L1.14,13.72 L1.14,10.28 L4.08,9.88 L4.90,7.90 L3.10,5.53 L5.53,3.10 L7.90,4.90 Z M12,8.6 A3.4,3.4 0 1,0 12.01,8.6 Z"/></svg></span>
+      <span class="tb-label">Settings</span>
+      <span class="tb-key">ctrl+,</span>
+    </button>
+  </header>
+
+  <aside class="sidebar">
+
+    <section class="panel account">
+      <h2>Soulseek login</h2>
+      <div class="login-row">
+        <label class="field">
+          <span>Username</span>
+          <input type="text" id="user" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" id="pass" autocomplete="off">
+        </label>
+      </div>
+      <p class="hint">No account? Just make one up.</p>
+    </section>
+
+    <section class="panel playlists">
+      <div class="pl-head">
+        <h2>Playlists</h2>
+        <button class="sort-btn" id="plSortBtn" aria-haspopup="menu" title="Sort playlists">Date added</button>
+      </div>
+      <ul class="playlist-list" id="playlistList" role="listbox" aria-label="Playlists"></ul>
+      <div class="playlist-actions">
+        <button class="btn primary-soft" id="getPlaylist">Get my playlist</button>
+        <button class="btn" id="addCsv">Add CSV file…</button>
+      </div>
+    </section>
+
+    <section class="panel options">
+      <h2>Options</h2>
+
+      <div class="opt folder-opt">
+        <div class="folder">
+          <span class="opt-label">Save to</span>
+          <span class="folder-path" id="folderPath"></span>
+          <button class="btn small" id="chooseFolder">Choose…</button>
+        </div>
+      </div>
+
+      <div class="opt">
+        <span class="opt-label">What to grab</span>
+        <div class="seg" role="radiogroup" id="grabSeg" aria-label="What to grab">
+          <button data-value="songs" class="on">These songs</button>
+          <button data-value="albums">Full albums</button>
+          <button data-value="artist">Whole artist</button>
+        </div>
+      </div>
+
+      <div class="opt">
+        <span class="opt-label">Format</span>
+        <div class="seg-row">
+          <div class="seg" role="radiogroup" id="fmtSeg" aria-label="Format">
+            <button data-value="mp3" class="on">MP3</button>
+            <button data-value="flac">FLAC</button>
+          </div>
+          <div class="seg" role="radiogroup" id="modeSeg" aria-label="Format mode">
+            <button data-value="auto" class="on">Automatic</button>
+            <button data-value="force">Force</button>
+          </div>
+        </div>
+        <p class="hint" id="fmtHint"></p>
+      </div>
+
+      <div class="toggles">
+        <label class="toggle"><input type="checkbox" id="optSkip" checked><span class="box"></span><span>Skip what I already have</span></label>
+        <label class="toggle" title="For Full albums and Whole artist"><input type="checkbox" id="optArt" checked><span class="box"></span><span>Get album art</span></label>
+        <label class="toggle"><input type="checkbox" id="optHarder"><span class="box"></span><span>Try harder <em>(slower)</em></span></label>
+      </div>
+
+      <button class="btn small advanced-btn" id="openAdvanced">Advanced…</button>
+    </section>
+
+  </aside>
+
+  <main class="tracks panel">
+    <div class="tracks-head">
+      <div>
+        <h2 id="playlistTitle" dir="auto"></h2>
+        <div class="counts" id="counts"></div>
+      </div>
+      <div class="head-actions">
+        <button class="btn go-alt" id="testBtn" hidden>Test connection</button>
+        <button class="btn go-alt" id="retryBtn" hidden>Retry missing</button>
+        <button class="btn go" id="goBtn">Download</button>
+      </div>
+    </div>
+    <div class="track-table">
+      <div class="track-row header" id="trackHeader">
+        <button class="c-num col" data-sort="index" title="Playlist order">#</button>
+        <button class="c-title col" data-sort="title">Title</button>
+        <button class="c-artist col" data-sort="artist">Artist</button>
+        <button class="c-album col" data-sort="album">Album</button>
+        <button class="c-fmt col" data-sort="format">Format</button>
+        <button class="c-status col" data-sort="state">Status</button>
+      </div>
+      <div class="track-rows" id="trackRows"></div>
+      <div class="empty-state" id="emptyState" hidden></div>
+    </div>
+  </main>
+
+  <div class="splitter" id="splitter" title="Drag to resize"><span></span></div>
+
+  <section class="terminal panel" id="terminal">
+    <div class="terminal-head">
+      <h2>Details</h2>
+      <button class="btn tiny" id="toggleTerm">Hide</button>
+    </div>
+    <pre class="log" id="log"></pre>
+  </section>
+
+</div>
+
+<!-- Advanced options sheet -->
+<div class="sheet-backdrop" id="advancedSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="advTitle">
+    <h2 class="sheet-title" id="advTitle">Advanced</h2>
+    <div class="sheet-body">
+      <fieldset class="group">
+        <legend>Playlist</legend>
+        <label class="field inline"><span>Only download the first</span><input type="text" id="advFirst" placeholder="all" size="4" inputmode="numeric"><span>songs</span></label>
+        <label class="field inline"><span>Skip the first</span><input type="text" id="advSkip" placeholder="0" size="4" inputmode="numeric"><span>songs</span></label>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Search</legend>
+        <label class="toggle"><input type="checkbox" id="advFast"><span class="box"></span><span>Fast mode <em>(take the first good match)</em></span></label>
+        <label class="toggle"><input type="checkbox" id="advStrict"><span class="box"></span><span>Strict title match</span></label>
+        <label class="field inline"><span>Minimum bitrate</span><input type="text" id="advBitrate" placeholder="200" size="4" inputmode="numeric"><span>kbps</span></label>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Connection</legend>
+        <div class="port-test">
+          <label class="field inline"><span>Listen port</span><input type="text" id="listenPort" placeholder="49998" size="6" inputmode="numeric"></label>
+          <button class="btn small" id="portTestBtn">Test port</button>
+        </div>
+        <p class="hint port-result" id="portResult" aria-live="polite">If nothing downloads, test the port. Some networks block it.</p>
+      </fieldset>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" id="restoreDefaults">Restore Defaults</button>
+      <button class="btn default" data-close>OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="sheet-backdrop" id="settingsSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="setTitle">
+    <h2 class="sheet-title" id="setTitle">Settings</h2>
+    <div class="sheet-body">
+      <fieldset class="group">
+        <legend>Look</legend>
+        <div class="look-picker" id="lookPicker">
+          <button class="look-card" data-look="phosphor"><span class="swatch sw-phosphor">&gt;_</span><span>Phosphor</span></button>
+          <button class="look-card" data-look="jukebox"><span class="swatch sw-jukebox">&#9835;</span><span>Jukebox</span></button>
+        </div>
+        <p class="hint">Make your own look: coming later.</p>
+      </fieldset>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn default" data-close>Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- How to get a playlist file -->
+<div class="sheet-backdrop" id="guideSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="guideTitle">
+    <h2 class="sheet-title" id="guideTitle">Get your playlist</h2>
+    <div class="sheet-body">
+      <fieldset class="group">
+        <legend>From Spotify: Exportify (recommended)</legend>
+        <ol class="steps">
+          <li>Open Exportify and log in with Spotify.</li>
+          <li>Click <b>Export</b> next to a playlist. A CSV file downloads.</li>
+          <li>Come back here and click <b>Add CSV file…</b> (or drop the file on this window).</li>
+        </ol>
+        <button class="btn primary-soft" id="openExportify">Open Exportify</button>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Other apps (Apple Music, YouTube, Tidal…): Soundiiz</legend>
+        <p class="hint">Log in, open your playlist, choose <b>Export as file</b> → <b>CSV</b>, then add it here.</p>
+        <button class="btn small" id="openSoundiiz">Open Soundiiz</button>
+      </fieldset>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" data-close>Close</button>
+      <button class="btn default" id="guideAddCsv">Add CSV file…</button>
+    </div>
+  </div>
+</div>
+
+<!-- Force mode follow-up -->
+<div class="sheet-backdrop" id="followupSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="followTitle">
+    <h2 class="sheet-title" id="followTitle">Some songs weren't found</h2>
+    <div class="sheet-body">
+      <p id="followText"></p>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" id="followNo">Leave them</button>
+      <button class="btn default" id="followYes">Get them</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm (remove playlist) -->
+<div class="sheet-backdrop" id="confirmSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="confirmTitle">
+    <h2 class="sheet-title" id="confirmTitle"></h2>
+    <div class="sheet-body"><p id="confirmText"></p></div>
+    <div class="sheet-actions">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn default" id="confirmYes">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pop-up menu (playlist actions, sort) -->
+<div class="menu" id="popMenu" role="menu" hidden></div>
+
+<div class="drop-hint" id="dropHint" hidden>Drop the CSV to add it</div>
+
+<script src="app/core.js"></script>
+<script src="app/fake-backend.js"></script>
+<script src="app/real-backend.js"></script>
+<script src="app/boot.js"></script>
 </body>
 </html>

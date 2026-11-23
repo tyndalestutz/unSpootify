@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -25,7 +27,7 @@ class Job:
 
 
 @dataclass
-class RunPlan:
+class RunPlan:  # noqa: D101
     mode: str  # songs | albums | artist
     input_path: Path
     manifest_path: Path
@@ -46,25 +48,56 @@ def pick_tracks(tracks: list[Track], settings: Settings, only: list[int] | None 
     return [t for t in rows if t.state not in ("done", "skipped", "failed")]
 
 
+_REMASTER = re.compile(
+    r"\s*(?:-\s*(?:\d{4}\s+)?(?:digital(?:ly)?\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?"
+    r"|[(\[]\s*(?:\d{4}\s+)?(?:digital(?:ly)?\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*[)\]])\s*$",
+    re.I,
+)
+_FEAT = re.compile(r"\s*(?:[(\[]\s*(?:feat|ft|featuring|with)\.?\s[^)\]]*[)\]]|\s-\s(?:feat|ft)\.?\s.*$)", re.I)
+
+
+def primary_artist(artist: str) -> str:
+    """Spotify exports join artists with ';'. Soulseek folders almost always name just the first."""
+    return artist.split(";")[0].strip() or artist.strip()
+
+
+def search_title(title: str) -> str:
+    """'In The Wee Small Hours - Remastered 1998' -> 'In The Wee Small Hours'; drop '(feat. X)'."""
+    cleaned = _FEAT.sub("", _REMASTER.sub("", title)).strip()
+    return cleaned or title
+
+
 def make_jobs(mode: str, tracks: list[Track]) -> list[Job]:
+    """Jobs carry the *search* artist/title (first artist, no 'Remastered'/'feat.'); sockseek echoes
+    these back in its events and they become the file and folder names."""
     jobs: list[Job] = []
     if mode == "songs":
+        # Songs from the same album are searched back to back (first appearance order), and
+        # --pref-strict-album favours real album folders, so they tend to come from the same
+        # shared folder in the same format instead of being picked from different places.
+        order: dict[tuple[str, str], int] = {}
         for t in tracks:
-            jobs.append(Job(len(jobs) + 1, t.artist, t.album, t.title, [t.index], number=t.index + 1))
+            order.setdefault((primary_artist(t.artist).lower(), t.album.lower()), len(order))
+        grouped = sorted(tracks, key=lambda t: (order[(primary_artist(t.artist).lower(), t.album.lower())], t.index))
+        for t in grouped:
+            # no track number: a playlist position isn't the album's track number
+            jobs.append(Job(len(jobs) + 1, primary_artist(t.artist), t.album, search_title(t.title), [t.index]))
     elif mode == "albums":
         by_album: dict[tuple[str, str], Job] = {}
         for t in tracks:
-            key = (t.artist.lower(), (t.album or t.title).lower())
+            artist = primary_artist(t.artist)
+            key = (artist.lower(), (t.album or t.title).lower())
             if key not in by_album:
-                by_album[key] = Job(len(by_album) + 1, t.artist, t.album or t.title)
+                by_album[key] = Job(len(by_album) + 1, artist, t.album or t.title)
             by_album[key].indexes.append(t.index)
         jobs = list(by_album.values())
     elif mode == "artist":
         by_artist: dict[str, Job] = {}
         for t in tracks:
-            key = t.artist.lower()
+            artist = primary_artist(t.artist)
+            key = artist.lower()
             if key and key not in by_artist:
-                by_artist[key] = Job(len(by_artist) + 1, t.artist)
+                by_artist[key] = Job(len(by_artist) + 1, artist)
             if key:
                 by_artist[key].indexes.append(t.index)
         jobs = list(by_artist.values())
@@ -89,31 +122,39 @@ def write_input(mode: str, jobs: list[Job], tracks_by_index: dict[int, Track], p
             w.writerow(["Artist", "Title", "Album", "Length"])
             for j in jobs:
                 t = tracks_by_index[j.indexes[0]]
-                w.writerow([t.artist, t.title, t.album, round(t.length_ms / 1000) if t.length_ms else ""])
+                w.writerow([j.artist, j.title, t.album, round(t.length_ms / 1000) if t.length_ms else ""])
 
 
 def build_args(
     settings: Settings, *, mode: str, input_path: Path, stage: Path, index_path: Path, manifest_path: Path,
     format_override: str | None = None, force_override: bool | None = None, try_harder: bool | None = None,
-    mock_dir: Path | None = None,
+    mock_dir: Path | None = None, config_path: Path | None = None,
 ) -> list[str]:
     o, adv = settings.options, settings.advanced
     fmt = format_override or o.format
     force = o.mode == "force" if force_override is None else force_override
     args = [str(input_path), "--input-type", "list" if mode == "artist" else "csv",
             "-p", str(stage), "--index-path", str(index_path), "--progress-json", "--no-progress"]
+    # Login lives in a private per-run config file (never on the command line, where `ps` shows it).
+    # Using our own config also means a stray ~/.config/sockseek/sockseek.conf can't change behaviour.
+    args += ["--config", str(config_path)] if config_path else ["--no-config"]
     if mock_dir is not None:
-        args += ["--mock-files-dir", str(mock_dir), "--user", settings.username or "offline-test",
-                 "--pass", settings.password or "offline-test"]
-    else:
-        args += ["--user", settings.username, "--pass", settings.password]
+        args += ["--mock-files-dir", str(mock_dir)]
     if mode == "artist":
         args.append("-g")
     if mode in ("albums", "artist") and o.album_art:
         args += ["--album-art", "largest"]
     args += ["--format", fmt] if force else ["--pref-format", fmt]
+    if mode == "songs":
+        args.append("--pref-strict-album")
+    if fmt == "flac":  # prefer CD-quality lossless: hi-res 24-bit files are huge and slow to fetch
+        args += ["--pref-max-bitdepth", "16", "--pref-max-samplerate", "48000"]
+    args += ["--concurrent-searches", "4"]  # still inside sockseek's Soulseek rate limit
     if o.skip_existing:
-        args += ["--skip-music-dir", settings.library_path]
+        # Songs: also skip anything already in the library. Albums/artists: rely on sockseek's index only,
+        # otherwise owning one song of an album counts as owning the album.
+        if mode == "songs":
+            args += ["--skip-music-dir", settings.library_path]
     else:
         args.append("--no-skip-existing")
     if o.try_harder if try_harder is None else try_harder:
@@ -135,6 +176,16 @@ def build_args(
     return args
 
 
+def write_config(path: Path, settings: Settings, offline: bool) -> None:
+    """Private sockseek config with the login (0600, deleted after the run)."""
+    user = settings.username or ("offline-test" if offline else "")
+    password = settings.password or ("offline-test" if offline else "")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(f"username = {user.strip()}\npassword = {password}\n")
+
+
 def write_manifest(path: Path, *, mode: str, library: Path, stage: Path, jobs: list[Job]) -> None:
     path.write_text(json.dumps({"mode": mode, "library": str(library), "stage": str(stage),
                                 "jobs": [asdict(j) for j in jobs]}), encoding="utf-8")
@@ -154,9 +205,12 @@ def prepare(
     write_input(mode, jobs, by_index, input_path)
     library = Path(settings.library_path).expanduser()
     write_manifest(manifest, mode=mode, library=library, stage=run_dir / "stage", jobs=jobs)
+    config = run_dir / "sockseek.conf"
+    write_config(config, settings, offline=mock_dir is not None)
     args = build_args(
         settings, mode=mode, input_path=input_path, stage=run_dir / "stage",
         index_path=run_dir.parent / f"index-{playlist_id}-{mode}.csv", manifest_path=manifest,
         format_override=format_override, force_override=force_override, try_harder=try_harder, mock_dir=mock_dir,
+        config_path=config,
     ) + list(extra_args or [])
     return RunPlan(mode, input_path, manifest, args, jobs, library)

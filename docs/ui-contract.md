@@ -16,13 +16,13 @@ FakeBackend, and an end-to-end test against the real backend running sockseek in
 ## Data shapes
 
 ```text
-Settings   { username, password, library_path, look,
+Settings   { username, password, library_path, look, playlist_sort: "added"|"name"|"size",
              options: { grab: "songs"|"albums"|"artist", format: "mp3"|"flac",
                         mode: "auto"|"force", skip_existing: bool, album_art: bool, try_harder: bool },
              advanced: { first_n: int|null, skip_n: int|null, fast: bool, strict_title: bool,
                          min_bitrate: int|null, listen_port: int|null } }
 
-Playlist   { id, name, source_file, total, done, failed, skipped, finished: bool, added_at }
+Playlist   { id, name, source_file, total, done, downloaded, failed, skipped, finished: bool, archived: bool, added_at }
 
 Track      { index, title, artist, album, length_ms,
              state: "queued"|"searching"|"waiting"|"downloading"|"done"|"skipped"|"failed",
@@ -43,14 +43,21 @@ Run        { playlist_id, running: bool, current_track: index|null,
 | `save_settings(partial)` | `settings` | login fields, options, Advanced OK, look picker |
 | `choose_folder()` | `path \| null` | Save to › Choose… |
 | `import_csv()` | `playlist \| error` | Add CSV file… (native file dialog) |
-| `import_csv_path(path)` | `playlist \| error` | drag-and-drop a CSV onto the window |
-| `open_exportify()` | `null` | Get my playlist from Spotify (opens browser + guide) |
+| `import_csv_data(name, base64)` | `playlist \| error` | drag-and-drop a CSV onto the window (raw bytes, so any encoding works) |
+| `open_url(which)` | `null` | guide buttons: `"soundiiz"` or `"exportify"` open in the browser |
 | `get_tracks(playlist_id)` | `Track[]` | clicking a playlist |
 | `start(playlist_id)` | `ok \| error` | Download |
 | `stop()` | `ok` | Stop (works from any playlist; stops the active run) |
 | `retry(playlist_id)` | `ok \| error` | Retry N missing (re-queues failed, with Try harder) |
-| `force_followup(playlist_id, accept)` | `ok` | Force mode: "get the missing ones as the other format?" |
+| `force_followup(playlist_id, accept, forced_format)` | `ok` | Force mode: "get the missing ones as the other format?" (`forced_format` from `run_finished.force_format`) |
+| `archive_playlist(playlist_id, archived)` | `Playlist` | playlist menu › Archive / Move out of Archived |
+| `remove_playlist(playlist_id)` | `ok` | playlist menu › Remove from unSpootify… (confirm sheet; music files untouched) |
+| `reset_playlist(playlist_id)` | `Playlist` | Download again (a finished playlist: try every song; library files are skipped) |
 | `test_port(port)` | `{open, port, server, suggested_port?, error?}` | Advanced › Test port, Test connection |
+
+Commands never throw into the page: an error comes back as `{"error": {code, message, action}}`.
+`choose_folder`, `import_csv`, `import_csv_data` and `open_url` live in the window layer (`app.py`);
+the rest are `Backend` methods.
 
 ## Events (backend → UI)
 
@@ -62,7 +69,7 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `track` | `{playlist_id, ...Track}` | one song row + counts + sidebar meter |
 | `run_finished` | `{playlist_id, stopped, counts: Playlist, missing_format, force_format, nothing_to_do?}` | summary in top display, Retry/Test connection, Force follow-up offer when `missing_format` |
 | `log` | `{bold, text}` | Details pane line |
-| `status` | `{phase: "connecting"\|"logged_in"\|"login_failed"\|"rate_limited"\|"idle"}` | top display |
+| `status` | `{phase: "connecting"\|"logged_in"\|"idle"}` | top display while a run starts ("Connecting to Soulseek…" → "Connected") |
 | `error` | `{code, message, action?}` | top display message + optional action button |
 | `port_result` | `{open: bool\|null, port, server: bool, suggested_port?, error?}` | Advanced port result (`server` false = network blocks Soulseek entirely) |
 
@@ -81,25 +88,32 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `SOCKSEEK_CRASHED` | The downloader stopped unexpectedly. Details has more. | Retry |
 | `NO_LOGIN` | Enter a Soulseek username and password first. | focus login fields |
 | `ALREADY_RUNNING` | A download is already running. | — |
+| `LOGIN_TIMEOUT` | Couldn't get connected to Soulseek. Check your internet or test your connection. | Test connection |
+| `UNEXPECTED` | Something went wrong. Details has more. | — |
 
-`LOGIN_FAILED`, `PORT_BLOCKED` and `NO_NETWORK` are detected from sockseek's text output and only
-when a run dies before its summary line; the exact wording must be confirmed with a real account (Phase 3).
+`LOGIN_FAILED`, `PORT_BLOCKED` and `NO_NETWORK` are detected from sockseek's text output, only before
+the first search starts and only when the run dies before its summary line. `LOGIN_TIMEOUT` fires when
+no search has started 120 s after launch; the exact wording must be confirmed with a real account (Phase 3).
 
 ## UI element → contract map
 
 | Element | Reads | Writes / calls |
 |---|---|---|
 | Username / Password | `settings.username/password` | `save_settings` (on change, debounced) |
-| Playlists list (+ ↓ marker, meters) | `playlists`, `run.playlist_id`, `track` events | `get_tracks` |
-| Get my playlist from Spotify | — | `open_exportify` |
-| Add CSV file… / drop | — | `import_csv` / `import_csv_path` |
+| Playlists list (+ ↓ marker, meters, Archived group) | `playlists`, `run.playlist_id`, `track` events | `get_tracks` |
+| Playlists sort pop-up (Date added / Name / Size) | `settings.playlist_sort` | `save_settings` |
+| Playlist menu (right-click, ⋯, Shift+F10; Delete key = remove) | playlist | `start` / `archive_playlist` / `remove_playlist` |
+| Song column headers (click to sort, again to reverse) | `Track[]` | — (sorting is in the page) |
+| Get my playlist (guide sheet: Open Soundiiz / Open Exportify / Add CSV) | — | `open_url`, `import_csv` |
+| Add CSV file… / drop | — | `import_csv` / `import_csv_data` |
+| Force follow-up sheet (Leave them / Get as …) | `run_finished.missing_format` | `force_followup` |
 | Save to + Choose… | `settings.library_path` | `choose_folder` → `save_settings` |
 | What to grab / Format / Automatic-Force / toggles | `settings.options` | `save_settings` |
 | Advanced sheet fields, Restore Defaults, OK | `settings.advanced` | `save_settings` |
 | Test port / Test connection | `port_result` | `test_port` |
 | Settings › Look | `settings.look` | `save_settings` |
 | Playlist title + counts | selected playlist + its tracks | — |
-| Download / Stop | `run`, validation | `start` / `stop` |
+| Download / Stop / Download again | `run`, validation, `finished` | `start` / `stop` / `reset_playlist` + `start` |
 | Retry N missing | finished playlist with failed > 0 | `retry` |
 | Song rows | `Track` | — |
 | Top display (LCD) | `run`, `status`, `error`, `run_finished` | — |
@@ -112,14 +126,14 @@ so `snum` in sockseek maps back to playlist rows through the run manifest.
 
 | Option | How |
 |---|---|
-| login | `--user`, `--pass` (password scrubbed from every log line) |
+| login | private per-run sockseek config (0600, deleted after the run) via `--config`, so it's never on the command line and no user config file can interfere; password scrubbed from log lines |
 | Save to | files staged by sockseek, then moved by `unspootify finalize` (sockseek `--on-complete ... update-index`) to `Artist/Album [EXT]/NN. Title.ext` |
-| Just these songs | CSV `Artist,Title,Album,Length` |
+| Just these songs | CSV `Artist,Title,Album,Length` (first artist only; 'Remastered'/'feat.' removed; songs from the same album listed back to back) + `--pref-strict-album` so album-mates tend to come from the same shared folder |
 | Full albums | CSV `Artist,Album` (title-less rows are album jobs); every song of that album follows the album's state |
 | Whole artist | list file of `"artist=NAME"` lines + `-g`; every song by that artist follows the artist's state |
 | MP3/FLAC + Automatic | `--pref-format mp3\|flac` |
 | MP3/FLAC + Force | `--format mp3\|flac`; misses offered via `run_finished.missing_format`, `force_followup` reruns them with the other format |
-| Skip what I already have | sockseek index (per playlist + mode) + `--skip-music-dir <library>`; off = `--no-skip-existing` |
+| Skip what I already have | sockseek index (per playlist + mode); songs mode also `--skip-music-dir <library>`; off = `--no-skip-existing`. Rows marked done whose file is gone are retried. |
 | Get album art | `--album-art largest` (Full albums / Whole artist only) |
 | Try harder | `-d` (Retry always adds it) |
 | Only first / Skip first | applied by the app when choosing rows (not sockseek `-n/-o`) |

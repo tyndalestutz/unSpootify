@@ -11,7 +11,7 @@ SONGS = [("The Killers", "Mr. Brightside", "Hot Fuss"), ("Modest Mouse", "Float 
 
 
 def song_jobs():
-    return [Job(i + 1, a, al, t, [i], number=i + 1) for i, (a, t, al) in enumerate(SONGS)]
+    return [Job(i + 1, a, al, t, [i]) for i, (a, t, al) in enumerate(SONGS)]
 
 
 def run(mapper, path):
@@ -29,7 +29,7 @@ def test_songs_fixture_reaches_expected_states(tmp_path):
     assert states == ["done"] * 7 + ["failed"]
     assert m.states[7].reason == "not_found"
     assert m.states[5].format == "FLAC" and m.states[0].format == "MP3"
-    assert m.states[0].path == str(tmp_path / "The Killers" / "Hot Fuss [MP3]" / "01. Mr. Brightside.mp3")
+    assert m.states[0].path == str(tmp_path / "The Killers" / "Hot Fuss [MP3]" / "Mr. Brightside.mp3")
     assert m.completed and m.fatal is None
 
 
@@ -87,3 +87,32 @@ def test_password_never_logged(tmp_path):
     m = EventMapper("songs", song_jobs(), tmp_path, secret="hunter22")
     out = m.feed("[cli] args: --pass hunter22")
     assert all("hunter22" not in o.text for o in out if isinstance(o, LogLine))
+
+
+def test_album_already_exists_is_skipped(tmp_path):
+    jobs = [Job(1, "The Killers", "Hot Fuss", "", [0])]
+    m = EventMapper("albums", jobs, tmp_path)
+    m.feed("[003] AlbumJob: Already exists: The Killers - Hot Fuss: completed at /lib/x")
+    assert m.states[0].state == "skipped"
+
+
+def test_short_password_not_garbling_logs(tmp_path):
+    m = EventMapper("songs", song_jobs(), tmp_path, secret="e")
+    out = m.feed("[003] SongJob: searching: The White Stripes - Seven Nation Army --pass e")
+    text = "".join(o.bold + o.text for o in out if isinstance(o, LogLine))
+    assert "Seven Nation Army" in text and "--pass ***" in text
+
+
+def test_fatal_patterns_ignored_once_searching(tmp_path):
+    m = EventMapper("songs", song_jobs(), tmp_path)
+    m.feed('{"type":"search_start","data":{"artist":"The Killers","title":"Mr. Brightside"}}')
+    m.feed("[peer] connection refused by 1.2.3.4")
+    assert m.fatal is None
+
+
+def test_crash_after_everything_settled(tmp_path):
+    m = EventMapper("songs", song_jobs()[:1], tmp_path)
+    m.feed('{"type":"track_state","data":{"artist":"The Killers","title":"Mr. Brightside","terminalOutcome":"Succeeded","extension":"mp3"}}')
+    assert m.all_settled() and not m.completed
+    m.finish(stopped=False)
+    assert m.states[0].state == "done"

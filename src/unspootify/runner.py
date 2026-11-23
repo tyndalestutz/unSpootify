@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import atexit
 import json
 import re
 import subprocess
+import sys
 import threading
+import time
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -83,7 +86,16 @@ class EventMapper:
         self.progress_ids: dict[str, int] = {}  # download_progress jobId -> job
         self.fatal: str | None = None
         self.completed = False  # saw sockseek's final "[cli] Completed:" summary
+        self.active = False  # searching has begun (so we're logged in)
         self.tail: list[str] = []
+
+    def scrub(self, text: str) -> str:
+        """Hide the password. Very short passwords would garble every line, so only the
+        `--pass X` / `password = X` patterns are scrubbed for those."""
+        text = re.sub(r"(?i)(--pass(?:word)?\s+|password\s*[=:]\s*)\S+", r"\1***", text)
+        if self.secret and len(self.secret) >= 4:
+            text = text.replace(self.secret, "***")
+        return text
 
     # ---- helpers ----
     def _song(self, artist: str, title: str) -> int | None:
@@ -131,8 +143,7 @@ class EventMapper:
         text = line.rstrip()
         if not text.strip():
             return None
-        if self.secret:
-            text = text.replace(self.secret, "***")
+        text = self.scrub(text)
         m = _JOB_LINE.search(text)
         if m:
             phase, _, rest = m.group(3).partition(": ")
@@ -163,10 +174,15 @@ class EventMapper:
         return out
 
     def _feed_text(self, line: str) -> list[Update | LogLine]:
+        line = self.scrub(line)
         self.tail = (self.tail + [line])[-40:]
         if "[cli] Completed:" in line:
             self.completed = True
-        if self.fatal is None:
+        if re.search(r"\] (?:SongJob|AlbumJob|Album Aggregate): searching", line):
+            self.active = True
+        # Login/network problems show up before any search starts; later, peers refuse
+        # connections all the time in healthy runs, so stop looking once searching has begun.
+        if self.fatal is None and not self.active:
             for code, rx in _FATAL:
                 if rx.search(line):
                     self.fatal = code
@@ -192,6 +208,8 @@ class EventMapper:
                 elif skip not in ("None", None, ""):
                     out += self._set(i, state=SKIPPED, pct=100)
             return out
+        if kind in ("search_start", "download_start"):
+            self.active = True
         if kind == "search_start" and self.mode == "songs":
             return self._set(self._song(d.get("artist", ""), d.get("title", "")), state=SEARCHING)
         if kind == "download_start":
@@ -250,6 +268,10 @@ class EventMapper:
         return []
 
     def _text(self, line: str) -> list[Update | LogLine]:
+        ex = re.search(r"Already exists: (.+?): (?:completed|exists)", line)
+        if ex:  # album/artist already downloaded in an earlier run (sockseek's index)
+            i = self._album_job(ex.group(1))
+            return self._set(i, state=SKIPPED, pct=100)
         m = _JOB_LINE.search(line.strip())
         if not m:
             return []
@@ -289,13 +311,16 @@ class EventMapper:
             return self._set(i, state=DOWNLOADING, user=parts[0], format=ext.upper() or None, pct=pct)
         return []
 
+    def all_settled(self) -> bool:
+        return all(st.state in TERMINAL for st in self.states)
+
     def finish(self, stopped: bool) -> list[Update]:
         """When sockseek exits: settle every job that never reached an end state."""
         out: list[Update] = []
         for i, st in enumerate(self.states):
             if st.state in TERMINAL:
                 continue
-            if stopped or not self.completed:
+            if stopped or (not self.completed and not self.all_settled()):
                 out += self._set(i, state=QUEUED, pct=0, user=None)
             elif self.mode == "artist" and st.files_done:
                 out += self._set(i, state=DONE, pct=100, path=self._done_path(i, None, None))
@@ -305,6 +330,20 @@ class EventMapper:
 
 
 Emit = Callable[[dict[str, Any]], None]
+
+# sockseek processes we started: killed if the app exits (even without a clean shutdown)
+_LIVE: set[subprocess.Popen] = set()
+
+
+@atexit.register
+def _kill_children() -> None:
+    for proc in list(_LIVE):
+        if proc.poll() is None:
+            proc.kill()
+
+
+# Note: Linux PR_SET_PDEATHSIG is NOT used. It fires when the *thread* that spawned the child exits,
+# and pywebview runs commands on short-lived worker threads, so sockseek would be killed instantly.
 
 
 @dataclass
@@ -321,6 +360,9 @@ class Runner:
     on_exit: Callable[[Runner], None] | None = None
     proc: subprocess.Popen | None = None
     stopped: bool = False
+    timed_out: bool = False
+    login_timeout: float = 120.0  # seconds without any search before we call it a connection problem
+    _started_at: float = 0.0
     mapper: EventMapper = field(init=False)
     _thread: threading.Thread | None = None
 
@@ -330,28 +372,56 @@ class Runner:
     def start(self) -> None:
         if not self.sockseek.exists():
             raise AppError("SOCKSEEK_MISSING", str(self.sockseek))
+        try:
+            self.proc = subprocess.Popen(
+                [str(self.sockseek), *self.plan.args], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace", bufsize=1,
+                cwd=self.plan.input_path.parent,
+            )
+        except OSError as exc:  # not executable (permissions, macOS quarantine), wrong architecture…
+            self._cleanup()
+            raise AppError("SOCKSEEK_MISSING", str(exc)) from exc
+        _LIVE.add(self.proc)
         for job in self.plan.jobs:
             for idx in job.indexes:
                 self.store.update_track(self.playlist_id, idx, state=QUEUED, pct=0, reason=None, user=None)
         self.store.set_finished(self.playlist_id, False)
         self.emit(event("run_started", playlist_id=self.playlist_id,
                         total=sum(len(j.indexes) for j in self.plan.jobs)))
-        self.proc = subprocess.Popen(
-            [str(self.sockseek), *self.plan.args], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace", bufsize=1,
-            cwd=self.plan.input_path.parent,
-        )
+        self.emit(event("status", phase="connecting"))
+        self._started_at = time.monotonic()
         self._thread = threading.Thread(target=self._pump, name="sockseek", daemon=True)
         self._thread.start()
+        threading.Thread(target=self._watchdog, name="sockseek-watchdog", daemon=True).start()
 
     def stop(self) -> None:
         self.stopped = True
+        self._terminate()
+
+    def _terminate(self) -> None:
         if self.proc and self.proc.poll() is None:
             self.proc.terminate()
             try:
                 self.proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self.proc.kill()
+
+    def _watchdog(self) -> None:
+        """If sockseek never starts searching (can't log in / no network), give up with a clear error."""
+        while self.proc and self.proc.poll() is None:
+            if self.mapper.active:
+                return
+            if time.monotonic() - self._started_at > self.login_timeout:
+                self.timed_out = True
+                self._terminate()
+                return
+            time.sleep(0.5)
+
+    def _cleanup(self) -> None:
+        try:  # the per-run config holds the password
+            (self.plan.input_path.parent / "sockseek.conf").unlink(missing_ok=True)
+        except OSError:
+            pass
 
     def wait(self, timeout: float | None = None) -> None:
         if self._thread:
@@ -375,20 +445,32 @@ class Runner:
 
     def _pump(self) -> None:
         assert self.proc and self.proc.stdout
+        was_active = False
         for line in self.proc.stdout:
             self._apply(self.mapper.feed(line))
+            if self.mapper.active and not was_active:
+                was_active = True
+                self.emit(event("status", phase="logged_in"))
         self.proc.wait()
+        _LIVE.discard(self.proc)
+        self._cleanup()
+        crashed_after_work = not self.mapper.completed and self.mapper.all_settled() and not self.timed_out
         self._apply(self.mapper.finish(self.stopped))
         error: AppError | None = None
         # sockseek exits non-zero when some songs failed; that's a normal finish, not a crash.
-        # Error patterns in the output only count if the run never reached its summary
-        # (peer connections fail all the time during healthy runs).
-        if not self.stopped and not self.mapper.completed:
+        if self.timed_out:
+            error = AppError(self.mapper.fatal or "LOGIN_TIMEOUT", "\n".join(self.mapper.tail[-8:]))
+        elif not self.stopped and not self.mapper.completed and not crashed_after_work:
             error = AppError(self.mapper.fatal or "SOCKSEEK_CRASHED", "\n".join(self.mapper.tail[-8:]))
-        finished = not self.stopped and error is None
+        elif crashed_after_work and not self.stopped:
+            self.emit(event("log", bold="Note:", text=" the downloader closed oddly after finishing every song;"
+                            " nothing was lost."))
+        queued_left = any(t.state not in TERMINAL for t in self.store.tracks(self.playlist_id))
+        finished = not self.stopped and error is None and not queued_left
         self.store.set_finished(self.playlist_id, finished)
         if error:
             self.emit(error.to_event())
+        self.emit(event("status", phase="idle"))
         missing = None
         if finished and self.force_format:
             missing = sum(1 for t in self.store.tracks(self.playlist_id) if t.state == FAILED) or None

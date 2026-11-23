@@ -9,10 +9,11 @@ from pathlib import Path
 from unspootify.contract import AppError
 
 # Column names we recognise, most specific first (compared case-insensitively).
-TITLE_COLS = ("track name", "title", "track title", "song", "name")
-ARTIST_COLS = ("artist name(s)", "artist names", "artist", "artists", "artist name")
-ALBUM_COLS = ("album name", "album", "album title")
-LENGTH_COLS = ("duration (ms)", "track duration (ms)", "duration_ms", "length", "duration")
+# Exportify, Soundiiz, TuneMyMusic and generic exports.
+TITLE_COLS = ("track name", "title", "track title", "track", "song", "song name", "name")
+ARTIST_COLS = ("artist name(s)", "artist names", "artist", "artists", "artist name", "creator")
+ALBUM_COLS = ("album name", "album", "album title", "release")
+LENGTH_COLS = ("duration (ms)", "track duration (ms)", "duration_ms", "duration ms", "length", "duration", "time")
 
 MAX_BYTES = 50 * 1024 * 1024
 
@@ -49,17 +50,40 @@ def _length_ms(raw: str, column: str) -> int | None:
     return int(value if "ms" in column.lower() else value * 1000)
 
 
+def decode(data: bytes) -> str:
+    """UTF-8 (with or without BOM), UTF-16 (Excel 'Unicode text'), else Windows-1252."""
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        try:
+            text = data.decode("utf-16")
+        except UnicodeDecodeError as exc:
+            raise AppError("CSV_UNREADABLE") from exc
+        if "\x00" in text:
+            raise AppError("CSV_UNREADABLE")
+        return text
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    text = data.decode("cp1252", errors="replace")
+    if "\x00" in text:  # binary file, not a CSV
+        raise AppError("CSV_UNREADABLE")
+    return text
+
+
 def read_tracks(path: Path) -> list[CsvTrack]:
     """Parse a playlist CSV. Raises AppError(CSV_UNREADABLE / CSV_NO_TRACKS)."""
     try:
         if path.stat().st_size > MAX_BYTES:
             raise AppError("CSV_UNREADABLE")
-        text = path.read_text(encoding="utf-8-sig")
-    except (OSError, UnicodeDecodeError) as exc:
+        text = decode(path.read_bytes())
+    except OSError as exc:
         raise AppError("CSV_UNREADABLE") from exc
 
+    # Exports differ: Exportify/Soundiiz use commas, some tools use ; or tabs.
+    first = text.splitlines()[0] if text.strip() else ""
+    delimiter = max((",", ";", "\t"), key=first.count) if first else ","
     try:
-        rows = list(csv.reader(text.splitlines()))
+        rows = list(csv.reader(text.splitlines(), delimiter=delimiter))
     except csv.Error as exc:
         raise AppError("CSV_UNREADABLE") from exc
     if not rows:

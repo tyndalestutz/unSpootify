@@ -29,7 +29,9 @@ class ConsolePage(QWebEnginePage):
         if level != QWebEnginePage.JavaScriptConsoleMessageLevel.InfoMessageLevel:
             sys.stderr.write(f"JS {level.name}: {message} ({source}:{line})\n")
         elif message.startswith("CHECK"):
-            print(message)
+            print(message, flush=True)
+            if message.startswith("CHECK DONE"):
+                self.done = True
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -62,10 +64,28 @@ def main() -> None:
 
     script = open(sys.argv[5]).read() if len(sys.argv) > 5 else ""
 
+    page = view.page()
+    page.done = False
+    timeout_ms = int(os.environ.get("UI_SCRIPT_TIMEOUT_MS", "90000"))
+
     def loaded(_ok: bool) -> None:
-        if script:
-            view.page().runJavaScript(script)
-        QTimer.singleShot(1500 if not script else 4000, snap)
+        if not script:
+            QTimer.singleShot(1500, snap)
+            return
+        page.runJavaScript(script)
+        # Scripts that print "CHECK DONE" end the run; others get 4 s.
+        waited = {"ms": 0}
+
+        def poll() -> None:
+            waited["ms"] += 200
+            if page.done or (waited["ms"] >= 4000 and "CHECK DONE" not in script) or waited["ms"] >= timeout_ms:
+                if not page.done and "CHECK DONE" in script:
+                    print("CHECK FAIL timeout: script never finished", flush=True)
+                snap()
+            else:
+                QTimer.singleShot(200, poll)
+
+        QTimer.singleShot(200, poll)
 
     view.loadFinished.connect(loaded)
     app.exec()
