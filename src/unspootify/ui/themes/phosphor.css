@@ -3,7 +3,8 @@
 body[data-theme="phosphor"] {
   --fg: #3dff7a;
   --mid: #27c25a;
-  --dim: #17803a;
+  --dim: #22a04b;   /* readable dim text */
+  --line: #17803a;  /* borders */
   --faint: #0b3a1b;
   --bg: #020a04;
   --panel: #04120a;
@@ -25,7 +26,7 @@ body[data-theme="phosphor"]::after {
 
 [data-theme="phosphor"] .logo { font-size: 8px; line-height: 1.15; color: var(--fg); text-shadow: 0 0 8px rgba(61,255,122,.6); }
 
-[data-theme="phosphor"] .lcd { border: 1px solid var(--dim); padding: 10px 14px; background: rgba(0,0,0,.35); }
+[data-theme="phosphor"] .lcd { border: 1px solid var(--line); padding: 10px 14px; background: rgba(0,0,0,.35); }
 [data-theme="phosphor"] .lcd-line1 { font-size: 15px; }
 [data-theme="phosphor"] .lcd-line1::before { content: "> "; color: var(--mid); }
 [data-theme="phosphor"] .lcd-line2 { color: var(--mid); }
@@ -34,7 +35,7 @@ body[data-theme="phosphor"]::after {
 
 [data-theme="phosphor"] .tool-btn {
   align-self: stretch; justify-content: center; gap: 2px; min-width: 96px; padding: 0 12px;
-  border: 1px solid var(--dim); background: rgba(0,0,0,.35); color: var(--mid); text-shadow: inherit;
+  border: 1px solid var(--line); background: rgba(0,0,0,.35); color: var(--mid); text-shadow: inherit;
 }
 [data-theme="phosphor"] .tb-face { display: none; }
 [data-theme="phosphor"] .tb-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
@@ -46,7 +47,7 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .tool-btn:hover .tb-label::after { color: var(--fg); }
 
 /* boxes: every title sits inside its box */
-[data-theme="phosphor"] .panel { border: 1px solid var(--dim); background: var(--panel); padding: 9px 12px 10px; }
+[data-theme="phosphor"] .panel { border: 1px solid var(--line); background: var(--panel); padding: 9px 12px 10px; }
 [data-theme="phosphor"] .panel > h2 { margin-bottom: 6px; }
 [data-theme="phosphor"] .opt { margin-bottom: 8px; }
 [data-theme="phosphor"] .toggles { gap: 2px; margin-bottom: 6px; }
@@ -62,7 +63,7 @@ body[data-theme="phosphor"]::after {
 
 [data-theme="phosphor"] input[type="text"],
 [data-theme="phosphor"] input[type="password"] {
-  background: #000; border: 1px solid var(--dim); padding: 5px 8px; color: var(--fg); outline: none;
+  background: #000; border: 1px solid var(--line); padding: 5px 8px; color: var(--fg); outline: none;
   caret-color: var(--fg);
 }
 [data-theme="phosphor"] input:focus { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg) inset; }
@@ -114,16 +115,16 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .toggle em { color: var(--dim); font-style: normal; }
 
 [data-theme="phosphor"] .counts { color: var(--mid); font-size: 11px; margin-top: 4px; }
-[data-theme="phosphor"] .track-row.header { color: var(--dim); border-bottom: 1px dashed var(--dim); font-size: 11px; text-transform: uppercase; }
+[data-theme="phosphor"] .track-row.header { color: var(--dim); border-bottom: 1px dashed var(--line); font-size: 11px; text-transform: uppercase; }
 [data-theme="phosphor"] .track-row { padding: 4px 6px; }
 [data-theme="phosphor"] .track-rows .track-row:hover { background: rgba(61,255,122,.06); }
-[data-theme="phosphor"] .c-num, [data-theme="phosphor"] .c-album, [data-theme="phosphor"] .c-fmt { color: var(--mid); }
+[data-theme="phosphor"] .track-rows .c-num, [data-theme="phosphor"] .track-rows .c-album, [data-theme="phosphor"] .track-rows .c-fmt { color: var(--mid); }
 [data-theme="phosphor"] .bar { display: none; }
 [data-theme="phosphor"] .asciibar { display: inline; color: var(--fg); letter-spacing: -.5px; }
 [data-theme="phosphor"] .st-queued { color: var(--dim); }
 [data-theme="phosphor"] .st-searching { color: var(--warn); }
 [data-theme="phosphor"] .st-done { color: var(--fg); }
-[data-theme="phosphor"] .st-skipped { color: var(--mid); }
+[data-theme="phosphor"] .st-skipped { color: #9be8b4; }
 [data-theme="phosphor"] .st-failed { color: var(--bad); text-shadow: 0 0 5px rgba(255,95,86,.4); }
 
 [data-theme="phosphor"] .splitter span { background: var(--dim); }
@@ -136,11 +137,11 @@ body[data-theme="phosphor"]::after {
   background: var(--bg); border: 3px double var(--fg); padding: 14px 18px 16px;
   box-shadow: 0 0 30px rgba(61,255,122,.15);
 }
-[data-theme="phosphor"] .sheet-title { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--dim); }
-[data-theme="phosphor"] .group { border: 1px solid var(--dim); padding: 8px 12px 10px; }
+[data-theme="phosphor"] .sheet-title { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+[data-theme="phosphor"] .group { border: 1px solid var(--line); padding: 8px 12px 10px; }
 [data-theme="phosphor"] .group legend { color: var(--mid); font-size: 11px; text-transform: uppercase; padding: 0 6px; }
 [data-theme="phosphor"] .sheet-actions { margin-top: 14px; }
-[data-theme="phosphor"] .look-card { background: none; border: 1px solid var(--dim); padding: 8px; color: var(--mid); text-shadow: inherit; }
+[data-theme="phosphor"] .look-card { background: none; border: 1px solid var(--line); padding: 8px; color: var(--mid); text-shadow: inherit; }
 [data-theme="phosphor"] .look-card.on { border-color: var(--fg); color: var(--fg); box-shadow: 0 0 10px rgba(61,255,122,.25); }
 
 [data-theme="phosphor"] ::-webkit-scrollbar { width: 8px; }
@@ -149,3 +150,14 @@ body[data-theme="phosphor"]::after {
 
 /* look-picker swatches are always shown in their own look */
 .sw-phosphor { background: #020a04; color: #3dff7a; font: 18px "DejaVu Sans Mono", monospace; border: 1px solid #17803a; text-shadow: 0 0 6px rgba(61,255,122,.6); }
+
+/* sticky table header, focus, empty state */
+[data-theme="phosphor"] .track-row.header { background: var(--panel); }
+[data-theme="phosphor"] .empty-state { color: var(--mid); }
+[data-theme="phosphor"] .empty-state strong { color: var(--fg); font-weight: normal; text-transform: uppercase; }
+[data-theme="phosphor"] :focus { outline: none; }
+[data-theme="phosphor"] :focus-visible,
+[data-theme="phosphor"] .toggle input:focus-visible + .box { outline: 1px dashed var(--fg); outline-offset: 2px; }
+[data-theme="phosphor"] .playlist-list li:focus-visible { outline-offset: -2px; }
+[data-theme="phosphor"] .btn:disabled:hover { background: transparent; color: var(--fg); }
+[data-theme="phosphor"] .test-data { box-shadow: none; }

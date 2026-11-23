@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 1 round 2 (2026-11-23): owner kept Phosphor + Jukebox, dropped Midnight; tweaks made, waiting for sign-off. Run: `uv run python -m unspootify --mockups`.
+**Status:** Phase 1 final UI test (2026-11-23): adversarial-review fixes in, waiting for the owner's scenario run. Run: `uv run python -m unspootify --mockups`.
 
 ## Goal
 
@@ -62,7 +62,10 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] Each shows: login fields, folder picker (real native dialog), playlist list, options, per-track progress, resizable verbose pane
 - [x] Owner picked: keep Phosphor + Jukebox, drop Midnight (recorded under Decisions)
 - [x] Round 2: fixed sidebar, Advanced as a sheet, gear + Settings look picker, Phosphor titles inside boxes, tighter Jukebox styling, theme contract (`THEMING.md`)
-- [ ] Owner signs off on round 2
+- [x] Owner signed off on round 2; Settings became a labeled toolbar button (Ctrl/Cmd+,)
+- [x] Adversarial review (fresh agent): fixed HTML injection from names, stacked timers, empty-state crashes, hard-coded counts, frozen rows after Stop, splitter overflow, header misalignment, RTL truncation, tooltips, all-fail messaging, focus/keyboard, contrast, Restore Defaults
+- [x] Fake-data scenario picker (10 scenarios, `TEST DATA` corner menu) for the final UI test
+- [ ] Owner runs the final UI test
 
 ### Phase 2: Pipeline core (no UI wiring)
 - [ ] Settings store (login, library folder, last options) in the OS app-data dir

@@ -23,7 +23,7 @@
     <div class="wordmark">unSpootify</div>
 
     <div class="lcd" aria-live="polite">
-      <div class="lcd-line1" id="lcdTitle">Ready</div>
+      <div class="lcd-line1" id="lcdTitle" dir="auto">Ready</div>
       <div class="lcd-line2" id="lcdSub">Pick a playlist and hit Download</div>
       <div class="lcd-bar"><span id="lcdFill"></span></div>
     </div>
@@ -42,11 +42,11 @@
       <div class="login-row">
         <label class="field">
           <span>Username</span>
-          <input type="text" value="ipod_dreamer" autocomplete="off" spellcheck="false">
+          <input type="text" id="user" value="ipod_dreamer" autocomplete="off" spellcheck="false">
         </label>
         <label class="field">
           <span>Password</span>
-          <input type="password" value="hunter22">
+          <input type="password" id="pass" value="hunter22">
         </label>
       </div>
       <p class="hint">No account? Just make one up.</p>
@@ -54,7 +54,7 @@
 
     <section class="panel playlists">
       <h2>Playlists</h2>
-      <ul class="playlist-list" id="playlistList"></ul>
+      <ul class="playlist-list" id="playlistList" role="listbox" aria-label="Playlists"></ul>
       <div class="playlist-actions">
         <button class="btn primary-soft" id="getPlaylist">Get my playlist from Spotify</button>
         <button class="btn" id="addCsv">Add CSV file…</button>
@@ -74,7 +74,7 @@
 
       <div class="opt">
         <span class="opt-label">What to grab</span>
-        <div class="seg" role="radiogroup" id="grabSeg">
+        <div class="seg" role="radiogroup" id="grabSeg" aria-label="What to grab">
           <button class="on">These songs</button>
           <button>Full albums</button>
           <button>Whole artist</button>
@@ -84,11 +84,11 @@
       <div class="opt">
         <span class="opt-label">Format</span>
         <div class="seg-row">
-          <div class="seg" role="radiogroup" id="fmtSeg">
+          <div class="seg" role="radiogroup" id="fmtSeg" aria-label="Format">
             <button class="on">MP3</button>
             <button>FLAC</button>
           </div>
-          <div class="seg" role="radiogroup" id="modeSeg">
+          <div class="seg" role="radiogroup" id="modeSeg" aria-label="Format mode">
             <button class="on">Automatic</button>
             <button>Force</button>
           </div>
@@ -110,10 +110,13 @@
   <main class="tracks panel">
     <div class="tracks-head">
       <div>
-        <h2 id="playlistTitle">road trip '03</h2>
+        <h2 id="playlistTitle" dir="auto"></h2>
         <div class="counts" id="counts"></div>
       </div>
-      <button class="btn go" id="goBtn">Download</button>
+      <div class="head-actions">
+        <button class="btn" id="retryBtn" hidden>Retry missing</button>
+        <button class="btn go" id="goBtn">Download</button>
+      </div>
     </div>
     <div class="track-table">
       <div class="track-row header">
@@ -125,6 +128,7 @@
         <span class="c-status">Status</span>
       </div>
       <div class="track-rows" id="trackRows"></div>
+      <div class="empty-state" id="emptyState" hidden></div>
     </div>
   </main>
 
@@ -163,7 +167,7 @@
       </fieldset>
     </div>
     <div class="sheet-actions">
-      <button class="btn" data-close>Restore Defaults</button>
+      <button class="btn" id="restoreDefaults">Restore Defaults</button>
       <button class="btn default" data-close>OK</button>
     </div>
   </div>
@@ -188,6 +192,11 @@
     </div>
   </div>
 </div>
+
+<!-- Mockup only: switch fake-data scenarios. Not part of the real app. -->
+<label class="test-data">TEST DATA
+  <select id="scenarioPick"></select>
+</label>
 
 <script src="mockups/mock.js"></script>
 </body>
