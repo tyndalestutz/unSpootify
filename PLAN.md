@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 0 done (2026-11-23). Next: Phase 1 UI directions.
+**Status:** Phase 1 mockups built (2026-11-23), waiting for the owner to pick a look. Run: `uv run python -m unspootify --mockups`.
 
 ## Goal
 
@@ -57,8 +57,8 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - [x] `.gitignore`, friend-facing README with roadmap
 
 ### Phase 1: v0 UI directions (CHECKPOINT)
-- [ ] 2-3 visual directions (refined green terminal + refreshed takes) rendered in the real window with fake data
-- [ ] Each shows: login fields, folder picker, playlist list, options, per-track progress, verbose pane
+- [x] 3 visual directions (A Phosphor, B Jukebox 2003, C Midnight) in the real window with fake data and simulated downloads (`--mockups`)
+- [x] Each shows: login fields, folder picker (real native dialog), playlist list, options, per-track progress, resizable verbose pane
 - [ ] Owner picks one (or a mix). Record the choice under Decisions.
 
 ### Phase 2: Pipeline core (no UI wiring)

@@ -1,0 +1,114 @@
+/* Shared structure for all looks. Each theme-*.css only restyles. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h2 { margin: 0; }
+
+/* ---- look switcher (mockup only, theme-neutral) ---- */
+.switcher {
+  position: fixed; inset: 0 0 auto 0; height: 34px; z-index: 100;
+  display: flex; align-items: center; gap: 6px; padding: 0 12px;
+  background: #1b1b1f; color: #bbb; border-bottom: 1px solid #333;
+  font: 12px/1 Inter, system-ui, sans-serif;
+}
+.switcher-label { font-weight: 700; letter-spacing: .12em; color: #ffd166; margin-right: 6px; }
+.switcher button {
+  background: #2a2a30; border: 1px solid #3a3a42; color: #ddd;
+  border-radius: 6px; padding: 5px 10px; font-size: 12px;
+}
+.switcher button.on { background: #ffd166; color: #1b1b1f; border-color: #ffd166; font-weight: 600; }
+.switcher-note { margin-left: auto; color: #777; }
+
+/* ---- app grid ---- */
+.app {
+  position: absolute; inset: 34px 0 0 0;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-rows: auto minmax(120px, 1fr) 10px var(--term-h, 190px);
+  grid-template-areas:
+    "head head"
+    "side tracks"
+    "side split"
+    "side term";
+  gap: var(--gap, 12px);
+  padding: var(--gap, 12px);
+}
+.app.term-hidden { grid-template-rows: auto minmax(120px, 1fr) 0 38px; }
+.app.term-hidden .log { display: none; }
+
+.masthead { grid-area: head; display: flex; align-items: center; gap: 20px; min-width: 0; }
+.sidebar { grid-area: side; overflow-y: auto; display: flex; flex-direction: column; gap: var(--gap, 12px); min-height: 0; }
+.tracks { grid-area: tracks; display: flex; flex-direction: column; min-height: 0; }
+.splitter { grid-area: split; cursor: row-resize; display: flex; align-items: center; justify-content: center; }
+.splitter span { width: 48px; height: 4px; border-radius: 2px; }
+.terminal { grid-area: term; display: flex; flex-direction: column; min-height: 0; }
+
+.logo { margin: 0; white-space: pre; flex: none; }
+.wordmark { display: none; }
+.lcd { flex: 1; min-width: 0; }
+.lcd-line1, .lcd-line2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcd-bar { height: 6px; margin-top: 8px; overflow: hidden; }
+.lcd-bar span { display: block; height: 100%; width: 0; transition: width .3s linear; }
+
+.panel h2 { margin-bottom: 10px; }
+.field { display: block; margin-bottom: 8px; }
+.field > span { display: block; margin-bottom: 4px; }
+.field input { width: 100%; }
+.field.inline { display: flex; align-items: center; gap: 6px; margin: 0; }
+.field.inline > span { margin: 0; white-space: nowrap; }
+.field.inline input { width: auto; flex: none; }
+.hint { margin: 6px 0 0; }
+.hint.small { margin-top: 6px; }
+
+.folder { display: flex; gap: 8px; align-items: center; }
+.folder-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.playlist-list { list-style: none; margin: 0 0 10px; padding: 0; }
+.playlist-list li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 10px; cursor: pointer; }
+.pl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-meter { grid-column: 1 / -1; height: 3px; overflow: hidden; }
+.pl-meter span { display: block; height: 100%; }
+.playlist-actions { display: flex; flex-direction: column; gap: 6px; }
+
+.opt { margin-bottom: 12px; }
+.opt-label { display: block; margin-bottom: 6px; }
+.seg-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg { display: inline-flex; }
+.seg button { white-space: nowrap; }
+.opt > .seg { display: flex; }
+.opt > .seg button { flex: 1; }
+.toggles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.toggle .box { flex: none; }
+.advanced summary { cursor: pointer; }
+.adv-grid { display: grid; gap: 8px; margin-top: 10px; }
+
+.tracks-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.tracks-head h2 { margin: 0; }
+.track-table { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.track-rows { flex: 1; overflow-y: auto; min-height: 0; }
+.track-row {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) minmax(0, 1.3fr) 56px 190px;
+  padding: 6px 10px;
+}
+.track-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-status { display: flex; align-items: center; gap: 8px; }
+.st-text { flex: none; }
+.bar { flex: 1; height: 5px; overflow: hidden; min-width: 30px; }
+.bar i { display: block; height: 100%; }
+.asciibar { display: none; }
+
+.terminal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.terminal-head h2 { margin: 0; }
+.log { flex: 1; margin: 0; overflow-y: auto; white-space: pre-wrap; word-break: break-word; min-height: 0; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: 290px minmax(0, 1fr); }
+  .c-album { display: none; }
+  .track-row { grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 56px 170px; }
+}

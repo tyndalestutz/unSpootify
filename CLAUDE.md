@@ -30,4 +30,5 @@ Four people; three are non-technical and can't debug. Every error the app shows 
 - Python 3.13, managed with `uv`. Run tests before every PR.
 - Downloader is **sockseek** (formerly sldl). Fetch it with `scripts/fetch_sockseek.sh`; CLI reference: `vendor/sockseek/<platform>/sockseek --help` (and `--help <topic>`).
 - Run the app: `uv run python -m unspootify` (`--smoke-test` opens, checks the bridge, and quits).
+- Check UI visually with `uv run python scripts/screenshot_ui.py <page.html> <out.png> [query] [WxH]` (offscreen Qt WebEngine, same engine as the Linux app).
 - Claude can't test macOS. Flag anything Mac-specific for a human test.

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>unSpootify · look check</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="theme-phosphor.css">
+<link rel="stylesheet" href="theme-jukebox.css">
+<link rel="stylesheet" href="theme-midnight.css">
+</head>
+<body data-theme="phosphor">
+
+<!-- Mockup-only bar for switching looks. Not part of the real app. -->
+<nav class="switcher" aria-label="Pick a look">
+  <span class="switcher-label">LOOK CHECK</span>
+  <button data-pick="phosphor">A · Phosphor</button>
+  <button data-pick="jukebox">B · Jukebox 2003</button>
+  <button data-pick="midnight">C · Midnight</button>
+  <span class="switcher-note">fake data · downloads are simulated</span>
+</nav>
+
+<div class="app">
+
+  <header class="masthead">
+    <pre class="logo" aria-label="unSpootify"> ___  ___  ________   ________  ________  ________  ________  _________  ___  ________ ___    ___
+|\  \|\  \|\   ___  \|\   ____\|\   __  \|\   __  \|\   __  \|\___   ___\\  \|\  _____\\  \  /  /|
+\ \  \\\  \ \  \\ \  \ \  \___|\ \  \|\  \ \  \|\  \ \  \|\  \|___ \  \_\ \  \ \  \__/\ \  \/  / /
+ \ \  \\\  \ \  \\ \  \ \_____  \ \   ____\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \   __\\ \    / /
+  \ \  \\\  \ \  \\ \  \|____|\  \ \  \___|\ \  \\\  \ \  \\\  \   \ \  \ \ \  \ \  \_| \/  /  /
+   \ \_______\ \__\\ \__\____\_\  \ \__\    \ \_______\ \_______\   \ \__\ \ \__\ \__\__/  / /
+    \|_______|\|__| \|__|\_________\|__|     \|_______|\|_______|    \|__|  \|__|\|__|\___/ /
+                        \|_________|                                                 \|___|/</pre>
+    <div class="wordmark">unSpootify</div>
+
+    <div class="lcd" aria-live="polite">
+      <div class="lcd-line1" id="lcdTitle">Ready</div>
+      <div class="lcd-line2" id="lcdSub">Pick a playlist and hit Download</div>
+      <div class="lcd-bar"><span id="lcdFill"></span></div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+
+    <section class="panel account">
+      <h2>Soulseek login</h2>
+      <label class="field">
+        <span>Username</span>
+        <input type="text" value="ipod_dreamer" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input type="password" value="hunter22">
+      </label>
+      <p class="hint">No account? Make one up. Soulseek creates it the first time you connect.</p>
+    </section>
+
+    <section class="panel library">
+      <h2>Music folder</h2>
+      <div class="folder">
+        <span class="folder-path" id="folderPath">~/Music/unSpootify</span>
+        <button class="btn" id="chooseFolder">Choose…</button>
+      </div>
+    </section>
+
+    <section class="panel playlists">
+      <h2>Playlists</h2>
+      <ul class="playlist-list" id="playlistList"></ul>
+      <div class="playlist-actions">
+        <button class="btn primary-soft" id="getPlaylist">Get my playlist from Spotify</button>
+        <button class="btn" id="addCsv">Add CSV file…</button>
+      </div>
+      <p class="hint drop">…or drop a CSV anywhere in this window</p>
+    </section>
+
+    <section class="panel options">
+      <h2>Options</h2>
+
+      <div class="opt">
+        <span class="opt-label">What to grab</span>
+        <div class="seg" role="radiogroup">
+          <button class="on">These songs</button>
+          <button>Full albums</button>
+          <button>Whole artist</button>
+        </div>
+      </div>
+
+      <div class="opt">
+        <span class="opt-label">Format</span>
+        <div class="seg-row">
+          <div class="seg" role="radiogroup">
+            <button class="on">MP3</button>
+            <button>FLAC</button>
+          </div>
+          <div class="seg" role="radiogroup">
+            <button class="on">Automatic</button>
+            <button>Force</button>
+          </div>
+        </div>
+        <p class="hint small">Automatic grabs MP3 when it can, anything else when it can't. Force gets only MP3 and tells you what it couldn't find.</p>
+      </div>
+
+      <div class="toggles">
+        <label class="toggle"><input type="checkbox" checked><span class="box"></span><span>Skip what I already have</span></label>
+        <label class="toggle"><input type="checkbox" checked><span class="box"></span><span>Get album art</span></label>
+        <label class="toggle"><input type="checkbox"><span class="box"></span><span>Try harder <em>(slower)</em></span></label>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <div class="adv-grid">
+          <label class="field inline"><span>Only first</span><input type="text" placeholder="all" size="4"><span>tracks</span></label>
+          <label class="field inline"><span>Skip first</span><input type="text" placeholder="0" size="4"><span>tracks</span></label>
+          <label class="field inline"><span>Min bitrate</span><input type="text" placeholder="200" size="4"><span>kbps</span></label>
+          <label class="toggle"><input type="checkbox"><span class="box"></span><span>Fast mode</span></label>
+          <label class="toggle"><input type="checkbox"><span class="box"></span><span>Strict title match</span></label>
+          <label class="field inline"><span>Listen port</span><input type="text" placeholder="49998" size="6"></label>
+        </div>
+      </details>
+    </section>
+
+  </aside>
+
+  <main class="tracks panel">
+    <div class="tracks-head">
+      <div>
+        <h2 id="playlistTitle">road trip '03</h2>
+        <div class="counts" id="counts"></div>
+      </div>
+      <button class="btn go" id="goBtn">Download</button>
+    </div>
+    <div class="track-table">
+      <div class="track-row header">
+        <span class="c-num">#</span>
+        <span class="c-title">Title</span>
+        <span class="c-artist">Artist</span>
+        <span class="c-album">Album</span>
+        <span class="c-fmt">Format</span>
+        <span class="c-status">Status</span>
+      </div>
+      <div class="track-rows" id="trackRows"></div>
+    </div>
+  </main>
+
+  <div class="splitter" id="splitter" title="Drag to resize"><span></span></div>
+
+  <section class="terminal panel" id="terminal">
+    <div class="terminal-head">
+      <h2>Details</h2>
+      <button class="btn tiny" id="toggleTerm">Hide</button>
+    </div>
+    <pre class="log" id="log"></pre>
+  </section>
+
+</div>
+
+<script src="mock.js"></script>
+</body>
+</html>

@@ -26,8 +26,18 @@ def sockseek_version() -> str | None:
 class Api:
     """Methods the page can call as `window.pywebview.api.<name>()`."""
 
+    def __init__(self) -> None:
+        self._window: webview.Window | None = None
+
     def get_info(self) -> dict:
         return {"app_version": __version__, "sockseek_version": sockseek_version()}
+
+    def choose_folder(self) -> str | None:
+        """Show the OS folder picker; return the chosen path or None."""
+        if self._window is None:
+            return None
+        result = self._window.create_file_dialog(webview.FileDialog.FOLDER)
+        return result[0] if result else None
 
 
 def _smoke_test(window: webview.Window) -> None:
@@ -46,15 +56,19 @@ def _smoke_test(window: webview.Window) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
+    # --mockups: Phase 1 look check (fake data, simulated downloads)
+    page = ui_dir() / ("mockups/index.html" if "--mockups" in argv else "index.html")
+    api = Api()
     window = webview.create_window(
         "unSpootify",
-        url=str(ui_dir() / "index.html"),
-        js_api=Api(),
+        url=str(page),
+        js_api=api,
         width=1100,
         height=760,
         min_size=(800, 560),
         background_color="#000000",
     )
+    api._window = window
     gui = "qt" if sys.platform.startswith("linux") else None
     if "--smoke-test" in argv:
         webview.start(_smoke_test, window, gui=gui)
