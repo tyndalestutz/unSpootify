@@ -223,16 +223,17 @@ def main(argv: list[str] | None = None) -> int:
     api._attach(window)
     window.events.closed += api._close
     gui = "qt" if sys.platform.startswith("linux") else None
+    icon = str(ui_dir() / "icon.png")
     if "--ui-script" in argv:
         script = Path(argv[argv.index("--ui-script") + 1]).read_text(encoding="utf-8")
-        webview.start(_ui_script, (window, script), gui=gui)
+        webview.start(_ui_script, (window, script), gui=gui, icon=icon)
         api._close()
         return 1 if _smoke_failed else 0
     if "--smoke-test" in argv:
-        webview.start(_smoke_test, window, gui=gui)
+        webview.start(_smoke_test, window, gui=gui, icon=icon)
         api._close()
         return 1 if _smoke_failed else 0
-    webview.start(gui=gui)
+    webview.start(gui=gui, icon=icon)
     return 0
 
 

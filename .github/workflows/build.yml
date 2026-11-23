@@ -1,0 +1,53 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: write  # attach builds to releases
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: System packages (ffmpeg for the offline test share, X/GL for the window tests)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg xvfb libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libnss3 libasound2 fonts-dejavu-core
+      - run: scripts/fetch_sockseek.sh linux-x64
+      - run: uv sync
+      - name: Tests (incl. UI checks and the real window end to end)
+        run: xvfb-run -a uv run pytest -q
+
+  appimage:
+    needs: test
+    runs-on: ubuntu-22.04  # older glibc = the AppImage runs on more Linux versions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 libnss3 xvfb
+      - run: uv sync
+      - name: Build AppImage
+        run: scripts/build_appimage.sh
+      - name: Packaged app opens and answers sockseek's callback
+        run: |
+          APP=$(ls dist/*.AppImage)
+          APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a "$APP" --smoke-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unSpootify-linux-x86_64
+          path: dist/*.AppImage
+          retention-days: 14
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.AppImage --clobber

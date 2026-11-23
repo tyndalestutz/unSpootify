@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 3 merged (2026-11-23); `main` protected. Next: Phase 4, Linux AppImage → v1.0.0.
+**Status:** Phase 4 (2026-11-23): AppImage builds (221 MB) and passes the clean-machine test; CI added. Next: CI green, release candidate, owner checkpoint.
 
 ## Goal
 
@@ -109,21 +109,22 @@ Readiness check (2026-11-23, brief fresh-agent review): ready; the three must-fi
 Goal: one downloadable `unSpootify-1.0.0-x86_64.AppImage` that opens the app with nothing else installed.
 
 Build
-- [ ] PyInstaller spec `packaging/unspootify.spec`, **onedir** (sockseek calls the app once per finished song; onefile would unpack ~150 MB each time)
-- [ ] Entry script `src/unspootify/__main__.py` so the frozen app answers `finalize` (and other CLI commands) without opening a window
-- [ ] Bundle `ui/` as data and `vendor/sockseek/<platform>/sockseek` as a binary (keeps its exec bit); trim unused Qt modules
-- [ ] Start sockseek with a clean environment (restore `LD_LIBRARY_PATH_ORIG`; PyInstaller's library path can break the .NET binary)
-- [ ] App icon (both looks feel right at small size) + `.desktop` entry
-- [ ] AppDir + pinned `appimagetool` → `unSpootify-<version>-x86_64.AppImage` via `scripts/build_appimage.sh`
+- [x] PyInstaller spec `packaging/unspootify.spec`, **onedir** (sockseek calls the app once per finished song; onefile would unpack ~150 MB each time)
+- [x] Entry script `src/unspootify/__main__.py` so the frozen app answers `finalize` (and other CLI commands) without opening a window
+- [x] Bundle `ui/` as data and `vendor/sockseek/<platform>/sockseek` as a binary (keeps its exec bit); trim unused Qt modules
+- [x] Start sockseek with a clean environment (restore `LD_LIBRARY_PATH_ORIG`; PyInstaller's library path can break the .NET binary)
+- [x] App icon: owner picked A (black tile, Spotify-green eject; `assets/icon/`), glossy-black variant kept in `assets/icon/alt/` for later; `.desktop` entry
+- [x] AppDir + pinned `appimagetool` → `unSpootify-<version>-x86_64.AppImage` via `scripts/build_appimage.sh`
 
 Verify
-- [ ] Built-binary tests: `<exe> finalize …` works headless; `--smoke-test` passes on the built app; offline end-to-end (`--offline-test`) through the built app
-- [ ] Clean-machine test in a fresh Docker container (Ubuntu LTS + Xvfb): open, add CSV, download offline, files land in the library
+- [x] Built-binary tests: `<exe> finalize …` works headless; `--smoke-test` passes on the built app; offline end-to-end (`--offline-test`) through the built app
+- [x] Clean-machine test in a fresh Docker container (`packaging/test/clean_linux.sh`, Ubuntu 24.04 + Xvfb): opens, offline download lands in ~/Music/unSpootify (found + fixed: default music folder wasn't created on a fresh home)
 - [ ] GitHub Actions: run tests and build the AppImage on every PR; attach the AppImage to tagged releases. Then make the test job a required check on `main`.
 
 Release
-- [ ] Delete `legacy/`; README rewritten for friends (download, make executable, open; first-run steps; Exportify guide)
-- [ ] Version 1.0.0 in `pyproject.toml` / `__init__.py`; tag `v1.0.0`; GitHub Release with the AppImage
+- [x] Delete `legacy/`; README rewritten for friends (download, make executable, open; first-run steps; Exportify guide)
+- [x] Version 1.0.0 in `pyproject.toml` / `__init__.py`
+- [ ] Pre-release `v1.0.0-rc.1` with the CI-built AppImage; promote to `v1.0.0` after the checkpoint
 - [ ] CHECKPOINT: owner downloads the release AppImage and does a real run
 
 ### Phase 5: macOS Apple Silicon `.dmg` = v1.0.x for the friend test

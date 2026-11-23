@@ -73,7 +73,11 @@ class Backend:
             raise AppError("ALREADY_RUNNING")
         library = Path(s.library_path).expanduser()
         if not library.exists():
-            if not library.parent.exists():
+            # Inside the home folder we simply create it (a fresh computer may not have ~/Music yet).
+            # Elsewhere, a missing parent usually means an unplugged drive: say so instead of
+            # silently writing to the wrong disk.
+            in_home = Path.home() in library.parents
+            if not in_home and not library.parent.exists():
                 raise AppError("FOLDER_MISSING", str(library))
             try:
                 library.mkdir(parents=True)

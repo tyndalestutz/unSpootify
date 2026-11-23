@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=unSpootify
+Comment=Turn your playlists into a music library you own
+Exec=unspootify
+Icon=unspootify
+Categories=AudioVideo;Audio;Network;
+Terminal=false

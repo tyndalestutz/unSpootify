@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import atexit
 import json
+import os
 import re
 import subprocess
 import sys
@@ -331,6 +332,20 @@ class EventMapper:
 
 Emit = Callable[[dict[str, Any]], None]
 
+def child_env() -> dict[str, str]:
+    """Environment for sockseek. A PyInstaller build points LD_LIBRARY_PATH (Linux) /
+    DYLD_LIBRARY_PATH (macOS) at its own bundled libraries; sockseek must get the user's originals."""
+    env = dict(os.environ)
+    if getattr(sys, "frozen", False):
+        for var in ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
+            original = env.pop(f"{var}_ORIG", None)
+            if original is not None:
+                env[var] = original
+            else:
+                env.pop(var, None)
+    return env
+
+
 # sockseek processes we started: killed if the app exits (even without a clean shutdown)
 _LIVE: set[subprocess.Popen] = set()
 
@@ -376,7 +391,7 @@ class Runner:
             self.proc = subprocess.Popen(
                 [str(self.sockseek), *self.plan.args], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace", bufsize=1,
-                cwd=self.plan.input_path.parent,
+                cwd=self.plan.input_path.parent, env=child_env(),
             )
         except OSError as exc:  # not executable (permissions, macOS quarantine), wrong architecture…
             self._cleanup()
