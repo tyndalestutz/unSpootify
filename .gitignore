@@ -24,3 +24,7 @@ package-lock.json
 *.tmp
 *.swp
 *.swo
+
+# PyInstaller output
+build/
+dist/

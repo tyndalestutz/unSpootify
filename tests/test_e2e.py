@@ -221,3 +221,16 @@ def test_login_timeout(tmp_path, mock_share):
     assert [e["code"] for e in rec.of("error")] == ["LOGIN_TIMEOUT"]
     assert states(backend, pid) == ["queued"] * 8
     backend.close()
+
+
+def test_default_library_created_on_fresh_home(tmp_path, mock_share, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path / "freshhome"))
+    (tmp_path / "freshhome").mkdir()
+    rec = Recorder()
+    backend = Backend(rec, root=tmp_path / "home", mock_dir=mock_share)
+    backend.save_settings({"library_path": str(tmp_path / "freshhome" / "Music" / "unSpootify")})
+    pid = backend.import_csv_path(str(ROAD_TRIP))["id"]
+    backend.start(pid)
+    rec.wait(backend)
+    assert (tmp_path / "freshhome" / "Music" / "unSpootify" / "The Killers").exists()
+    backend.close()

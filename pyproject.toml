@@ -1,6 +1,6 @@
 [project]
 name = "unspootify"
-version = "0.1.0"
+version = "1.0.0"
 description = "Turn your Spotify playlists into a real music library."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,7 +17,10 @@ dependencies = [
 unspootify = "unspootify.app:main"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "pyinstaller>=6.10",
+    "pytest>=8",
+]
 
 [build-system]
 requires = ["hatchling"]
