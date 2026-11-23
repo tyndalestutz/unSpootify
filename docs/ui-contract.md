@@ -43,14 +43,18 @@ Run        { playlist_id, running: bool, current_track: index|null,
 | `save_settings(partial)` | `settings` | login fields, options, Advanced OK, look picker |
 | `choose_folder()` | `path \| null` | Save to › Choose… |
 | `import_csv()` | `playlist \| error` | Add CSV file… (native file dialog) |
-| `import_csv_path(path)` | `playlist \| error` | drag-and-drop a CSV onto the window |
-| `open_exportify()` | `null` | Get my playlist from Spotify (opens browser + guide) |
+| `import_csv_text(name, text)` | `playlist \| error` | drag-and-drop a CSV onto the window (the page reads the file) |
+| `open_url(which)` | `null` | guide buttons: `"soundiiz"` or `"exportify"` open in the browser |
 | `get_tracks(playlist_id)` | `Track[]` | clicking a playlist |
 | `start(playlist_id)` | `ok \| error` | Download |
 | `stop()` | `ok` | Stop (works from any playlist; stops the active run) |
 | `retry(playlist_id)` | `ok \| error` | Retry N missing (re-queues failed, with Try harder) |
 | `force_followup(playlist_id, accept)` | `ok` | Force mode: "get the missing ones as the other format?" |
 | `test_port(port)` | `{open, port, server, suggested_port?, error?}` | Advanced › Test port, Test connection |
+
+Commands never throw into the page: an error comes back as `{"error": {code, message, action}}`.
+`choose_folder`, `import_csv`, `import_csv_text` and `open_url` live in the window layer (`app.py`);
+the rest are `Backend` methods.
 
 ## Events (backend → UI)
 
@@ -91,8 +95,9 @@ when a run dies before its summary line; the exact wording must be confirmed wit
 |---|---|---|
 | Username / Password | `settings.username/password` | `save_settings` (on change, debounced) |
 | Playlists list (+ ↓ marker, meters) | `playlists`, `run.playlist_id`, `track` events | `get_tracks` |
-| Get my playlist from Spotify | — | `open_exportify` |
-| Add CSV file… / drop | — | `import_csv` / `import_csv_path` |
+| Get my playlist (guide sheet: Open Soundiiz / Open Exportify / Add CSV) | — | `open_url`, `import_csv` |
+| Add CSV file… / drop | — | `import_csv` / `import_csv_text` |
+| Force follow-up sheet (Leave them / Get as …) | `run_finished.missing_format` | `force_followup` |
 | Save to + Choose… | `settings.library_path` | `choose_folder` → `save_settings` |
 | What to grab / Format / Automatic-Force / toggles | `settings.options` | `save_settings` |
 | Advanced sheet fields, Restore Defaults, OK | `settings.advanced` | `save_settings` |

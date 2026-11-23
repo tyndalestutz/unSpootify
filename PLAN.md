@@ -23,7 +23,7 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 | Platforms | Linux first (build and test here), macOS Apple Silicon second. Intel Mac only if cheap (Backlog). No Windows, ever. |
 | Stack | Python 3.13 backend, HTML/CSS/JS UI shown in a native window by **pywebview** (no browser, no server, no port). Qt backend on Linux (self-contained in AppImage), native WebKit on macOS. |
 | Downloader | **sockseek** (formerly sldl / slsk-batchdl), pinned to v3.0.6, binary bundled per platform, run as a subprocess. Parse `--progress-json` for per-track progress. Soulseek needs no separate client: sockseek connects directly. |
-| Input | **Exportify CSV** is the primary path (exportify.net: log in with Spotify, export, done). Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium for any Spotify input. |
+| Input | **Soundiiz CSV** is the primary path (connects Spotify, Apple Music, YouTube, Tidal…; export a playlist as CSV), **Exportify** as the Spotify-only alternative. The "Get my playlist" guide covers both. Direct Spotify links are out: sockseek 3 needs your own Spotify developer app *and* Premium. |
 | Playlist home | Imported CSVs are copied into an app-managed playlists folder. The app tracks, per playlist and per track, what was tried, downloaded, failed, or skipped. |
 | Soulseek login | Username and password fields always visible in the main window. Required on first run, editable any time, remembered between launches. Each friend uses their own account. |
 | Folder choice | Native OS folder picker (Finder on Mac, GTK/Qt dialog on Linux). Never make the user type a path. |
@@ -126,7 +126,7 @@ The backend never invents state the UI can't show, and the UI never shows state 
 - Auto-update / "new version available" notice
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
-- Other services' CSVs (Bandcamp, Apple Music, via converter sites like TuneMyMusic/Soundiiz): a later version with its own friendly import guide. v1 is Spotify + Exportify only.
+- (moved into v1) Soundiiz covers other services' playlists. Verify Soundiiz's real CSV columns and whether its file export needs a paid plan.
 - Apple Developer signing + notarization (removes the first-launch warning)
 
 ## Risks

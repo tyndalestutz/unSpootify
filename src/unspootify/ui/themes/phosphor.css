@@ -168,3 +168,10 @@ body[data-theme="phosphor"]::after {
 [data-theme="phosphor"] .port-result.bad { color: var(--bad); }
 [data-theme="phosphor"] .port-result.testing { color: var(--warn); }
 [data-theme="phosphor"] .playlist-list li.busy .pl-count { color: var(--warn); }
+
+[data-theme="phosphor"] .lcd.lcd-bad { border-color: var(--bad); }
+[data-theme="phosphor"] .lcd.lcd-bad .lcd-line1 { color: var(--bad); text-shadow: 0 0 6px rgba(255,95,86,.45); }
+[data-theme="phosphor"] .lcd.lcd-bad .lcd-line1::before { content: "! "; color: var(--bad); }
+[data-theme="phosphor"] .drop-hint { background: rgba(0,10,4,.85); color: var(--fg); border: 3px dashed var(--fg); text-transform: uppercase; letter-spacing: .1em; }
+[data-theme="phosphor"] .steps { color: var(--mid); font-size: 12px; }
+[data-theme="phosphor"] .steps b { color: var(--fg); font-weight: normal; }

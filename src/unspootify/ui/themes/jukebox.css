@@ -217,3 +217,8 @@ body[data-theme="jukebox"] {
 [data-theme="jukebox"] .playlist-list li.busy .pl-count { font-weight: bold; }
 [data-theme="jukebox"] .seg button:first-child { border-radius: 11px 0 0 11px; }
 [data-theme="jukebox"] .seg button:last-child { border-radius: 0 11px 11px 0; }
+
+[data-theme="jukebox"] .lcd.lcd-bad .lcd-line1 { color: #8a1c12; }
+[data-theme="jukebox"] .lcd.lcd-bad { background: linear-gradient(#f6e6dc, #ead2c4 45%, #e0c2b2); border-color: #9a6a58; }
+[data-theme="jukebox"] .drop-hint { background: rgba(230,236,245,.88); color: #1f4f9a; border: 3px dashed #3f77d0; font-weight: bold; border-radius: 12px; }
+[data-theme="jukebox"] .steps { font-size: 12px; }

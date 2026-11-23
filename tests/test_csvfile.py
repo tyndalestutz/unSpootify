@@ -42,3 +42,14 @@ def test_album_rows_dedupe(tmp_path):
     out = tmp_path / "a.csv"
     write_tracks(out, tracks + tracks, albums_only=True)
     assert out.read_text().count("Hot Fuss") == 1
+
+
+def test_soundiiz_style_and_semicolons(tmp_path):
+    p = tmp_path / "soundiiz.csv"
+    p.write_text('"title","artist","album","isrc"\n"Maps","Yeah Yeah Yeahs","Fever to Tell","USIR10300001"\n', encoding="utf-8")
+    (t,) = read_tracks(p)
+    assert (t.title, t.artist, t.album, t.length_ms) == ("Maps", "Yeah Yeah Yeahs", "Fever to Tell", None)
+    q = tmp_path / "semi.csv"
+    q.write_text("Track name;Artist name;Album\nFloat On;Modest Mouse;Good News\n", encoding="utf-8")
+    (t,) = read_tracks(q)
+    assert (t.title, t.artist) == ("Float On", "Modest Mouse")

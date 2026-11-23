@@ -9,10 +9,11 @@ from pathlib import Path
 from unspootify.contract import AppError
 
 # Column names we recognise, most specific first (compared case-insensitively).
-TITLE_COLS = ("track name", "title", "track title", "song", "name")
-ARTIST_COLS = ("artist name(s)", "artist names", "artist", "artists", "artist name")
-ALBUM_COLS = ("album name", "album", "album title")
-LENGTH_COLS = ("duration (ms)", "track duration (ms)", "duration_ms", "length", "duration")
+# Exportify, Soundiiz, TuneMyMusic and generic exports.
+TITLE_COLS = ("track name", "title", "track title", "track", "song", "song name", "name")
+ARTIST_COLS = ("artist name(s)", "artist names", "artist", "artists", "artist name", "creator")
+ALBUM_COLS = ("album name", "album", "album title", "release")
+LENGTH_COLS = ("duration (ms)", "track duration (ms)", "duration_ms", "duration ms", "length", "duration", "time")
 
 MAX_BYTES = 50 * 1024 * 1024
 
@@ -58,8 +59,11 @@ def read_tracks(path: Path) -> list[CsvTrack]:
     except (OSError, UnicodeDecodeError) as exc:
         raise AppError("CSV_UNREADABLE") from exc
 
+    # Exports differ: Exportify/Soundiiz use commas, some tools use ; or tabs.
+    first = text.splitlines()[0] if text.strip() else ""
+    delimiter = max((",", ";", "\t"), key=first.count) if first else ","
     try:
-        rows = list(csv.reader(text.splitlines()))
+        rows = list(csv.reader(text.splitlines(), delimiter=delimiter))
     except csv.Error as exc:
         raise AppError("CSV_UNREADABLE") from exc
     if not rows:
