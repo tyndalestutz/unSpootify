@@ -323,7 +323,8 @@ class EventMapper:
                 continue
             if stopped or (not self.completed and not self.all_settled()):
                 out += self._set(i, state=QUEUED, pct=0, user=None)
-            elif self.mode == "artist" and st.files_done:
+            elif self.mode != "songs" and st.files_done:
+                # album/artist: files arrived but the job's own end line was lost in interleaved output
                 out += self._set(i, state=DONE, pct=100, path=self._done_path(i, None, None))
             else:
                 out += self._set(i, state=FAILED, pct=0, reason="not_found")
