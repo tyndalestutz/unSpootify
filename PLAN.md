@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 1 mockups built (2026-11-23), waiting for the owner to pick a look. Run: `uv run python -m unspootify --mockups`.
+**Status:** Phase 1 round 2 (2026-11-23): owner kept Phosphor + Jukebox, dropped Midnight; tweaks made, waiting for sign-off. Run: `uv run python -m unspootify --mockups`.
 
 ## Goal
 
@@ -31,7 +31,8 @@ and walks the user from "export my playlist" to "tagged files in my music folder
 | Naming (pre-tagging) | `Artist/Album [EXT]/NN. Title.ext` via sockseek `--name-format`. The `[EXT]` in the folder keeps encodings of the same album apart. |
 | Naming (post-tagging, bonus) | Port the owner's Picard script **ULTIMATE-03** (`Artist/[Year] Album (EP) [FLAC]/NN. Title`, standardized album artist). Source: `~/.config/MusicBrainz/Picard.ini`. |
 | Tagging | **Last, bonus phase.** beets as a library (MusicBrainz + AcoustID fingerprinting), headless. Picard itself is not automatable enough to embed. |
-| UI layout | Per-track progress list is the main view; collapsible/resizable verbose terminal pane shows raw sockseek output. |
+| UI layout | Per-track progress list is the main view; collapsible/resizable verbose terminal pane shows raw sockseek output. The window never scrolls: sidebar is fixed (login, playlists, options), only the playlist list, song list, and log scroll. Advanced options open in a sheet (dialog). |
+| Looks | Two built-in looks, switchable from the gear (Settings) in the top bar: **Phosphor** (green terminal) and **Jukebox** (early-2000s iTunes-style). Layout in `ui/base.css`, each look in `ui/themes/<name>.css` following `ui/themes/THEMING.md`. |
 | Repo | Same repo and name (`unSpootify`), history kept, stays **public**. README is for friends, not developers: short and friendly. Legacy web app moves to `legacy/` in Phase 0 and is deleted at v1. Feature branches + PRs into `main`; Claude handles commits, pushes, PRs, merges. |
 
 ## Main-screen sockseek options
@@ -59,7 +60,9 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 ### Phase 1: v0 UI directions (CHECKPOINT)
 - [x] 3 visual directions (A Phosphor, B Jukebox 2003, C Midnight) in the real window with fake data and simulated downloads (`--mockups`)
 - [x] Each shows: login fields, folder picker (real native dialog), playlist list, options, per-track progress, resizable verbose pane
-- [ ] Owner picks one (or a mix). Record the choice under Decisions.
+- [x] Owner picked: keep Phosphor + Jukebox, drop Midnight (recorded under Decisions)
+- [x] Round 2: fixed sidebar, Advanced as a sheet, gear + Settings look picker, Phosphor titles inside boxes, tighter Jukebox styling, theme contract (`THEMING.md`)
+- [ ] Owner signs off on round 2
 
 ### Phase 2: Pipeline core (no UI wiring)
 - [ ] Settings store (login, library folder, last options) in the OS app-data dir
@@ -103,6 +106,8 @@ Each phase ends with a commit/PR. **Checkpoints** mean stop and get the owner's 
 - Auto-detect new Exportify CSVs in `~/Downloads`
 - Exportify inside the app window instead of the browser
 - Auto-update / "new version available" notice
+- Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
+- Compact settings panel growing out of the gear sheet (look, defaults, account)
 - Apple Developer signing + notarization (removes the first-launch warning)
 
 ## Risks

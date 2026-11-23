@@ -21,7 +21,7 @@ Four people; three are non-technical and can't debug. Every error the app shows 
 
 ## Layout (target)
 - `src/unspootify/`: Python backend (pipeline, settings, state, sockseek runner)
-- `src/unspootify/ui/`: HTML/CSS/JS shown in the pywebview window
+- `src/unspootify/ui/`: HTML/CSS/JS shown in the pywebview window. `base.css` = layout, `themes/*.css` = looks (contract in `themes/THEMING.md`). New UI must be styled in every look.
 - `scripts/`: dev and build scripts (`fetch_sockseek.sh`, packaging)
 - `vendor/`: bundled third-party binaries, gitignored
 - `legacy/`: old Node web app, reference only, deleted at v1

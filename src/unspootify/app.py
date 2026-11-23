@@ -63,9 +63,9 @@ def main(argv: list[str] | None = None) -> int:
         "unSpootify",
         url=str(page),
         js_api=api,
-        width=1100,
-        height=760,
-        min_size=(800, 560),
+        width=1120,
+        height=820,
+        min_size=(940, 640),
         background_color="#000000",
     )
     api._window = window

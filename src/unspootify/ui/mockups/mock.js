@@ -189,18 +189,43 @@ $("#chooseFolder").addEventListener("click", async () => {
 $("#getPlaylist").addEventListener("click", () => alert("In the real app: opens Exportify in your browser, with a short how-to."));
 $("#addCsv").addEventListener("click", () => alert("In the real app: opens a file picker for your Exportify CSV."));
 
-/* ---- look switcher ---- */
-function pick(theme) {
-  document.body.dataset.theme = theme;
-  document.querySelectorAll(".switcher button").forEach((b) => b.classList.toggle("on", b.dataset.pick === theme));
-  try { localStorage.setItem("mockTheme", theme); } catch {}
+/* ---- format hint follows the choices ---- */
+function updateFmtHint() {
+  const fmt = $("#fmtSeg .on").textContent, other = fmt === "MP3" ? "FLAC" : "MP3";
+  const force = $("#modeSeg .on").textContent === "Force";
+  $("#fmtHint").textContent = force
+    ? `Only ${fmt}. Missing songs get offered as ${other}.`
+    : `${fmt} if possible, otherwise anything.`;
 }
-document.querySelectorAll(".switcher button").forEach((b) => b.addEventListener("click", () => pick(b.dataset.pick)));
+["#fmtSeg", "#modeSeg"].forEach((id) => $(id).addEventListener("click", updateFmtHint));
+updateFmtHint();
+
+/* ---- sheets ---- */
+function openSheet(id) { $(id).hidden = false; }
+function closeSheets() { document.querySelectorAll(".sheet-backdrop").forEach((s) => (s.hidden = true)); }
+$("#openAdvanced").addEventListener("click", () => openSheet("#advancedSheet"));
+$("#openSettings").addEventListener("click", () => openSheet("#settingsSheet"));
+document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeSheets));
+document.querySelectorAll(".sheet-backdrop").forEach((bd) =>
+  bd.addEventListener("click", (e) => { if (e.target === bd) closeSheets(); })
+);
+window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheets(); });
+
+/* ---- looks ---- */
+const LOOKS = ["phosphor", "jukebox"];
+function setLook(look) {
+  if (!LOOKS.includes(look)) look = LOOKS[0];
+  document.body.dataset.theme = look;
+  document.querySelectorAll(".look-card").forEach((c) => c.classList.toggle("on", c.dataset.look === look));
+  try { localStorage.setItem("unspootify.look", look); } catch {}
+}
+document.querySelectorAll(".look-card").forEach((c) => c.addEventListener("click", () => setLook(c.dataset.look)));
 
 const params = new URLSearchParams(location.search);
-let saved = null;
-try { saved = localStorage.getItem("mockTheme"); } catch {}
-pick(params.get("theme") || saved || "phosphor");
+let savedLook = null;
+try { savedLook = localStorage.getItem("unspootify.look"); } catch {}
+setLook(params.get("theme") || savedLook || "phosphor");
+if (params.get("sheet")) openSheet(`#${params.get("sheet")}Sheet`);
 
 reset();
 if (params.get("still") === null) start();

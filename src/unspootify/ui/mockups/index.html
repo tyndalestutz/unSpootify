@@ -2,22 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>unSpootify · look check</title>
-<link rel="stylesheet" href="mock.css">
-<link rel="stylesheet" href="theme-phosphor.css">
-<link rel="stylesheet" href="theme-jukebox.css">
-<link rel="stylesheet" href="theme-midnight.css">
+<title>unSpootify (mockup · fake data)</title>
+<link rel="stylesheet" href="../base.css">
+<link rel="stylesheet" href="../themes/phosphor.css">
+<link rel="stylesheet" href="../themes/jukebox.css">
 </head>
 <body data-theme="phosphor">
-
-<!-- Mockup-only bar for switching looks. Not part of the real app. -->
-<nav class="switcher" aria-label="Pick a look">
-  <span class="switcher-label">LOOK CHECK</span>
-  <button data-pick="phosphor">A · Phosphor</button>
-  <button data-pick="jukebox">B · Jukebox 2003</button>
-  <button data-pick="midnight">C · Midnight</button>
-  <span class="switcher-note">fake data · downloads are simulated</span>
-</nav>
 
 <div class="app">
 
@@ -37,29 +27,25 @@
       <div class="lcd-line2" id="lcdSub">Pick a playlist and hit Download</div>
       <div class="lcd-bar"><span id="lcdFill"></span></div>
     </div>
+
+    <button class="icon-btn" id="openSettings" title="Settings and looks" aria-label="Settings">&#9881;</button>
   </header>
 
   <aside class="sidebar">
 
     <section class="panel account">
       <h2>Soulseek login</h2>
-      <label class="field">
-        <span>Username</span>
-        <input type="text" value="ipod_dreamer" autocomplete="off" spellcheck="false">
-      </label>
-      <label class="field">
-        <span>Password</span>
-        <input type="password" value="hunter22">
-      </label>
-      <p class="hint">No account? Make one up. Soulseek creates it the first time you connect.</p>
-    </section>
-
-    <section class="panel library">
-      <h2>Music folder</h2>
-      <div class="folder">
-        <span class="folder-path" id="folderPath">~/Music/unSpootify</span>
-        <button class="btn" id="chooseFolder">Choose…</button>
+      <div class="login-row">
+        <label class="field">
+          <span>Username</span>
+          <input type="text" value="ipod_dreamer" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" value="hunter22">
+        </label>
       </div>
+      <p class="hint">No account? Just make one up.</p>
     </section>
 
     <section class="panel playlists">
@@ -69,15 +55,22 @@
         <button class="btn primary-soft" id="getPlaylist">Get my playlist from Spotify</button>
         <button class="btn" id="addCsv">Add CSV file…</button>
       </div>
-      <p class="hint drop">…or drop a CSV anywhere in this window</p>
     </section>
 
     <section class="panel options">
       <h2>Options</h2>
 
+      <div class="opt folder-opt">
+        <div class="folder">
+          <span class="opt-label">Save to</span>
+          <span class="folder-path" id="folderPath">~/Music/unSpootify</span>
+          <button class="btn small" id="chooseFolder">Choose…</button>
+        </div>
+      </div>
+
       <div class="opt">
         <span class="opt-label">What to grab</span>
-        <div class="seg" role="radiogroup">
+        <div class="seg" role="radiogroup" id="grabSeg">
           <button class="on">These songs</button>
           <button>Full albums</button>
           <button>Whole artist</button>
@@ -87,16 +80,16 @@
       <div class="opt">
         <span class="opt-label">Format</span>
         <div class="seg-row">
-          <div class="seg" role="radiogroup">
+          <div class="seg" role="radiogroup" id="fmtSeg">
             <button class="on">MP3</button>
             <button>FLAC</button>
           </div>
-          <div class="seg" role="radiogroup">
+          <div class="seg" role="radiogroup" id="modeSeg">
             <button class="on">Automatic</button>
             <button>Force</button>
           </div>
         </div>
-        <p class="hint small">Automatic grabs MP3 when it can, anything else when it can't. Force gets only MP3 and tells you what it couldn't find.</p>
+        <p class="hint" id="fmtHint"></p>
       </div>
 
       <div class="toggles">
@@ -105,17 +98,7 @@
         <label class="toggle"><input type="checkbox"><span class="box"></span><span>Try harder <em>(slower)</em></span></label>
       </div>
 
-      <details class="advanced">
-        <summary>Advanced</summary>
-        <div class="adv-grid">
-          <label class="field inline"><span>Only first</span><input type="text" placeholder="all" size="4"><span>tracks</span></label>
-          <label class="field inline"><span>Skip first</span><input type="text" placeholder="0" size="4"><span>tracks</span></label>
-          <label class="field inline"><span>Min bitrate</span><input type="text" placeholder="200" size="4"><span>kbps</span></label>
-          <label class="toggle"><input type="checkbox"><span class="box"></span><span>Fast mode</span></label>
-          <label class="toggle"><input type="checkbox"><span class="box"></span><span>Strict title match</span></label>
-          <label class="field inline"><span>Listen port</span><input type="text" placeholder="49998" size="6"></label>
-        </div>
-      </details>
+      <button class="btn small advanced-btn" id="openAdvanced">Advanced…</button>
     </section>
 
   </aside>
@@ -151,6 +134,55 @@
     <pre class="log" id="log"></pre>
   </section>
 
+</div>
+
+<!-- Advanced options sheet -->
+<div class="sheet-backdrop" id="advancedSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="advTitle">
+    <h2 class="sheet-title" id="advTitle">Advanced</h2>
+    <div class="sheet-body">
+      <fieldset class="group">
+        <legend>Playlist</legend>
+        <label class="field inline"><span>Only download the first</span><input type="text" placeholder="all" size="4"><span>songs</span></label>
+        <label class="field inline"><span>Skip the first</span><input type="text" placeholder="0" size="4"><span>songs</span></label>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Search</legend>
+        <label class="toggle"><input type="checkbox"><span class="box"></span><span>Fast mode <em>(take the first good match)</em></span></label>
+        <label class="toggle"><input type="checkbox"><span class="box"></span><span>Strict title match</span></label>
+        <label class="field inline"><span>Minimum bitrate</span><input type="text" placeholder="200" size="4"><span>kbps</span></label>
+      </fieldset>
+      <fieldset class="group">
+        <legend>Connection</legend>
+        <label class="field inline"><span>Listen port</span><input type="text" placeholder="49998" size="6"></label>
+        <p class="hint">Only change this if Details says the port is blocked.</p>
+      </fieldset>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" data-close>Restore Defaults</button>
+      <button class="btn default" data-close>OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="sheet-backdrop" id="settingsSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="setTitle">
+    <h2 class="sheet-title" id="setTitle">Settings</h2>
+    <div class="sheet-body">
+      <fieldset class="group">
+        <legend>Look</legend>
+        <div class="look-picker" id="lookPicker">
+          <button class="look-card" data-look="phosphor"><span class="swatch sw-phosphor">&gt;_</span><span>Phosphor</span></button>
+          <button class="look-card" data-look="jukebox"><span class="swatch sw-jukebox">&#9835;</span><span>Jukebox</span></button>
+        </div>
+        <p class="hint">Make your own look: coming later.</p>
+      </fieldset>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn default" data-close>Done</button>
+    </div>
+  </div>
 </div>
 
 <script src="mock.js"></script>
