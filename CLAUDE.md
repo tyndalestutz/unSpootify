@@ -29,6 +29,8 @@ Four people; three are non-technical and can't debug. Every error the app shows 
 ## Dev
 - Python 3.13, managed with `uv`. Run tests before every PR.
 - Downloader is **sockseek** (formerly sldl). Fetch it with `scripts/fetch_sockseek.sh`; CLI reference: `vendor/sockseek/<platform>/sockseek --help` (and `--help <topic>`).
-- Run the app: `uv run python -m unspootify` (`--smoke-test` opens, checks the bridge, and quits).
+- Run the app: `uv run python -m unspootify` (add `--mockups` for the look check).
+- Before handing any UI change to the owner, run `uv run python -m unspootify --smoke-test` (and with `--mockups`): it opens the real window, fails if any CSS/JS didn't load, and quits.
+- pywebview serves pages over HTTP rooted at the page's own folder, so every HTML page lives directly in `src/unspootify/ui/` and never references `../`.
 - Check UI visually with `uv run python scripts/screenshot_ui.py <page.html> <out.png> [query] [WxH]` (offscreen Qt WebEngine, same engine as the Linux app).
 - Claude can't test macOS. Flag anything Mac-specific for a human test.
