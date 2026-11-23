@@ -13,6 +13,24 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Libraries that must come from the user's system, never the build machine: graphics drivers
+# (GL/EGL/gbm/drm), X11/xcb/Wayland, GTK/GLib (system plugins load against them), fonts, sound,
+# D-Bus, NSS. Bundling the build machine's copies (e.g. from an older Ubuntu) breaks on newer
+# desktops ("Could not initialize GLX"). Mirrors the AppImage project's excludelist idea.
+SYSTEM_LIBS = re.compile(
+    r"^lib(GL|GLX|GLdispatch|EGL|OpenGL|gbm|drm|epoxy|X11|X11-xcb|Xau|Xdmcp|Xext|Xrender|Xi|Xfixes|Xrandr|Xcursor|"
+    r"Xdamage|Xcomposite|Xinerama|Xtst|xshmfence|xcb.*|xkbcommon.*|wayland-.*|"
+    r"gtk-3|gdk-3|gdk_pixbuf-2\.0|atk-1\.0|atk-bridge-2\.0|atspi|cairo|cairo-gobject|pango-1\.0|pangocairo-1\.0|"
+    r"pangoft2-1\.0|harfbuzz|fribidi|thai|datrie|graphite2|pixman-1|"
+    r"glib-2\.0|gio-2\.0|gobject-2\.0|gmodule-2\.0|gthread-2\.0|pcre2?-.*|pcre|ffi|mount|blkid|selinux|"
+    r"fontconfig|freetype|expat|png16|brotli.*|asound|pulse.*|dbus-1|systemd|udev|cups|avahi-.*|"
+    r"nss3|nssutil3|nspr4|plc4|plds4|smime3|ssl3|softokn3|freebl3|freeblpriv3|"
+    r"gnutls|nettle|hogweed|gmp|idn2|unistring|tasn1|p11-kit|gcrypt|gpg-error|"
+    r"krb5|krb5support|k5crypto|gssapi_krb5|com_err|keyutils|cap|bsd|md|lz4|"
+    # the C++ runtime too: the system's graphics driver needs the system's (newer) libstdc++
+    r"stdc\+\+|gcc_s)\.so"
+)
+
 USED_MODULES = ["QtCore", "QtGui", "QtWidgets", "QtNetwork", "QtWebEngineCore", "QtWebEngineWidgets",
                 "QtWebChannel", "QtPrintSupport", "QtOpenGL"]
 
@@ -42,6 +60,10 @@ def main(dist: Path) -> None:
     # unused PySide6 bindings
     for f in (dist / "_internal" / "PySide6").glob("Qt*.abi3.so"):
         if f.name.split(".")[0] not in USED_MODULES:
+            f.unlink()
+    internal = dist / "_internal"
+    for f in internal.iterdir():
+        if SYSTEM_LIBS.match(f.name) or (f.is_symlink() and not f.exists()):
             f.unlink()
     shutil.rmtree(qt / "qml", ignore_errors=True)
     for f in (qt / "translations").glob("*.qm"):

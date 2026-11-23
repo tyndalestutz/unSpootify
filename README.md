@@ -22,6 +22,7 @@ Download the newest file from **[Releases](../../releases)** (beta builds are ma
 2. Allow it to run: right-click the file → **Properties** → **Permissions** → tick **Allow executing file as program**.
    (Or in a terminal: `chmod +x unSpootify-*.AppImage`.)
 3. Double-click it. Nothing else to install. You can move the file anywhere, e.g. into a `~/Applications` folder.
+   Don't run it with `sudo`; it runs as you, like any app.
 
 If double-clicking does nothing, run it from a terminal (`./unSpootify-*.AppImage`) to see why. On some
 minimal systems it needs FUSE (`sudo apt install fuse3`), or you can run it with

@@ -9,9 +9,10 @@ docker run --rm -v "$APPIMAGE:/app/unSpootify.AppImage:ro" -v "$SHARE:/share:ro"
   -v "$ROOT/tests/fixtures:/fixtures:ro" "$IMAGE" bash -euc '
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq >/dev/null
-  # what a typical desktop already has: X, fonts, GL, a couple of common libs
-  apt-get install -y -qq xvfb xauth fonts-dejavu-core libgl1 libegl1 libxkbcommon-x11-0 libxcb-cursor0 \
-    libnss3 libasound2t64 2>/dev/null >/dev/null || apt-get install -y -qq xvfb xauth fonts-dejavu-core libgl1 libegl1 libxkbcommon-x11-0 libxcb-cursor0 libnss3 libasound2 >/dev/null
+  # a typical desktop baseline: X/GL, GTK (pulls GLib, fonts, cairo, pango), NSS, sound, D-Bus
+  PKGS="xvfb xauth fonts-dejavu-core libgl1 libegl1 libgbm1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 \
+    libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-render-util0 libxcb-image0 libnss3 libdbus-1-3"
+  apt-get install -y -qq $PKGS libgtk-3-0t64 libasound2t64 >/dev/null 2>&1 || apt-get install -y -qq $PKGS libgtk-3-0 libasound2 >/dev/null
   useradd -m friend && cd /home/friend
   su friend -c "
     export APPIMAGE_EXTRACT_AND_RUN=1 HOME=/home/friend
