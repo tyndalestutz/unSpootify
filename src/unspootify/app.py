@@ -53,18 +53,91 @@ class Api:
     # pywebview exposes public attributes, so keep internals underscored
     def _attach(self, window: webview.Window) -> None:
         self._window = window
+        self._queue: list[dict[str, Any]] = []
+        self._queue_lock = threading.Lock()
+        threading.Thread(target=self._flush_loop, name="ui-events", daemon=True).start()
+        window.events.loaded += self._guard_renderer
         if self._mode == "real":
             from unspootify.backend import Backend
 
             self._backend = Backend(self._emit, mock_dir=self._offline_dir)
+            self._update_checked = False
+
+            def after_load() -> None:  # once, a few seconds after the page is up
+                if not self._update_checked:
+                    self._update_checked = True
+                    threading.Timer(3, self._startup_update_check).start()
+
+            window.events.loaded += after_load
 
     def _emit(self, ev: dict[str, Any]) -> None:
-        if self._window is None:
-            return
-        payload = json.dumps(ev, ensure_ascii=False)
+        """Queue an event for the page. Events go out in batches (every 0.15 s) and repeated song
+        updates collapse to the latest, so a downloader burst can't flood the window."""
+        with self._queue_lock:
+            if ev.get("type") == "track":
+                key = (ev.get("playlist_id"), ev.get("index"))
+                self._queue = [e for e in self._queue
+                               if not (e.get("type") == "track" and (e.get("playlist_id"), e.get("index")) == key)]
+            self._queue.append(ev)
+            if len(self._queue) > 5000:  # pathological bursts: keep the newest
+                self._queue = self._queue[-5000:]
+
+    def _flush_loop(self) -> None:
+        while True:
+            time.sleep(0.15)
+            with self._queue_lock:
+                batch, self._queue = self._queue, []
+            if not batch or self._window is None:
+                continue
+            payload = json.dumps(batch, ensure_ascii=False)
+            try:
+                self._window.evaluate_js(
+                    f"for (const e of {payload}) window.dispatchEvent(new CustomEvent('unspootify', {{detail: e}}))")
+            except Exception:  # window closing / reloading
+                pass
+
+    def _startup_update_check(self) -> None:
+        from unspootify import updater
+
+        if self._backend and self._backend.settings.settings.auto_update and updater.wanted_asset():
+            result = updater.check()
+            if result.get("available"):
+                self._emit(event("update_available", **result))
+
+    @_guard
+    def check_update(self) -> dict:
+        from unspootify import updater
+
+        return updater.check()
+
+    @_guard
+    def install_update(self) -> dict:
+        """Download, verify and swap in the new version, then restart. Not while downloading music."""
+        from unspootify import updater
+
+        if self._backend and self._backend.runner and self._backend.runner.running:
+            raise AppError("ALREADY_RUNNING", "finish or stop the download first")
+        info = updater.check()
+        if not info.get("installable"):
+            raise AppError("UPDATE_FAILED", info.get("error") or "no update for this computer")
+        if sys.platform == "darwin":
+            updater.install_macos(info["asset"], os.getpid())
+        else:
+            target = updater.install_linux(info["asset"])
+            threading.Timer(0.5, updater.relaunch_linux, (target,)).start()
+        threading.Timer(0.8, self._window.destroy).start()  # quit; the new version opens
+        return {"ok": True, "version": info["latest"]}
+
+    def _guard_renderer(self) -> None:
+        """Linux/Qt: if the page's renderer process dies, reload it instead of showing a blank window
+        (the page re-reads everything, including a run still in progress, from the backend)."""
         try:
-            self._window.evaluate_js(f"window.dispatchEvent(new CustomEvent('unspootify', {{detail: {payload}}}))")
-        except Exception:  # window closing
+            view = getattr(self._window.native, "view", None)
+            page = view.page() if view is not None else None
+            if page is not None and not getattr(self, "_renderer_guarded", False):
+                page.renderProcessTerminated.connect(lambda *_: view.reload())
+                self._renderer_guarded = True
+        except Exception:
             pass
 
     def get_mode(self) -> str:

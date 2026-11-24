@@ -302,6 +302,8 @@
       const other = (forcedFormat || this.settings.options.format) === "mp3" ? "flac" : "mp3";
       return this.start(id, { only: failed.map((t) => t.index), format: other, force: true, followup: true });
     }
+    async checkUpdate() { await wait(600); return { available: false, current: "fake", latest: "fake" }; }
+    async installUpdate() { return { ok: true }; }
     async testPort(port) {
       this.log("Connection test", ` · checking Soulseek and port ${port}`);
       await wait(1400);

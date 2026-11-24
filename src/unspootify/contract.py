@@ -28,6 +28,7 @@ ERRORS: dict[str, tuple[str, str | None]] = {
     "LOGIN_TIMEOUT": ("Couldn't get connected to Soulseek. Check your internet or test your connection.",
                       "test_connection"),
     "UNEXPECTED": ("Something went wrong. Details has more.", None),
+    "UPDATE_FAILED": ("The update couldn't be installed. You can download it from the Releases page instead.", None),
     "DISK_FULL": ("The disk is full. Free up some space, then press Download to continue.", "retry"),
 }
 

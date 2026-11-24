@@ -122,6 +122,7 @@ function applySettings(s) {
   $("#optHarder").checked = !!s.options.try_harder;
   fillAdvanced(s.advanced);
   setLook(s.look, false);
+  $("#autoUpdate").checked = s.auto_update !== false;
   updateFmtHint();
 }
 
@@ -247,6 +248,9 @@ function onEvent(ev) {
       return;
     case "port_result":
       showPortResult(ev);
+      return;
+    case "update_available":
+      showUpdate(ev);
       return;
     case "playlist_added":
       addPlaylist(ev.playlist);
@@ -837,6 +841,10 @@ function bindControls() {
   });
   $("#followNo").addEventListener("click", () => { const pid = $("#followupSheet").dataset.playlist; closeSheets(); UI.backend.forceFollowup(pid, false); });
 
+  $("#checkUpdateBtn").addEventListener("click", checkUpdate);
+  $("#installUpdateBtn").addEventListener("click", installUpdate);
+  $("#updYes").addEventListener("click", installUpdate);
+  $("#autoUpdate").addEventListener("change", () => saveSettings({ auto_update: $("#autoUpdate").checked }));
   $("#openAdvanced").addEventListener("click", () => openSheet("#advancedSheet"));
   $("#openSettings").addEventListener("click", () => openSheet("#settingsSheet"));
   document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeSheets));
@@ -886,6 +894,36 @@ async function toBase64(file) {
   return btoa(bin);
 }
 
+/* ================= updates ================= */
+
+function showUpdate(info) {
+  UI.update = info;
+  const ok = !!info.installable;
+  $("#updText").textContent = ok
+    ? `unSpootify ${info.latest} is out (you have ${info.current}). It downloads, restarts, and keeps your playlists and settings.`
+    : `unSpootify ${info.latest} is out (you have ${info.current}). Download it from the Releases page.`;
+  $("#updYes").hidden = !ok;
+  $("#updateStatus").textContent = `unSpootify ${info.current} · ${info.latest} available`;
+  $("#installUpdateBtn").hidden = !ok;
+  if (!UI.run) openSheet("#updateSheet");
+}
+
+async function installUpdate() {
+  if (UI.run) return flashLcd("Finish the download first", "Then update.");
+  closeSheets();
+  flashLcd("Updating unSpootify…", "It will reopen by itself.", 60000);
+  const r = await call(UI.backend.installUpdate());
+  if (isError(r)) UI.flash = null;
+}
+
+async function checkUpdate() {
+  $("#updateStatus").textContent = "Checking…";
+  const r = await UI.backend.checkUpdate();
+  if (isError(r) || r.error) return ($("#updateStatus").textContent = "Couldn't check right now. Try again later.");
+  if (r.available) return showUpdate(r);
+  $("#updateStatus").textContent = `unSpootify ${r.current} · up to date`;
+}
+
 /* ================= start ================= */
 
 async function startApp(backend) {
@@ -895,6 +933,7 @@ async function startApp(backend) {
   setPortResult(PORT_IDLE);
   const state = await backend.getState();
   UI.offline = !!state.offline_test;
+  $("#appVersion").textContent = state.app_version || "";
   UI.playlists = state.playlists || [];
   UI.run = state.run ? { playlist_id: state.run.playlist_id } : null;
   applySettings(state.settings);

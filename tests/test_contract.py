@@ -7,7 +7,7 @@ from unspootify.contract import ERRORS, STATES
 from conftest import ROOT
 
 DOC = (ROOT / "docs" / "ui-contract.md").read_text()
-WINDOW_ONLY = {"choose_folder", "import_csv", "import_csv_data", "open_url"}  # window layer (app.py)
+WINDOW_ONLY = {"choose_folder", "import_csv", "import_csv_data", "open_url", "check_update", "install_update"}  # window layer (app.py)
 
 
 def test_every_command_exists():
@@ -36,7 +36,7 @@ def test_window_commands_exist():
 def test_js_backends_implement_every_command():
     ui = ROOT / "src" / "unspootify" / "ui" / "app"
     js = {"getState", "saveSettings", "chooseFolder", "importCsv", "importCsvData", "openUrl", "getTracks", "start",
-          "stop", "retry", "forceFollowup", "resetPlaylist", "archivePlaylist", "removePlaylist", "testPort"}
+          "stop", "retry", "forceFollowup", "resetPlaylist", "archivePlaylist", "removePlaylist", "testPort", "checkUpdate", "installUpdate"}
     for f in ("real-backend.js", "fake-backend.js"):
         src = (ui / f).read_text()
         missing = [m for m in js if not re.search(rf"\b(async )?{m}\(", src)]

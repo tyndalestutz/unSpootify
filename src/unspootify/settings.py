@@ -44,6 +44,7 @@ class Settings:
     library_path: str = field(default_factory=lambda: str(default_library()))
     look: str = "phosphor"
     playlist_sort: str = "added"
+    auto_update: bool = True
     version: int = 3
     options: Options = field(default_factory=Options)
     advanced: Advanced = field(default_factory=Advanced)

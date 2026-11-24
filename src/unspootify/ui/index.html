@@ -193,6 +193,15 @@
         </div>
         <p class="hint">Make your own look: coming later.</p>
       </fieldset>
+      <fieldset class="group">
+        <legend>Updates</legend>
+        <p class="hint" id="updateStatus">unSpootify <span id="appVersion"></span></p>
+        <div class="port-test">
+          <button class="btn small" id="checkUpdateBtn">Check for updates</button>
+          <button class="btn small" id="installUpdateBtn" hidden>Update now</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="autoUpdate" checked><span class="box"></span><span>Check when unSpootify opens</span></label>
+      </fieldset>
     </div>
     <div class="sheet-actions">
       <button class="btn default" data-close>Done</button>
@@ -237,6 +246,18 @@
     <div class="sheet-actions">
       <button class="btn" id="followNo">Leave them</button>
       <button class="btn default" id="followYes">Get them</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update available -->
+<div class="sheet-backdrop" id="updateSheet" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="updTitle">
+    <h2 class="sheet-title" id="updTitle">Update available</h2>
+    <div class="sheet-body"><p id="updText"></p></div>
+    <div class="sheet-actions">
+      <button class="btn" data-close>Later</button>
+      <button class="btn default" id="updYes">Update now</button>
     </div>
   </div>
 </div>

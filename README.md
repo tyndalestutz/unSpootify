@@ -60,6 +60,7 @@ minimal systems it needs FUSE (`sudo apt install fuse3`), or you can run it with
   press **Test connection**: school, work and some public Wi-Fi block Soulseek.
 - **Playlists:** right-click one (or click **⋯**) to download, archive or remove it. Removing never deletes your music.
 - **Looks:** **Settings** (top right) switches between *Phosphor* and *Jukebox*.
+- **Updates:** when a new version is out, unSpootify offers it when it opens: click **Update now** and it restarts on the new version (Settings → Updates to check by hand).
 
 ## Feedback
 

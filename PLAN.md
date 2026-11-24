@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** Phase 5 (2026-11-23): Apple Silicon + Intel dmgs build and pass the CI checks (from the dmg, quarantined: signature, offline download, window). Next: v1.0.1-rc.1 for the friend test.
+**Status:** v1.1.0 (2026-11-24): auto-updater + album-mode/robustness fixes; friends start on v1.1.0 so later fixes reach them on launch. Mac still awaiting a human test.
 
 ## Goal
 
@@ -166,7 +166,8 @@ First launch (unsigned app)
 
 Friend test (CHECKPOINT)
 - [x] Owner's full-album run (Linux) found album-mode bugs, fixed for every platform: run froze when the disk filled (now a clear DISK_FULL error + free-space check), progress jumped 0→99 (path matching), format showed JPG/LRC (audio only), names kept sharers' patterns (now from the music's tags), albums marked done with no files (now verified), junk side files (dropped; one cover.jpg; lyrics named like their song), and each run's log is saved (runs/<id>/last-run.log)
-- [ ] Wrong-release heuristic (e.g. a remix EP picked for the album): Backlog; folder picker later
+- [x] Runaway album (a 209-song 'Singles Week' folder picked for a single) crashed the window: albums capped at 40 tracks + prefer album-named folders; events to the page are batched/coalesced; Linux reloads the page if its renderer dies
+- [ ] Wrong-release heuristic for remix EPs etc.: Backlog; folder picker later
 - [ ] Owner or friend installs from the release on a real Mac and does a real run; feedback as GitHub issues; fixes in v1.0.x
 - [ ] Decide on an Apple Developer ID ($99/yr) only if the first-launch steps prove too confusing
 
@@ -183,7 +184,7 @@ Friend test (CHECKPOINT)
 - Upgrade sockseek to 3.1.x (`--desperate` becomes `--fallback-level`; length matching no longer required by default)
 - Auto-detect new Exportify CSVs in `~/Downloads`
 - Exportify inside the app window instead of the browser
-- v1.1: built-in update check + install (owner wants it before tagging ships). Sketch: check GitHub's latest release on start (daily) and in Settings; verify a SHA256SUMS asset; Linux swaps the AppImage file in place and relaunches; Mac downloads the dmg, replaces the app via a small helper after quit (no quarantine flag, so no second Open Anyway)
+- [x] v1.1: built-in update check + install (done in v1.1.0). Sketch: check GitHub's latest release on start (daily) and in Settings; verify a SHA256SUMS asset; Linux swaps the AppImage file in place and relaunches; Mac downloads the dmg, replaces the app via a small helper after quit (no quarantine flag, so no second Open Anyway)
 - Make your own look: user drops a CSS file in a Looks folder, Settings lists it; app offers a copy-paste AI prompt (drafted in `ui/themes/THEMING.md`)
 - Compact settings panel growing out of the gear sheet (look, defaults, account)
 - (moved into v1) Soundiiz covers other services' playlists. Verify Soundiiz's real CSV columns and whether its file export needs a paid plan.
