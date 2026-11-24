@@ -90,6 +90,7 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `ALREADY_RUNNING` | A download is already running. | — |
 | `LOGIN_TIMEOUT` | Couldn't get connected to Soulseek. Check your internet or test your connection. | Test connection |
 | `UNEXPECTED` | Something went wrong. Details has more. | — |
+| `DISK_FULL` | The disk is full. Free up some space, then press Download to continue. | Retry |
 
 `LOGIN_FAILED`, `PORT_BLOCKED` and `NO_NETWORK` are detected from sockseek's text output, only before
 the first search starts and only when the run dies before its summary line. `LOGIN_TIMEOUT` fires when

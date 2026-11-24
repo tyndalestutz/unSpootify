@@ -100,7 +100,15 @@ def test_album_and_artist_modes(setup, grab):
     backend.start(pid)
     rec.wait(backend)
     assert states(backend, pid) == ["done"] * 7 + ["failed"]
-    assert (lib / "The Killers" / "Hot Fuss [MP3]" / "02. Album Track 1.mp3").exists()
+    album = lib / "The Killers" / "Hot Fuss [MP3]"
+    assert (album / "02. Album Track 1.mp3").exists()  # named from the file's tags
+    assert (album / "cover.jpg").exists() and not list(album.glob("*.nfo"))  # cover kept, junk dropped
+    tracks = backend.get_tracks(pid)
+    assert all(t["format"] in ("MP3", "FLAC") for t in tracks if t["state"] == "done"), [t["format"] for t in tracks]
+    # progress moved through the middle, not just 0 -> 100
+    mids = {e["pct"] for e in rec.of("track") if 0 < e["pct"] < 100}
+    assert mids, "album progress never moved between 0 and 100"
+    assert (Path(backend.root) / "runs" / pid / "last-run.log").stat().st_size > 0
 
 
 def test_stop_returns_unfinished_rows_to_waiting(tmp_path, mock_share):
@@ -234,3 +242,35 @@ def test_default_library_created_on_fresh_home(tmp_path, mock_share, monkeypatch
     rec.wait(backend)
     assert (tmp_path / "freshhome" / "Music" / "unSpootify" / "The Killers").exists()
     backend.close()
+
+
+def test_disk_full_mid_run_is_reported_not_stuck(setup, monkeypatch):
+    import sqlite3
+
+    backend, rec, pid, _ = setup
+    real = backend.store.update_track
+    calls = {"n": 0}
+
+    def flaky(*a, **k):
+        calls["n"] += 1
+        if calls["n"] > 12:  # after the run has started (start re-queues 8 rows)
+            raise sqlite3.OperationalError("database or disk is full")
+        return real(*a, **k)
+
+    monkeypatch.setattr(backend.store, "update_track", flaky)
+    backend.start(pid)
+    fin = rec.wait(backend)
+    assert fin["stopped"] is True
+    assert [e["code"] for e in rec.of("error")] == ["DISK_FULL"]
+
+
+def test_low_disk_space_blocks_start(setup, monkeypatch):
+    import shutil as sh
+    from collections import namedtuple
+
+    backend, rec, pid, _ = setup
+    usage = namedtuple("usage", "total used free")
+    monkeypatch.setattr(sh, "disk_usage", lambda p: usage(10, 10, 100 * 2**20))
+    with pytest.raises(AppError) as e:
+        backend.start(pid)
+    assert e.value.code == "DISK_FULL"

@@ -22,6 +22,7 @@ from unspootify.settings import SettingsStore
 from unspootify.store import Store
 
 EXPORTIFY_URL = "https://exportify.net/"
+MIN_FREE_BYTES = 1 * 2**30  # 1 GB
 
 
 class Backend:
@@ -85,6 +86,10 @@ class Backend:
                 raise AppError("FOLDER_NOT_WRITABLE", str(library)) from exc
         if not os.access(library, os.W_OK):
             raise AppError("FOLDER_NOT_WRITABLE", str(library))
+        # FLAC albums are big; stop before the disk fills up mid-run (and the app's own data too)
+        for where in (library, self.root):
+            if shutil.disk_usage(where).free < MIN_FREE_BYTES:
+                raise AppError("DISK_FULL", f"{where}: {shutil.disk_usage(where).free // 2**20} MB free")
         if not self.sockseek.exists():
             raise AppError("SOCKSEEK_MISSING", str(self.sockseek))
 

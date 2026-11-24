@@ -56,6 +56,7 @@ def main() -> None:
     ap.add_argument("--flac", default="")
     ap.add_argument("--flac-only", default="")
     ap.add_argument("--album-extras", type=int, default=0)
+    ap.add_argument("--side-files", action="store_true", help="add folder.jpg + album.nfo to each album folder")
     a = ap.parse_args()
 
     missing, flac, flac_only = rows(a.missing), rows(a.flac), rows(a.flac_only)
@@ -80,6 +81,10 @@ def main() -> None:
                          dict(title=f"Album Track {k + 1}", artist=artist, album=album, track=count + k + 1, seconds=180)))
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(lambda j: make_audio(j[0], **j[1]), jobs))
+    if a.side_files:
+        for folder in {p.parent for p, _ in jobs}:
+            (folder / "folder.jpg").write_bytes(b"\xff\xd8\xff\xe0fake-jpeg")
+            (folder / "album.nfo").write_text("ripped by someone")
     print(f"Mock library written to {a.out}")
 
 

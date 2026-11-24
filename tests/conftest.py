@@ -24,6 +24,6 @@ def mock_share(tmp_path_factory):
         pytest.skip("ffmpeg not installed")
     out = tmp_path_factory.mktemp("share")
     subprocess.run([sys.executable, str(ROOT / "scripts" / "make_mock_library.py"), str(ROAD_TRIP), str(out),
-                    "--missing", "8", "--flac", "4", "--flac-only", "6", "--album-extras", "2"],
+                    "--missing", "8", "--flac", "4", "--flac-only", "6", "--album-extras", "2", "--side-files"],
                    check=True, capture_output=True)
     return out

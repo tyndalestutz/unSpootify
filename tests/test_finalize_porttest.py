@@ -50,3 +50,41 @@ def test_porttest_parse_and_flow():
     r = porttest.test_port(50123, fetch=lambda url: (_ for _ in ()).throw(OSError()), connect=boom)
     assert r == {"open": None, "port": 50123, "server": False, "error": "NO_NETWORK"}
     assert porttest.test_port(80)["error"] == "BAD_PORT"
+
+
+def test_parse_filename_patterns():
+    pf = finalize.parse_filename
+    assert pf("Sink Into Me - 01 - Heartbeat", "Babeheaven", "Sink Into Me") == (1, "Heartbeat")
+    assert pf("Σtella_Up and Away_08_The Truth Is", "Σtella", "Up and Away") == (8, "The Truth Is")
+    assert pf("1-01 Hold Me (LUCASV remix)", "spill tab", "ANGIE") == (1, "Hold Me (LUCASV remix)")
+    assert pf("1901", "Phoenix", "Wolfgang") == (None, "1901")
+
+
+def test_finalize_album_uses_tags_and_handles_side_files(tmp_path, capsys):
+    import shutil as sh
+    import subprocess
+    import pytest as _pt
+
+    if not sh.which("ffmpeg"):
+        _pt.skip("ffmpeg")
+    stage, lib = tmp_path / "stage", tmp_path / "lib"
+    folder = stage / "Band" / "LP" / "Band - LP (2004) [FLAC]"
+    folder.mkdir(parents=True)
+    song = folder / "weird_name_xyz.flac"
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "sine=duration=1", "-c:a", "flac",
+                    "-metadata", "title=Real Title", "-metadata", "track=7/12", str(song)], check=True)
+    (folder / "front.jpg").write_bytes(b"img")
+    (folder / "rip.nfo").write_text("x")
+    (folder / "07 Real Title.lrc").write_text("[00:01]la")
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"mode": "albums", "library": str(lib), "stage": str(stage), "jobs": [
+        {"snum": 1, "artist": "Band", "album": "LP", "title": "", "indexes": [0], "number": None}]}))
+    for name in ("weird_name_xyz.flac", "front.jpg", "rip.nfo", "07 Real Title.lrc"):
+        finalize.main([str(manifest), "1", str(folder / name)])
+    album = lib / "Band" / "LP [FLAC]"
+    assert [p.name for p in album.iterdir()] == ["07. Real Title.flac"]  # named from tags; side files left to sockseek
+    assert (folder / "front.jpg").exists()  # untouched ("ignored")
+    for name in ("front.jpg", "rip.nfo", "07 Real Title.lrc"):  # sockseek moves these in itself
+        sh.move(str(folder / name), str(album / name))
+    finalize.tidy_album_folder(album)
+    assert sorted(p.name for p in album.iterdir()) == ["07. Real Title.flac", "07. Real Title.lrc", "cover.jpg"]

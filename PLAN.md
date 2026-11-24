@@ -165,6 +165,8 @@ First launch (unsigned app)
       "sockseek": click Allow
 
 Friend test (CHECKPOINT)
+- [x] Owner's full-album run (Linux) found album-mode bugs, fixed for every platform: run froze when the disk filled (now a clear DISK_FULL error + free-space check), progress jumped 0→99 (path matching), format showed JPG/LRC (audio only), names kept sharers' patterns (now from the music's tags), albums marked done with no files (now verified), junk side files (dropped; one cover.jpg; lyrics named like their song), and each run's log is saved (runs/<id>/last-run.log)
+- [ ] Wrong-release heuristic (e.g. a remix EP picked for the album): Backlog; folder picker later
 - [ ] Owner or friend installs from the release on a real Mac and does a real run; feedback as GitHub issues; fixes in v1.0.x
 - [ ] Decide on an Apple Developer ID ($99/yr) only if the first-launch steps prove too confusing
 

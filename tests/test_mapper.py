@@ -116,3 +116,15 @@ def test_crash_after_everything_settled(tmp_path):
     assert m.all_settled() and not m.completed
     m.finish(stopped=False)
     assert m.states[0].state == "done"
+
+
+def test_album_progress_with_shortened_paths_and_audio_only_format(tmp_path):
+    jobs = [Job(1, "Nick Leng", "Spirals", "", [0])]
+    m = EventMapper("albums", jobs, tmp_path)
+    m.feed("[003] AlbumJob: searching: Nick Leng - Spirals")
+    for f in ("01 A.mp3", "02 B.mp3", "cover.jpg"):
+        m.feed(f"[003] Album File: downloading: Nick Leng - Spirals: kula35\\..\\Nick Leng\\Nick Leng - Spirals\\{f}")
+    assert m.states[0].format == "MP3"
+    m.feed('{"type":"track_state","data":{"artist":"Nick Leng","title":"A","terminalOutcome":"Succeeded",'
+           '"filename":"Music\\\\Nick Leng\\\\Nick Leng - Spirals\\\\01 A.mp3"}}')
+    assert m.states[0].pct == 50 and m.states[0].format == "MP3"
