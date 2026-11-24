@@ -20,7 +20,10 @@ SOCKSEEK = ROOT / "vendor" / "sockseek" / KEY / "sockseek"
 if not SOCKSEEK.exists():
     raise SystemExit(f"missing {SOCKSEEK}: run scripts/fetch_sockseek.sh {KEY}")
 
-hidden = ["unspootify.cli", "unspootify.finalize", "unspootify.backend", "unspootify.porttest"]
+from PyInstaller.utils.hooks import collect_submodules
+
+hidden = ["unspootify.cli", "unspootify.finalize", "unspootify.backend", "unspootify.porttest",
+          *collect_submodules("mutagen")]  # tag reading for file names (imported lazily)
 if sys.platform.startswith("linux"):
     hidden += ["webview.platforms.qt", "qtpy", "PySide6.QtWebEngineWidgets", "PySide6.QtWebEngineCore",
                "PySide6.QtWebChannel", "PySide6.QtNetwork"]

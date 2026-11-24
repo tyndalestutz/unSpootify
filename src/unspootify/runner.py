@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import atexit
+import errno
 import json
 import os
 import re
@@ -19,6 +20,9 @@ from typing import Any
 from unspootify.contract import (
     DONE, DOWNLOADING, FAILED, QUEUED, SEARCHING, SKIPPED, TERMINAL, WAITING, AppError, event,
 )
+from glob import escape as glob_escape
+
+from unspootify.finalize import tidy_album_folder
 from unspootify.naming import clean, final_path
 from unspootify.plan import Job, RunPlan
 from unspootify.store import Store
@@ -38,6 +42,21 @@ _FATAL = [
     ("NO_NETWORK", re.compile(r"(?i)(?:could not|failed to|unable to) connect|name or service not known|"
                                 r"network is unreachable|no such host|connection refused")),
 ]
+
+
+AUDIO_EXTS = {"mp3", "flac", "m4a", "aac", "ogg", "oga", "opus", "wav", "aif", "aiff", "alac", "wma", "ape", "wv", "dsf"}
+
+
+def _folder_key(remote: str) -> str:
+    """Last folder name of a Soulseek path. sockseek's text lines shorten paths with '..' while its
+    JSON events give them in full, so only the last folder is comparable."""
+    parts = [p for p in remote.replace("/", "\\").split("\\") if p and p != ".."]
+    return parts[-2].lower() if len(parts) >= 2 else ""
+
+
+def _audio_format(name_or_ext: str | None) -> str | None:
+    ext = (name_or_ext or "").rsplit(".", 1)[-1].lower()
+    return ext.upper() if ext in AUDIO_EXTS else None
 
 
 def _norm(s: str) -> str:
@@ -137,7 +156,7 @@ class EventMapper:
             return str(final_path(self.library, artist=j.artist, album=j.album, title=j.title,
                                   number=j.number, ext=ext))
         if self.mode != "songs":
-            return str(self.library / clean(j.artist, "Unknown Artist"))
+            return str(self.library / clean(j.artist, "Unknown Artist"))  # refined by Runner._verify
         return download_path
 
     def _log(self, line: str) -> LogLine | None:
@@ -217,12 +236,14 @@ class EventMapper:
             if self.mode == "songs":
                 i = self._song(d.get("artist", ""), d.get("title", ""))
             else:
-                i = self.folder.get(str(d.get("filename", "")).rsplit("\\", 1)[0])
+                i = self.folder.get(_folder_key(str(d.get("filename", ""))))
             if i is not None:
                 self.pending_sizes.append((int(d.get("size") or 0), i))
-            ext = d.get("extension")
-            return self._set(i, state=DOWNLOADING, user=d.get("username"),
-                             format=ext.upper() if ext else None)
+            fmt = _audio_format(d.get("extension"))
+            fields = {"state": DOWNLOADING, "user": d.get("username")}
+            if fmt:
+                fields["format"] = fmt
+            return self._set(i, **fields)
         if kind == "download_progress":
             jid = str(d.get("jobId", ""))
             i = self.progress_ids.get(jid)
@@ -242,20 +263,20 @@ class EventMapper:
         outcome, skip = d.get("terminalOutcome", "None"), d.get("skipReason", "None")
         phase = str(d.get("activityPhase", "None"))
         if self.mode != "songs":
-            if outcome == "Succeeded":
-                folder = str(d.get("filename", "")).rsplit("\\", 1)[0]
-                i = self.folder.get(folder)
+            if outcome == "Succeeded" and _audio_format(str(d.get("filename", ""))):
+                i = self.folder.get(_folder_key(str(d.get("filename", ""))))
                 if i is None:
                     i = self.by_artist.get(_norm(d.get("artist", ""))) if self.mode == "artist" else None
                 if i is not None:
                     st = self.states[i]
                     st.files_done += 1
                     pct = min(99, int(100 * st.files_done / max(st.files_started, st.files_done, 1)))
-                    return self._set(i, state=DOWNLOADING, pct=pct)
+                    return self._set(i, state=DOWNLOADING, pct=pct, format=_audio_format(str(d.get("filename", ""))))
             return []
         i = self._song(d.get("artist", ""), d.get("title", ""))
         if outcome == "Succeeded":
             ext = d.get("extension") or Path(str(d.get("downloadPath") or "")).suffix.lstrip(".") or None
+            ext = ext if _audio_format(ext) else None
             return self._set(i, state=DONE, pct=100, format=ext.upper() if ext else self.states[i].format if i is not None else None,
                              path=self._done_path(i, ext, d.get("downloadPath")) if i is not None else None, reason=None)
         if outcome == "Failed":
@@ -304,12 +325,14 @@ class EventMapper:
             parts = remote.split("\\")
             if i is None or len(parts) < 2:
                 return []
-            self.folder["\\".join(parts[1:-1])] = i
+            self.folder[_folder_key(remote)] = i
+            fmt = _audio_format(parts[-1])
+            if not fmt:  # cover art, lyrics, .nfo: not a song
+                return self._set(i, state=DOWNLOADING, user=parts[0])
             st = self.states[i]
             st.files_started += 1
-            ext = Path(parts[-1]).suffix.lstrip(".")
             pct = min(99, int(100 * st.files_done / max(st.files_started, 1)))
-            return self._set(i, state=DOWNLOADING, user=parts[0], format=ext.upper() or None, pct=pct)
+            return self._set(i, state=DOWNLOADING, user=parts[0], format=fmt, pct=pct)
         return []
 
     def all_settled(self) -> bool:
@@ -385,6 +408,8 @@ class Runner:
     proc: subprocess.Popen | None = None
     stopped: bool = False
     timed_out: bool = False
+    stopped_by_error: bool = False
+    _tidy_later: set = field(default_factory=set)
     login_timeout: float = 120.0  # seconds without any search before we call it a connection problem
     _started_at: float = 0.0
     mapper: EventMapper = field(init=False)
@@ -464,21 +489,82 @@ class Runner:
             fields = {k: v for k, v in item.fields.items() if k in ("state", "pct", "format", "user", "path", "reason")}
             if not fields:
                 continue
+            if fields.get("state") == DONE:
+                fields.update(self._verify(item.job, fields.get("path")))
             for idx in self.plan.jobs[item.job].indexes:
                 self.store.update_track(self.playlist_id, idx, **fields)
                 self.emit(event("track", playlist_id=self.playlist_id, **self.store.track(self.playlist_id, idx).to_dict()))
 
+    def _verify(self, job: int, path: str | None) -> dict[str, Any]:
+        """Only call it done if the music is really in the library (e.g. a full disk can stop the
+        move). Returns field overrides: the real album folder, or failed."""
+        j, lib = self.plan.jobs[job], self.plan.library
+        if self.plan.mode == "songs":
+            p = Path(path) if path else None
+            if p and (p.exists() or any(p.parent.glob(f"{glob_escape(p.stem)}*{p.suffix}"))):
+                return {}
+            return {"state": FAILED, "reason": "error", "pct": 0}
+        artist_dir = lib / clean(j.artist, "Unknown Artist")
+        pattern = f"{glob_escape(clean(j.album, 'Unknown Album'))} [[]*]" if self.plan.mode == "albums" else "*"
+        for folder in sorted(artist_dir.glob(pattern)) if artist_dir.is_dir() else []:
+            if folder.is_dir() and any(f.suffix.lower().lstrip(".") in AUDIO_EXTS for f in folder.iterdir()):
+                self._tidy_later.add(folder)
+                return {"path": str(folder if self.plan.mode == "albums" else artist_dir)}
+        return {"state": FAILED, "reason": "error", "pct": 0}
+
+    def _open_log(self) -> Any:
+        """Each run's raw downloader output (password scrubbed) is kept for troubleshooting."""
+        try:
+            return (self.plan.input_path.parent / "last-run.log").open("w", encoding="utf-8")
+        except OSError:
+            return None
+
     def _pump(self) -> None:
+        try:
+            self._pump_inner()
+        except Exception as exc:  # e.g. disk full: never leave the window stuck on "downloading"
+            self.stopped_by_error = True
+            self._terminate()
+            full = isinstance(exc, OSError) and getattr(exc, "errno", None) == errno.ENOSPC or "full" in str(exc).lower()
+            self.emit(AppError("DISK_FULL" if full else "UNEXPECTED", f"{type(exc).__name__}: {exc}").to_event())
+            try:
+                self._apply(self.mapper.finish(stopped=True))
+                self.store.set_finished(self.playlist_id, False)
+                counts = self.store.playlist(self.playlist_id)
+            except Exception:
+                counts = None
+            self.emit(event("status", phase="idle"))
+            self.emit(event("run_finished", playlist_id=self.playlist_id, stopped=True, counts=counts,
+                            missing_format=None, force_format=None))
+            _LIVE.discard(self.proc)
+            self._cleanup()
+            if self.on_exit:
+                self.on_exit(self)
+
+    def _pump_inner(self) -> None:
         assert self.proc and self.proc.stdout
         was_active = False
+        log = self._open_log()
         for line in self.proc.stdout:
+            if log:
+                try:
+                    log.write(self.mapper.scrub(line))
+                except OSError:
+                    log = None
             self._apply(self.mapper.feed(line))
             if self.mapper.active and not was_active:
                 was_active = True
                 self.emit(event("status", phase="logged_in"))
+        if log:
+            log.close()
         self.proc.wait()
         _LIVE.discard(self.proc)
         self._cleanup()
+        for folder in self._tidy_later:  # sockseek has moved cover art/lyrics in by now
+            try:
+                tidy_album_folder(folder)
+            except OSError:
+                pass
         crashed_after_work = not self.mapper.completed and self.mapper.all_settled() and not self.timed_out
         self._apply(self.mapper.finish(self.stopped))
         error: AppError | None = None
