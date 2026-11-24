@@ -30,5 +30,7 @@ class RealBackend {
   archivePlaylist(id, archived) { return this.call("archive_playlist", id, archived); }
   removePlaylist(id) { return this.call("remove_playlist", id); }
   testPort(port) { return this.call("test_port", port); }
+  checkUpdate() { return this.call("check_update"); }
+  installUpdate() { return this.call("install_update"); }
 }
 window.RealBackend = RealBackend;

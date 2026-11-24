@@ -43,16 +43,20 @@ jobs:
         run: |
           APP=$(ls dist/*.AppImage)
           APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a "$APP" --smoke-test
+      - name: Checksum (the in-app updater verifies downloads against it)
+        run: cd dist && for f in *.AppImage; do sha256sum "$f" > "$f.sha256"; done
       - uses: actions/upload-artifact@v4
         with:
           name: unSpootify-linux-x86_64
-          path: dist/*.AppImage
+          path: |
+            dist/*.AppImage
+            dist/*.AppImage.sha256
           retention-days: 14
       - name: Attach to the release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" dist/*.AppImage --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.AppImage dist/*.AppImage.sha256 --clobber
 
   macos:
     needs: test
@@ -80,13 +84,17 @@ jobs:
         run: scripts/build_macos.sh
       - name: Check the app as a user gets it (from the dmg, quarantined)
         run: packaging/test/macos_check.sh dist/*.dmg
+      - name: Checksum (the in-app updater verifies downloads against it)
+        run: cd dist && for f in *.dmg; do shasum -a 256 "$f" > "$f.sha256"; done
       - uses: actions/upload-artifact@v4
         with:
           name: unSpootify-macos-${{ matrix.arch }}
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/*.dmg.sha256
           retention-days: 14
       - name: Attach to the release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${GITHUB_REF_NAME}" dist/*.dmg --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" dist/*.dmg dist/*.dmg.sha256 --clobber

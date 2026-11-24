@@ -53,6 +53,8 @@ Run        { playlist_id, running: bool, current_track: index|null,
 | `archive_playlist(playlist_id, archived)` | `Playlist` | playlist menu › Archive / Move out of Archived |
 | `remove_playlist(playlist_id)` | `ok` | playlist menu › Remove from unSpootify… (confirm sheet; music files untouched) |
 | `reset_playlist(playlist_id)` | `Playlist` | Download again (a finished playlist: try every song; library files are skipped) |
+| `check_update()` | `{available, current, latest, installable, notes_url}` | Settings › Check for updates |
+| `install_update()` | `ok \| error` | update sheet / Settings › Update now (downloads, verifies, swaps, restarts) |
 | `test_port(port)` | `{open, port, server, suggested_port?, error?}` | Advanced › Test port, Test connection |
 
 Commands never throw into the page: an error comes back as `{"error": {code, message, action}}`.
@@ -71,6 +73,7 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `log` | `{bold, text}` | Details pane line |
 | `status` | `{phase: "connecting"\|"logged_in"\|"idle"}` | top display while a run starts ("Connecting to Soulseek…" → "Connected") |
 | `error` | `{code, message, action?}` | top display message + optional action button |
+| `update_available` | `{current, latest, installable, notes_url}` | update sheet (once, a few seconds after launch, if `settings.auto_update`) |
 | `port_result` | `{open: bool\|null, port, server: bool, suggested_port?, error?}` | Advanced port result (`server` false = network blocks Soulseek entirely) |
 
 ## Error codes (all user-facing text is plain words + what to do)
@@ -90,6 +93,7 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `ALREADY_RUNNING` | A download is already running. | — |
 | `LOGIN_TIMEOUT` | Couldn't get connected to Soulseek. Check your internet or test your connection. | Test connection |
 | `UNEXPECTED` | Something went wrong. Details has more. | — |
+| `UPDATE_FAILED` | The update couldn't be installed. You can download it from the Releases page instead. | — |
 | `DISK_FULL` | The disk is full. Free up some space, then press Download to continue. | Retry |
 
 `LOGIN_FAILED`, `PORT_BLOCKED` and `NO_NETWORK` are detected from sockseek's text output, only before

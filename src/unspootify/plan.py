@@ -144,6 +144,10 @@ def build_args(
         args.append("-g")
     if mode in ("albums", "artist") and o.album_art:
         args += ["--album-art", "largest"]
+    if mode in ("albums", "artist"):
+        # an "album" with 40+ files is somebody's dump folder (e.g. "Singles Week 2025"), not the album;
+        # and prefer folders named after the album
+        args += ["--album-track-count", "40-", "--pref-strict-album"]
     args += ["--format", fmt] if force else ["--pref-format", fmt]
     if mode == "songs":
         args.append("--pref-strict-album")
