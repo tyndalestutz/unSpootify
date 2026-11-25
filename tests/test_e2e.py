@@ -274,3 +274,25 @@ def test_low_disk_space_blocks_start(setup, monkeypatch):
     with pytest.raises(AppError) as e:
         backend.start(pid)
     assert e.value.code == "DISK_FULL"
+
+
+def test_convert_lossless_to_mp3_songs(setup):
+    backend, rec, pid, lib = setup
+    backend.save_settings({"advanced": {"convert_mp3": True}})
+    backend.start(pid)
+    rec.wait(backend)
+    tracks = [t for t in backend.get_tracks(pid) if t["state"] == "done"]
+    assert tracks and all(t["format"] == "MP3" and t["path"].endswith(".mp3") for t in tracks), tracks
+    assert all(Path(t["path"]).exists() for t in tracks)
+    assert not list(lib.rglob("*.flac")) and not list(lib.rglob("*.part"))
+    assert any(e.get("phase") == "converting" for e in rec.of("status"))
+    # nothing is downloaded again on the next run
+    rec.events.clear()
+    assert backend.start(pid).get("nothing_to_do") or rec.wait(backend)["counts"]["done"] == len(tracks)
+
+
+def test_convert_off_by_default_keeps_flac(setup):
+    backend, rec, pid, lib = setup
+    backend.start(pid)
+    rec.wait(backend)
+    assert list(lib.rglob("*.flac"))

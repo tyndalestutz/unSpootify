@@ -30,6 +30,12 @@ grep -q '"downloaded": 7' "$WORK/run.jsonl"
 test -f "$WORK/lib/The Killers/Hot Fuss [MP3]/Mr. Brightside.mp3"
 ! pgrep -f "vendor/sockseek" >/dev/null || { echo "sockseek still running"; exit 1; }
 
+echo "== experimental FLAC -> MP3 with the bundled encoder (no ffmpeg needed)"
+"$EXE" run "$ROOT/tests/fixtures/road_trip.csv" --home "$WORK/home2" --library "$WORK/lib2" --mock-dir "$SHARE" --convert-mp3 -v > "$WORK/run2.jsonl"
+grep '"MP3:"' "$WORK/run2.jsonl" || true
+test -f "$WORK/lib2/OutKast/Speakerboxxx-The Love Below [MP3]/Hey Ya!.mp3"
+test -z "$(find "$WORK/lib2" -name '*.flac')"
+
 echo "== window opens (Cocoa/WebKit)"
 UNSPOOTIFY_HOME="$WORK/gui" "$EXE" --smoke-test | tee "$WORK/smoke.txt"
 grep -q "SMOKE ok" "$WORK/smoke.txt"

@@ -131,6 +131,7 @@ function fillAdvanced(a) {
   $("#advSkip").value = a.skip_n ?? "";
   $("#advFast").checked = !!a.fast;
   $("#advStrict").checked = !!a.strict_title;
+  $("#advMp3").checked = !!a.convert_mp3;
   $("#advBitrate").value = a.min_bitrate ?? "";
   $("#listenPort").value = a.listen_port ?? "";
 }
@@ -140,6 +141,7 @@ function readAdvanced() {
   return {
     first_n: num("#advFirst"), skip_n: num("#advSkip"), fast: $("#advFast").checked,
     strict_title: $("#advStrict").checked, min_bitrate: num("#advBitrate"), listen_port: num("#listenPort"),
+    convert_mp3: $("#advMp3").checked,
   };
 }
 
@@ -207,6 +209,7 @@ function onEvent(ev) {
     }
     case "status":
       UI.status = ev.phase;
+      UI.convert = ev.phase === "converting" ? { done: ev.done, total: ev.total } : null;
       break;
     case "track": {
       const list = tracksOf(ev.playlist_id);
@@ -447,6 +450,11 @@ function renderLcd(c, can) {
   const p = currentPl();
   if (UI.flash && Date.now() < UI.flash.until) { a = UI.flash.a; b = UI.flash.b; kind = UI.flash.kind; }
   else if (UI.notice && Date.now() < UI.notice.until && !UI.run) { a = UI.notice.message; b = noticeHint(UI.notice.action); kind = "bad"; }
+  else if (UI.run && UI.convert) {
+    a = "Converting FLAC to MP3…";
+    b = `${UI.convert.done.toLocaleString()} of ${UI.convert.total.toLocaleString()} songs`;
+    $("#lcdFill").style.width = UI.convert.total ? `${(UI.convert.done / UI.convert.total) * 100}%` : "0%";
+  }
   else if (UI.run && cur) {
     a = `${cur.title || "(no title)"} — ${cur.artist || "(unknown artist)"}`;
     const where = UI.current === UI.run.playlist_id ? "" : `“${act ? act.name : ""}” · `;
@@ -801,7 +809,7 @@ function bindControls() {
     }
     saveSettings({ advanced: readAdvanced() });
   });
-  ["#advFast", "#advStrict"].forEach((id) => $(id).addEventListener("change", () => saveSettings({ advanced: readAdvanced() })));
+  ["#advFast", "#advStrict", "#advMp3"].forEach((id) => $(id).addEventListener("change", () => saveSettings({ advanced: readAdvanced() })));
 
   $("#toggleTerm").addEventListener("click", () => {
     const hidden = $(".app").classList.toggle("term-hidden");
@@ -850,7 +858,7 @@ function bindControls() {
   document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeSheets));
   document.querySelectorAll(".sheet-backdrop").forEach((bd) => bd.addEventListener("click", (e) => { if (e.target === bd) closeSheets(); }));
   $("#restoreDefaults").addEventListener("click", () => {
-    fillAdvanced({ first_n: null, skip_n: null, fast: false, strict_title: false, min_bitrate: null, listen_port: null });
+    fillAdvanced({ first_n: null, skip_n: null, fast: false, strict_title: false, min_bitrate: null, listen_port: null, convert_mp3: false });
     saveSettings({ advanced: readAdvanced() });
     cancelPortTest();
     setPortResult(PORT_IDLE);

@@ -165,6 +165,11 @@
         <label class="field inline"><span>Minimum bitrate</span><input type="text" id="advBitrate" placeholder="200" size="4" inputmode="numeric"><span>kbps</span></label>
       </fieldset>
       <fieldset class="group">
+        <legend>Files</legend>
+        <label class="toggle"><input type="checkbox" id="advMp3"><span class="box"></span><span>Convert FLAC to MP3 <em>(experimental)</em></span></label>
+        <p class="hint">Automatic mode only. After a download, FLAC songs become MP3 when MP3 is your format, or when at least 3 of every 4 songs came as MP3 anyway. They move into the album's [MP3] folder.</p>
+      </fieldset>
+      <fieldset class="group">
         <legend>Connection</legend>
         <div class="port-test">
           <label class="field inline"><span>Listen port</span><input type="text" id="listenPort" placeholder="49998" size="6" inputmode="numeric"></label>

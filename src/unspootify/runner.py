@@ -409,6 +409,7 @@ class Runner:
     stopped: bool = False
     timed_out: bool = False
     stopped_by_error: bool = False
+    _cancel: threading.Event = field(default_factory=threading.Event)
     _tidy_later: set = field(default_factory=set)
     login_timeout: float = 120.0  # seconds without any search before we call it a connection problem
     _started_at: float = 0.0
@@ -446,6 +447,7 @@ class Runner:
 
     def stop(self) -> None:
         self.stopped = True
+        self._cancel.set()
         self._terminate()
 
     def _terminate(self) -> None:
@@ -512,6 +514,64 @@ class Runner:
                 return {"path": str(folder if self.plan.mode == "albums" else artist_dir)}
         return {"state": FAILED, "reason": "error", "pct": 0}
 
+    def _convert_mp3(self) -> None:
+        """Experimental (Advanced): turn this playlist's lossless downloads into MP3. See convert.py."""
+        from unspootify import convert
+
+        tracks = self.store.tracks(self.playlist_id)
+        done = [t for t in tracks if t.state == DONE and t.path]
+        if not convert.should_convert(enabled=True, mode=self.plan.format_mode, preferred=self.plan.preferred,
+                                      formats=[t.format or "" for t in done]):
+            return
+        rows = [Path(t.path) for t in done if (t.format or "").lower() in convert.LOSSLESS or self.plan.mode != "songs"]
+        files = convert.lossless_files([p for p in rows if p.exists()])
+        if not files:
+            return
+        self.emit(event("log", bold="MP3:", text=f" converting {len(files)} lossless songs to MP3 (V0)…"))
+
+        def progress(n: int, total: int) -> None:
+            self.emit(event("status", phase="converting", done=n, total=total))
+
+        res = convert.convert_all(files, self._cancel, progress)
+        changed: set[tuple[str, int]] = set()
+        moves = [(str(o), str(n)) for o, n in res.converted]
+        for old, new in res.converted:
+            changed.update(self.store.repath(str(old), str(new), "MP3"))
+        for old, new in res.folders:
+            if not old.exists():  # every song in it was converted
+                changed.update(self.store.repath(str(old), str(new), "MP3"))
+                moves.append((str(old), str(new)))
+        self._rewrite_indexes(moves)
+        for pid, idx in sorted(changed):
+            if pid == self.playlist_id:
+                self.emit(event("track", playlist_id=pid, **self.store.track(pid, idx).to_dict()))
+        msg = f" {len(res.converted)} converted"
+        if res.skipped:
+            why = sorted({w for _, w in res.skipped})
+            msg += f", {len(res.skipped)} left as they were ({', '.join(why)})"
+        if res.failed:
+            msg += f", {len(res.failed)} couldn't be converted (kept the original)"
+        if res.stopped_early:
+            msg += f"; stopped because {res.stopped_early}"
+        self.emit(event("log", bold="MP3:", text=msg + "."))
+        for f, why in res.failed[:5]:
+            self.emit(event("log", bold="MP3:", text=f" {f.name}: {why}"))
+
+    def _rewrite_indexes(self, moves: list[tuple[str, str]]) -> None:
+        """sockseek's skip index remembers where files went; keep it pointing at the MP3s."""
+        if not moves:
+            return
+        for index in (self.plan.input_path.parent.parent).glob("index-*.csv"):
+            try:
+                text = index.read_text(encoding="utf-8")
+                new = text
+                for old, to in sorted(moves, key=lambda m: -len(m[0])):
+                    new = new.replace(old, to)
+                if new != text:
+                    index.write_text(new, encoding="utf-8")
+            except OSError:
+                pass
+
     def _open_log(self) -> Any:
         """Each run's raw downloader output (password scrubbed) is kept for troubleshooting."""
         try:
@@ -567,6 +627,11 @@ class Runner:
                 pass
         crashed_after_work = not self.mapper.completed and self.mapper.all_settled() and not self.timed_out
         self._apply(self.mapper.finish(self.stopped))
+        if self.plan.convert_mp3 and not self.stopped and not self.timed_out:
+            try:
+                self._convert_mp3()
+            except Exception as exc:  # noqa: BLE001  experimental: never spoil the run over it
+                self.emit(event("log", bold="MP3:", text=f" conversion stopped ({type(exc).__name__}: {exc})"))
         error: AppError | None = None
         # sockseek exits non-zero when some songs failed; that's a normal finish, not a crash.
         if self.timed_out:

@@ -35,6 +35,7 @@ class Advanced:
     strict_title: bool = False
     min_bitrate: int | None = None
     listen_port: int | None = None
+    convert_mp3: bool = False  # experimental: turn lossless downloads into MP3 (Automatic mode)
 
 
 @dataclass
