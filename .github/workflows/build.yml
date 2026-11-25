@@ -45,6 +45,7 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a "$APP" --smoke-test
       - name: Packaged app converts FLAC to MP3 with its bundled encoder
         run: |
+          sudo apt-get install -y -qq ffmpeg  # only to make the fake test share; the app doesn't use it
           APP=$(ls dist/*.AppImage); W=$(mktemp -d)
           uv run python scripts/make_mock_library.py tests/fixtures/road_trip.csv "$W/share" --missing 8 --flac 4 --flac-only 6 >/dev/null
           APPIMAGE_EXTRACT_AND_RUN=1 "$APP" run tests/fixtures/road_trip.csv --home "$W/h" --library "$W/lib" --mock-dir "$W/share" --convert-mp3 -v | grep '"MP3:"'
