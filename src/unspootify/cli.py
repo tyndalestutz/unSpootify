@@ -42,6 +42,8 @@ def _run(a: argparse.Namespace) -> int:
         partial["options"]["mode"] = "force"
     if a.no_skip:
         partial["options"]["skip_existing"] = False
+    if a.convert_mp3:
+        partial["advanced"]["convert_mp3"] = True
     backend.save_settings(partial)
     try:
         playlist = backend.import_csv_path(str(a.csv))
@@ -93,6 +95,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--followup", action="store_true", help="after Force, get the misses in the other format")
     ap.add_argument("--retry", action="store_true", help="retry misses once with Try harder")
     ap.add_argument("--no-skip", action="store_true")
+    ap.add_argument("--convert-mp3", action="store_true", help="experimental: lossless downloads -> MP3")
     ap.add_argument("--reset", action="store_true", help="forget previous results for this playlist")
     ap.add_argument("-v", "--verbose", action="store_true", help="include log lines")
     return _run(ap.parse_args(argv[1:]))

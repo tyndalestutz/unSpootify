@@ -4,7 +4,7 @@
 > **Backlog**, not into the current phase. Tick boxes as items land; update the
 > **Status** line at the end of every working session.
 
-**Status:** v1.1.0 (2026-11-24): auto-updater + album-mode/robustness fixes; friends start on v1.1.0 so later fixes reach them on launch. Mac still awaiting a human test.
+**Status:** v1.2.0 (2026-11-25): experimental FLAC→MP3 conversion; first update delivered through the in-app updater. A friend confirmed 1.1.0 runs on an Apple-chip Mac.
 
 ## Goal
 
@@ -168,6 +168,7 @@ Friend test (CHECKPOINT)
 - [x] Owner's full-album run (Linux) found album-mode bugs, fixed for every platform: run froze when the disk filled (now a clear DISK_FULL error + free-space check), progress jumped 0→99 (path matching), format showed JPG/LRC (audio only), names kept sharers' patterns (now from the music's tags), albums marked done with no files (now verified), junk side files (dropped; one cover.jpg; lyrics named like their song), and each run's log is saved (runs/<id>/last-run.log)
 - [x] Runaway album (a 209-song 'Singles Week' folder picked for a single) crashed the window: albums capped at 40 tracks + prefer album-named folders; events to the page are batched/coalesced; Linux reloads the page if its renderer dies
 - [ ] Wrong-release heuristic for remix EPs etc.: Backlog; folder picker later
+- [x] v1.2.0 (owner request, experimental): Advanced › Convert FLAC to MP3. Automatic mode; converts when MP3 is the chosen format or ≥75% of downloads came as MP3. Bundled libsndfile/LAME (no ffmpeg), V0, tags+cover kept, verified before the original is deleted, songs move into the album's [MP3] folder (no folder renames), DB paths + sockseek index updated so nothing re-downloads. Not converted: hi-res >48 kHz, ALAC/APE, lossy formats. Also the first real test of the auto-updater (friends on 1.1.0).
 - [ ] Owner or friend installs from the release on a real Mac and does a real run; feedback as GitHub issues; fixes in v1.0.x
 - [ ] Decide on an Apple Developer ID ($99/yr) only if the first-launch steps prove too confusing
 

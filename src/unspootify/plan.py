@@ -34,6 +34,9 @@ class RunPlan:  # noqa: D101
     args: list[str]
     jobs: list[Job]
     library: Path
+    convert_mp3: bool = False  # Advanced (experimental): lossless -> MP3 after the run
+    preferred: str = "mp3"
+    format_mode: str = "auto"
 
 
 def pick_tracks(tracks: list[Track], settings: Settings, only: list[int] | None = None) -> list[Track]:
@@ -217,4 +220,7 @@ def prepare(
         format_override=format_override, force_override=force_override, try_harder=try_harder, mock_dir=mock_dir,
         config_path=config,
     ) + list(extra_args or [])
-    return RunPlan(mode, input_path, manifest, args, jobs, library)
+    return RunPlan(mode, input_path, manifest, args, jobs, library, convert_mp3=settings.advanced.convert_mp3,
+                   preferred=format_override or settings.options.format,
+                   format_mode="force" if (settings.options.mode == "force" if force_override is None else force_override)
+                   else "auto")

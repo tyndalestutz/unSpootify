@@ -43,6 +43,13 @@ jobs:
         run: |
           APP=$(ls dist/*.AppImage)
           APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a "$APP" --smoke-test
+      - name: Packaged app converts FLAC to MP3 with its bundled encoder
+        run: |
+          APP=$(ls dist/*.AppImage); W=$(mktemp -d)
+          uv run python scripts/make_mock_library.py tests/fixtures/road_trip.csv "$W/share" --missing 8 --flac 4 --flac-only 6 >/dev/null
+          APPIMAGE_EXTRACT_AND_RUN=1 "$APP" run tests/fixtures/road_trip.csv --home "$W/h" --library "$W/lib" --mock-dir "$W/share" --convert-mp3 -v | grep '"MP3:"'
+          test -f "$W/lib/OutKast/Speakerboxxx-The Love Below [MP3]/Hey Ya!.mp3"
+          test -z "$(find "$W/lib" -name '*.flac')"
       - name: Checksum (the in-app updater verifies downloads against it)
         run: cd dist && for f in *.AppImage; do sha256sum "$f" > "$f.sha256"; done
       - uses: actions/upload-artifact@v4

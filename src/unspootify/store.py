@@ -162,6 +162,17 @@ class Store:
         with self._lock, self._db:
             self._db.execute(f"UPDATE tracks SET {sets} WHERE playlist_id=? AND idx=?", (*fields.values(), pid, index))
 
+    def repath(self, old: str, new: str, fmt: str | None = None) -> list[tuple[str, int]]:
+        """A file or folder moved (e.g. converted to MP3): point every playlist's rows at the new place."""
+        with self._lock, self._db:
+            rows = [(r["playlist_id"], r["idx"]) for r in
+                    self._db.execute("SELECT playlist_id, idx FROM tracks WHERE path=?", (old,))]
+            if fmt:
+                self._db.execute("UPDATE tracks SET path=?, format=? WHERE path=?", (new, fmt, old))
+            else:
+                self._db.execute("UPDATE tracks SET path=? WHERE path=?", (new, old))
+        return rows
+
     def reset_unfinished(self, pid: str) -> None:
         """After a stop or crash: anything mid-flight goes back to Waiting."""
         placeholders = ",".join("?" * len(TERMINAL))

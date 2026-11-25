@@ -88,7 +88,7 @@
         username: this.scn.loggedOut ? "" : "ipod_dreamer", password: this.scn.loggedOut ? "" : "hunter22",
         library_path: this.scn.path || "~/Music/unSpootify", look: "phosphor",
         options: { grab: "songs", format: "mp3", mode: "auto", skip_existing: true, album_art: true, try_harder: false },
-        advanced: { first_n: null, skip_n: null, fast: false, strict_title: false, min_bitrate: null, listen_port: null },
+        advanced: { first_n: null, skip_n: null, fast: false, strict_title: false, min_bitrate: null, listen_port: null, convert_mp3: false },
       };
       try { this.settings.look = localStorage.getItem("unspootify.look") || "phosphor"; } catch {}
       if (params.get("theme")) this.settings.look = params.get("theme");

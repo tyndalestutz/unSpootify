@@ -23,6 +23,7 @@ if not SOCKSEEK.exists():
 from PyInstaller.utils.hooks import collect_submodules
 
 hidden = ["unspootify.cli", "unspootify.finalize", "unspootify.backend", "unspootify.porttest",
+          "unspootify.convert", "soundfile", "numpy",  # experimental FLAC -> MP3 (bundled libsndfile + LAME)
           *collect_submodules("mutagen")]  # tag reading for file names (imported lazily)
 if sys.platform.startswith("linux"):
     hidden += ["webview.platforms.qt", "qtpy", "PySide6.QtWebEngineWidgets", "PySide6.QtWebEngineCore",
@@ -36,7 +37,7 @@ a = Analysis(
     binaries=[(str(SOCKSEEK), f"vendor/sockseek/{KEY}")],  # as a binary: keeps the exec bit, signed on macOS
     datas=[(str(SRC / "unspootify" / "ui"), "unspootify/ui")],
     hiddenimports=hidden,
-    excludes=["tkinter", "PyQt5", "PyQt6", "pytest", "IPython", "matplotlib", "numpy",
+    excludes=["tkinter", "PyQt5", "PyQt6", "pytest", "IPython", "matplotlib",
               "PySide6.Qt3DCore", "PySide6.QtCharts", "PySide6.QtDataVisualization", "PySide6.QtGraphs",
               "PySide6.QtMultimedia", "PySide6.QtBluetooth", "PySide6.QtSensors", "PySide6.QtSerialPort",
               "PySide6.QtPdf", "PySide6.QtDesigner", "PySide6.QtLocation", "PySide6.QtSpatialAudio"],

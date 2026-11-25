@@ -20,7 +20,7 @@ Settings   { username, password, library_path, look, playlist_sort: "added"|"nam
              options: { grab: "songs"|"albums"|"artist", format: "mp3"|"flac",
                         mode: "auto"|"force", skip_existing: bool, album_art: bool, try_harder: bool },
              advanced: { first_n: int|null, skip_n: int|null, fast: bool, strict_title: bool,
-                         min_bitrate: int|null, listen_port: int|null } }
+                         min_bitrate: int|null, listen_port: int|null, convert_mp3: bool } }
 
 Playlist   { id, name, source_file, total, done, downloaded, failed, skipped, finished: bool, archived: bool, added_at }
 
@@ -71,7 +71,7 @@ Delivered as `window.dispatchEvent(new CustomEvent("unspootify", {detail}))`.
 | `track` | `{playlist_id, ...Track}` | one song row + counts + sidebar meter |
 | `run_finished` | `{playlist_id, stopped, counts: Playlist, missing_format, force_format, nothing_to_do?}` | summary in top display, Retry/Test connection, Force follow-up offer when `missing_format` |
 | `log` | `{bold, text}` | Details pane line |
-| `status` | `{phase: "connecting"\|"logged_in"\|"idle"}` | top display while a run starts ("Connecting to Soulseek…" → "Connected") |
+| `status` | `{phase: "connecting"\|"logged_in"\|"converting"\|"idle", done?, total?}` | top display while a run starts ("Connecting to Soulseek…" → "Connected"); `converting` (experimental, Advanced › Convert FLAC to MP3) shows "Converting FLAC to MP3… n of m songs" with its own bar |
 | `error` | `{code, message, action?}` | top display message + optional action button |
 | `update_available` | `{current, latest, installable, notes_url}` | update sheet (once, a few seconds after launch, if `settings.auto_update`) |
 | `port_result` | `{open: bool\|null, port, server: bool, suggested_port?, error?}` | Advanced port result (`server` false = network blocks Soulseek entirely) |

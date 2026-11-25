@@ -65,14 +65,29 @@ T.run([
   }],
   ["advanced sheet", async () => {
     T.click("#openAdvanced");
-    T.type("#advFirst", "5"); T.type("#advBitrate", "256"); T.$("#advFast").click(); T.type("#listenPort", "51000");
+    T.type("#advFirst", "5"); T.type("#advBitrate", "256"); T.$("#advFast").click(); T.$("#advMp3").click(); T.type("#listenPort", "51000");
     T.click("#advancedSheet .btn.default");
     await T.waitFor(() => B().settings.advanced.first_n === 5 && B().settings.advanced.listen_port === 51000, 3000, "advanced saved");
     T.check("Advanced fields save on OK", B().settings.advanced.fast === true && B().settings.advanced.min_bitrate === 256);
+    T.check("Convert FLAC to MP3 saves", B().settings.advanced.convert_mp3 === true);
     T.click("#openAdvanced");
     T.click("#restoreDefaults");
     await T.waitFor(() => B().settings.advanced.first_n === null && B().settings.advanced.listen_port === null, 3000, "defaults");
-    T.check("Restore Defaults resets advanced", T.$("#advFirst").value === "" && !T.$("#advFast").checked);
+    T.check("Restore Defaults resets advanced", T.$("#advFirst").value === "" && !T.$("#advFast").checked && !T.$("#advMp3").checked);
+    T.click("#advancedSheet .btn.default");
+  }],
+  ["converting display", async () => {
+    UI.run = { playlist_id: UI.current };
+    try {
+      B().emit({ type: "status", phase: "converting", done: 3, total: 12 });
+      await T.waitFor(() => T.text("#lcdTitle").startsWith("Converting"), 3000, "converting shown");
+      T.check("converting shows n of m", T.text("#lcdSub").startsWith("3 of 12"), T.text("#lcdSub"));
+    } finally {
+      B().emit({ type: "status", phase: "idle" });
+      await T.sleep(100);
+      UI.run = null;
+      UI.convert = null;
+    }
   }],
   ["port test", async () => {
     T.click("#portTestBtn");
